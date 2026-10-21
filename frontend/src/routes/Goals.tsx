@@ -14,13 +14,14 @@ import {
   ProgressCard,
   Skeleton,
 } from '../design'
+import { CurrencySelect } from '../features/CurrencySelect'
 import { formatDate, formatMoney, todayISO } from '../lib/format'
 import { monthlyNeeded } from '../lib/goals'
 
 const goalSchema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
   target_amount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Monto positivo con hasta 2 decimales'),
-  currency: z.string().regex(/^[A-Za-z]{3}$/, 'Código de 3 letras (ISO 4217)'),
+  currency: z.string().min(1, 'Selecciona una moneda'),
   deadline: z.string().optional(),
 })
 
@@ -122,13 +123,7 @@ export function GoalsPage() {
               error={formState.errors.target_amount?.message}
               {...register('target_amount')}
             />
-            <Input
-              label="Moneda"
-              maxLength={3}
-              placeholder="ISO 4217"
-              error={formState.errors.currency?.message}
-              {...register('currency')}
-            />
+            <CurrencySelect error={formState.errors.currency?.message} {...register('currency')} />
             <Input label="Fecha límite (opcional)" type="date" {...register('deadline')} />
           </div>
           <div>

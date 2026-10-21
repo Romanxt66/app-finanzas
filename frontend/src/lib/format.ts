@@ -16,6 +16,11 @@ function currencyFormat(currency: string): Intl.NumberFormat {
   return f
 }
 
+/** 18.2 → «18,2» (hasta un decimal, con el separador de la configuración regional). */
+export function formatPercent(value: string | number): string {
+  return new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 1 }).format(Number(value))
+}
+
 /** Monto con signo tipográfico (−). `signed` añade + a los positivos. Sin moneda: solo el número. */
 export function formatMoney(
   value: string | number,
@@ -28,6 +33,12 @@ export function formatMoney(
     : new Intl.NumberFormat(LOCALE).format(Math.abs(n))
   if (n < 0) return `− ${abs}`
   return signed ? `+ ${abs}` : abs
+}
+
+/** "USD" -> "US Dollar" (o su equivalente en el idioma del navegador). */
+export function currencyLabel(code: string): string {
+  const name = new Intl.DisplayNames(LOCALE, { type: 'currency' }).of(code)
+  return name ? `${code} · ${name}` : code
 }
 
 export function formatDate(iso: string): string {
