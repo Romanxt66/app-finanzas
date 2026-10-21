@@ -1,17 +1,22 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { lazy } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ToastProvider } from './design'
 import { AuthProvider } from './features/auth'
-import { AccountsPage } from './routes/Accounts'
 import { LoginPage, RegisterPage } from './routes/AuthPages'
-import { BudgetsPage } from './routes/Budgets'
-import { CategoriesPage } from './routes/Categories'
-import { DashboardPage } from './routes/Dashboard'
-import { GoalsPage } from './routes/Goals'
 import { Layout } from './routes/Layout'
-import { MorePage } from './routes/More'
-import { ProfilePage } from './routes/Profile'
-import { TransactionsPage } from './routes/Transactions'
+
+// Cada pantalla se descarga al visitarla; recharts solo viaja con el resumen
+const lazyPage = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
+  lazy(async () => ({ default: (await load())[name] }))
+const AccountsPage = lazyPage(() => import('./routes/Accounts'), 'AccountsPage')
+const BudgetsPage = lazyPage(() => import('./routes/Budgets'), 'BudgetsPage')
+const CategoriesPage = lazyPage(() => import('./routes/Categories'), 'CategoriesPage')
+const DashboardPage = lazyPage(() => import('./routes/Dashboard'), 'DashboardPage')
+const GoalsPage = lazyPage(() => import('./routes/Goals'), 'GoalsPage')
+const MorePage = lazyPage(() => import('./routes/More'), 'MorePage')
+const ProfilePage = lazyPage(() => import('./routes/Profile'), 'ProfilePage')
+const TransactionsPage = lazyPage(() => import('./routes/Transactions'), 'TransactionsPage')
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },

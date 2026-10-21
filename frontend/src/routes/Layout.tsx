@@ -1,5 +1,16 @@
+import { Suspense } from 'react'
 import { Link, Navigate, Outlet } from 'react-router-dom'
-import { Backdrop, Button, Glass, Icon, TabBar, TopNav, useTheme, type NavItem } from '../design'
+import {
+  Backdrop,
+  Button,
+  Glass,
+  Icon,
+  Skeleton,
+  TabBar,
+  TopNav,
+  useTheme,
+  type NavItem,
+} from '../design'
 import { useAuth } from '../features/authContext'
 
 const DESKTOP_NAV: NavItem[] = [
@@ -57,7 +68,9 @@ export function Layout() {
           </Button>
         </Glass>
         <main className="cr-main">
-          <Outlet />
+          <Suspense fallback={<Skeleton lines={3} height={96} />}>
+            <Outlet />
+          </Suspense>
         </main>
         <div className="cr-bottom">
           <TabBar items={MOBILE_NAV} />
