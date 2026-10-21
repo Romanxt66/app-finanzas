@@ -1,5 +1,16 @@
+import { Suspense } from 'react'
 import { Link, Navigate, Outlet } from 'react-router-dom'
-import { Backdrop, Button, Glass, Icon, TabBar, TopNav, useTheme, type NavItem } from '../design'
+import {
+  Backdrop,
+  Button,
+  Glass,
+  Icon,
+  Skeleton,
+  TabBar,
+  TopNav,
+  useTheme,
+  type NavItem,
+} from '../design'
 import { useAuth } from '../features/authContext'
 
 const DESKTOP_NAV: NavItem[] = [
@@ -42,7 +53,7 @@ export function Layout() {
           </span>
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
-          <Link to="/profile" className="label cr-muted cr-user" aria-label="Perfil">
+          <Link to="/profile" className="label cr-muted cr-user">
             {user.full_name}
           </Link>
           <Button
@@ -57,7 +68,9 @@ export function Layout() {
           </Button>
         </Glass>
         <main className="cr-main">
-          <Outlet />
+          <Suspense fallback={<Skeleton lines={3} height={96} />}>
+            <Outlet />
+          </Suspense>
         </main>
         <div className="cr-bottom">
           <TabBar items={MOBILE_NAV} />
