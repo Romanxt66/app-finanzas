@@ -13,6 +13,18 @@
 | Calidad | tests backend (pytest + hypothesis, ≥88), frontend (vitest, ≥113), E2E Playwright (flujos, responsive, a11y axe WCAG AA), CI en GitHub Actions |
 | Despliegue | Docker + `docker-compose.yml` en Coolify → https://alvea.softlane.click (esquema `alvea`, usuario `rmn_alvea`) |
 
+## Funciones diferenciadoras (rama `claude/optimistic-gates-yi1wgi`, pendiente de PR)
+
+| Función | Backend | Frontend |
+|---|---|---|
+| **Horas de vida**: cada gasto expresado en horas de trabajo | `/api/v1/life-hours` (perfil, conversión, resumen mensual), migración `0005` | tarjeta en el resumen, diálogo «¿Cuánto vale tu hora?» y «≈ X h de trabajo» junto a cada gasto |
+| **Suscripciones fantasma**: cobros recurrentes sin registrar, alzas silenciosas, duplicados y pruebas que pasan a pago | `/api/v1/ghost-subscriptions` (calculado al vuelo, sin tablas) | pantalla `/subscriptions` (desde «Más») y aviso en el resumen |
+| **Disponible hoy**: lo que queda del mes repartido entre los días que faltan, con peso por día de la semana | `/api/v1/daily-allowance` (presupuesto o ingresos + reglas recurrentes pendientes) | medidor animado en el resumen |
+| Moneda | `/api/v1/currencies`; cuentas y metas solo admiten las monedas de `backend/app/core/currencies.py` | selector `CurrencySelect` en cuentas y metas |
+| Tema | tokens `brand` (violeta) en `design/tokens.json`; `mint` pasó a llamarse `brand` | login rediseñado, menú desplegable de cristal (`design/Select.tsx`), aurora de fondo |
+
+Notas: «Mantener sesión iniciada» guarda los tokens en `localStorage` (si no, en `sessionStorage`). Los botones «Huella» y «Passkey» del login están deshabilitados hasta que exista soporte en el backend.
+
 ## Pendiente / ideas (candidatas para la sesión Desktop)
 
 - [ ] Importar movimientos desde CSV del banco (vista previa y mapeo de columnas).

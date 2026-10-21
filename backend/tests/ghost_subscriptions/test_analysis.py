@@ -107,6 +107,16 @@ def test_free_trial_turned_paid() -> None:
     assert alert.amount == Decimal("11.99")
 
 
+def test_a_habitual_merchant_is_not_a_free_trial() -> None:
+    # Compras pequeñas y grandes mezcladas en un comercio de uso diario
+    days = [f"2026-10-{d:02d}" for d in range(1, 15)]
+    amounts = ["8", "54", "10", "45", "12", "9", "50", "11", "8", "47", "10", "12", "9", "52"]
+    charges = [charge("Supermercado", a, d) for a, d in zip(amounts, days, strict=True)]
+    assert [
+        a for a in analyze(charges, set(), TODAY).alerts if a.kind == AlertKind.trial_converted
+    ] == []
+
+
 def test_currencies_are_never_mixed() -> None:
     eur = monthly("Netflix", "10.99", NETFLIX_DAYS)
     usd = [Charge("Netflix", Decimal("12"), c.day, "USD") for c in eur]

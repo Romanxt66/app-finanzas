@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../design/toastContext'
 import { todayISO } from '../lib/format'
-import { api, tokens, type Schemas } from './client'
+import { api, ApiError, tokens, type Schemas } from './client'
 
 export type Account = Schemas['AccountOut']
 export type Category = Schemas['CategoryOut']
@@ -12,6 +12,10 @@ export type TransactionInput = Schemas['TransactionCreate']
 export type Recurring = Schemas['RecurringOut']
 export type Goal = Schemas['GoalOut']
 export type Contribution = Schemas['ContributionOut']
+export type LifeHoursProfile = Schemas['ProfileOut']
+export type LifeHoursMonth = Schemas['MonthHours']
+export type GhostReport = Schemas['GhostReport']
+export type DailyAllowance = Schemas['DailyAllowance']
 
 export interface TransactionFilters {
   account_id?: string
@@ -32,6 +36,9 @@ export const keys = {
   summary: ['summary'] as const,
   goals: ['goals'] as const,
   recurring: ['recurring'] as const,
+  lifeHours: ['life-hours'] as const,
+  ghost: ['ghost-subscriptions'] as const,
+  allowance: ['daily-allowance'] as const,
 }
 
 /** Una transacción cambia saldos, presupuestos y reportes: se invalida todo lo derivado. */
@@ -117,7 +124,15 @@ export const useTransactions = (filters: TransactionFilters) =>
 
 export function useSaveTransaction() {
   const toast = useToast()
-  const invalidate = useInvalidate(keys.transactions, keys.accounts, keys.budgets, keys.summary)
+  const invalidate = useInvalidate(
+    keys.transactions,
+    keys.accounts,
+    keys.budgets,
+    keys.summary,
+    keys.lifeHours,
+    keys.ghost,
+    keys.allowance,
+  )
   return useMutation({
     mutationFn: ({ id, body }: { id?: string; body: TransactionInput }) =>
       id
@@ -132,7 +147,15 @@ export function useSaveTransaction() {
 
 export function useDeleteTransaction() {
   const toast = useToast()
-  const invalidate = useInvalidate(keys.transactions, keys.accounts, keys.budgets, keys.summary)
+  const invalidate = useInvalidate(
+    keys.transactions,
+    keys.accounts,
+    keys.budgets,
+    keys.summary,
+    keys.lifeHours,
+    keys.ghost,
+    keys.allowance,
+  )
   return useMutation({
     mutationFn: (id: string) => api<void>(`/transactions/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
@@ -292,7 +315,7 @@ export const useRecurring = () =>
 
 export function useCreateRecurring() {
   const toast = useToast()
-  const invalidate = useInvalidate(keys.recurring)
+  const invalidate = useInvalidate(keys.recurring, keys.ghost, keys.allowance)
   return useMutation({
     mutationFn: (body: Schemas['RecurringCreate']) =>
       api<Recurring>('/recurring', { method: 'POST', body }),
@@ -305,7 +328,7 @@ export function useCreateRecurring() {
 
 export function useUpdateRecurring() {
   const toast = useToast()
-  const invalidate = useInvalidate(keys.recurring)
+  const invalidate = useInvalidate(keys.recurring, keys.ghost, keys.allowance)
   return useMutation({
     mutationFn: ({ id, ...body }: { id: string } & Schemas['RecurringUpdate']) =>
       api<Recurring>(`/recurring/${id}`, { method: 'PATCH', body }),
@@ -318,7 +341,7 @@ export function useUpdateRecurring() {
 
 export function useDeleteRecurring() {
   const toast = useToast()
-  const invalidate = useInvalidate(keys.recurring)
+  const invalidate = useInvalidate(keys.recurring, keys.ghost, keys.allowance)
   return useMutation({
     mutationFn: (id: string) => api<void>(`/recurring/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
@@ -369,3 +392,57 @@ export function useBulkImport() {
     },
   })
 }
+
+/** Perfil de horas de vida; null mientras el usuario no lo haya configurado (la API responde 404). */
+export const useLifeHoursProfile = () =>
+  useQuery({
+    queryKey: [...keys.lifeHours, 'profile'],
+    queryFn: async () => {
+      try {
+        return await api<LifeHoursProfile>('/life-hours/profile')
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null
+        throw error
+      }
+    },
+  })
+
+export function useSaveLifeHours() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.lifeHours)
+  return useMutation({
+    mutationFn: (body: Schemas['ProfileIn']) =>
+      api<LifeHoursProfile>('/life-hours/profile', { method: 'PUT', body }),
+    onSuccess: () => {
+      toast.success('Valor de tu hora guardado')
+      return invalidate()
+    },
+  })
+}
+
+export const useLifeHoursMonth = (month: string, enabled: boolean) =>
+  useQuery({
+    queryKey: [...keys.lifeHours, 'month', month],
+    queryFn: () => api<LifeHoursMonth>('/life-hours/summary', { query: { month } }),
+    enabled,
+  })
+
+export const useGhostSubscriptions = () =>
+  useQuery({
+    queryKey: [...keys.ghost, todayISO()],
+    queryFn: () => api<GhostReport>('/ghost-subscriptions', { query: { today: todayISO() } }),
+  })
+
+/** «Disponible hoy»; la API responde 404 mientras el usuario no tenga cuentas (se trata como vacío). */
+export const useDailyAllowance = () =>
+  useQuery({
+    queryKey: [...keys.allowance, todayISO()],
+    queryFn: async () => {
+      try {
+        return await api<DailyAllowance>('/daily-allowance', { query: { today: todayISO() } })
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null
+        throw error
+      }
+    },
+  })

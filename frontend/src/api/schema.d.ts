@@ -512,6 +512,46 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/ghost-subscriptions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Report
+     * @description `today` permite al cliente fijar su fecha local; por defecto, la del servidor.
+     */
+    get: operations['get_report_api_v1_ghost_subscriptions_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/daily-allowance': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Daily Allowance
+     * @description `today` fija la fecha local del cliente; `currency`, por defecto, la de su primera cuenta.
+     */
+    get: operations['get_daily_allowance_api_v1_daily_allowance_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -603,6 +643,35 @@ export interface components {
       /** Archived */
       archived?: boolean | null
     }
+    /** Alert */
+    Alert: {
+      kind: components['schemas']['AlertKind']
+      /** Name */
+      name: string
+      /** Currency */
+      currency: string
+      /**
+       * Date
+       * Format: date
+       */
+      date: string
+      /** Amount */
+      amount: string
+      /** Previous Amount */
+      previous_amount?: string | null
+      /** Change Percent */
+      change_percent?: string | null
+    }
+    /**
+     * AlertKind
+     * @enum {string}
+     */
+    AlertKind: 'price_increase' | 'duplicate' | 'trial_converted'
+    /**
+     * Basis
+     * @enum {string}
+     */
+    Basis: 'budget' | 'income'
     /** BudgetCreate */
     BudgetCreate: {
       /**
@@ -691,6 +760,11 @@ export interface components {
       /** Skipped */
       skipped: number
     }
+    /**
+     * Cadence
+     * @enum {string}
+     */
+    Cadence: 'weekly' | 'monthly' | 'yearly'
     /** CategoryCreate */
     CategoryCreate: {
       /** Name */
@@ -792,11 +866,50 @@ export interface components {
       /** Hourly Rate */
       hourly_rate: string
     }
+    /** DailyAllowance */
+    DailyAllowance: {
+      /**
+       * Day
+       * Format: date
+       */
+      day: string
+      /** Currency */
+      currency: string
+      basis: components['schemas']['Basis']
+      /** Month Total */
+      month_total: string
+      /** Spent Before Today */
+      spent_before_today: string
+      /** Spent Today */
+      spent_today: string
+      /** Pending Committed */
+      pending_committed: string
+      /** Days Remaining */
+      days_remaining: number
+      /** Average Per Day */
+      average_per_day: string
+      /** Allowance Today */
+      allowance_today: string
+      /** Left Today */
+      left_today: string
+      /** Pattern Used */
+      pattern_used: boolean
+      status: components['schemas']['Status']
+    }
     /**
      * Frequency
      * @enum {string}
      */
     Frequency: 'weekly' | 'monthly' | 'yearly'
+    /** GhostReport */
+    GhostReport: {
+      /** Subscriptions */
+      subscriptions: components['schemas']['Subscription'][]
+      /** Alerts */
+      alerts: components['schemas']['Alert'][]
+      /** Untracked Monthly */
+      untracked_monthly: components['schemas']['MonthlyTotal'][]
+    }
     /** GoalCreate */
     GoalCreate: {
       /** Name */
@@ -886,6 +999,13 @@ export interface components {
       income: string
       /** Expense */
       expense: string
+    }
+    /** MonthlyTotal */
+    MonthlyTotal: {
+      /** Currency */
+      currency: string
+      /** Total */
+      total: string
     }
     /** ProfileIn */
     ProfileIn: {
@@ -1005,6 +1125,39 @@ export interface components {
     RunResult: {
       /** Created */
       created: number
+    }
+    /**
+     * Status
+     * @enum {string}
+     */
+    Status: 'ok' | 'tight' | 'over' | 'no_data'
+    /** Subscription */
+    Subscription: {
+      /** Name */
+      name: string
+      /** Currency */
+      currency: string
+      cadence: components['schemas']['Cadence']
+      /** Typical Amount */
+      typical_amount: string
+      /** Last Amount */
+      last_amount: string
+      /**
+       * Last Date
+       * Format: date
+       */
+      last_date: string
+      /**
+       * Next Expected
+       * Format: date
+       */
+      next_expected: string
+      /** Occurrences */
+      occurrences: number
+      /** Monthly Cost */
+      monthly_cost: string
+      /** Tracked */
+      tracked: boolean
     }
     /** Summary */
     Summary: {
@@ -2511,6 +2664,69 @@ export interface operations {
         }
         content: {
           'application/json': string[]
+        }
+      }
+    }
+  }
+  get_report_api_v1_ghost_subscriptions_get: {
+    parameters: {
+      query?: {
+        today?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GhostReport']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_daily_allowance_api_v1_daily_allowance_get: {
+    parameters: {
+      query?: {
+        today?: string | null
+        currency?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DailyAllowance']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }

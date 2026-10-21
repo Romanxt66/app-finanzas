@@ -38,6 +38,8 @@ DUPLICATE_RECENT_DAYS = 90
 TRIAL_RATIO = Decimal("0.25")  # cobro de prueba: hasta un cuarto del cobro real
 TRIAL_WINDOW_DAYS = 45
 TRIAL_RECENT_DAYS = 120
+TRIAL_EARLY_DAYS = 90  # un comercio habitual (súper, café) cobra mucho más que esto
+TRIAL_MAX_EARLY_CHARGES = 4
 MERCHANT_WORDS = 3
 
 CENTS = Decimal("0.01")
@@ -176,24 +178,24 @@ def _duplicates(name: str, charges: list[Charge], today: date) -> list[Alert]:
 
 
 def _trial_converted(name: str, charges: list[Charge], today: date) -> Alert | None:
-    for first, then in zip(charges, charges[1:], strict=False):
-        within = (then.day - first.day).days <= TRIAL_WINDOW_DAYS
-        recent = (today - then.day).days <= TRIAL_RECENT_DAYS
-        if (
-            within
-            and recent
-            and first.amount <= then.amount * TRIAL_RATIO
-            and first.day != then.day
-        ):
-            return Alert(
-                kind=AlertKind.trial_converted,
-                name=name,
-                currency=then.currency,
-                date=then.day,
-                amount=then.amount,
-                previous_amount=first.amount,
-            )
-    return None
+    """Primer cobro pequeño seguido de uno mayor, en un comercio que casi no se usa."""
+    if len(charges) < 2:
+        return None
+    first, then = charges[0], charges[1]
+    early = sum(1 for c in charges if (c.day - first.day).days <= TRIAL_EARLY_DAYS)
+    small = first.amount <= then.amount * TRIAL_RATIO
+    within = 0 < (then.day - first.day).days <= TRIAL_WINDOW_DAYS
+    recent = (today - then.day).days <= TRIAL_RECENT_DAYS
+    if not (small and within and recent and early <= TRIAL_MAX_EARLY_CHARGES):
+        return None
+    return Alert(
+        kind=AlertKind.trial_converted,
+        name=name,
+        currency=then.currency,
+        date=then.day,
+        amount=then.amount,
+        previous_amount=first.amount,
+    )
 
 
 def analyze(charges: list[Charge], tracked_keys: set[str], today: date) -> GhostReport:

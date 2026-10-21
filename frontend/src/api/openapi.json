@@ -2122,6 +2122,133 @@
         }
       }
     },
+    "/api/v1/ghost-subscriptions": {
+      "get": {
+        "tags": ["ghost-subscriptions"],
+        "summary": "Get Report",
+        "description": "`today` permite al cliente fijar su fecha local; por defecto, la del servidor.",
+        "operationId": "get_report_api_v1_ghost_subscriptions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "today",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Today"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GhostReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/daily-allowance": {
+      "get": {
+        "tags": ["daily-allowance"],
+        "summary": "Get Daily Allowance",
+        "description": "`today` fija la fecha local del cliente; `currency`, por defecto, la de su primera cuenta.",
+        "operationId": "get_daily_allowance_api_v1_daily_allowance_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "today",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Today"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 3,
+                  "pattern": "^[A-Za-z]{3}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyAllowance"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health"],
@@ -2301,6 +2428,65 @@
         "type": "object",
         "title": "AccountUpdate"
       },
+      "Alert": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AlertKind"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "previous_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Amount"
+          },
+          "change_percent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Percent"
+          }
+        },
+        "type": "object",
+        "required": ["kind", "name", "currency", "date", "amount"],
+        "title": "Alert"
+      },
+      "AlertKind": {
+        "type": "string",
+        "enum": ["price_increase", "duplicate", "trial_converted"],
+        "title": "AlertKind"
+      },
+      "Basis": {
+        "type": "string",
+        "enum": ["budget", "income"],
+        "title": "Basis"
+      },
       "BudgetCreate": {
         "properties": {
           "category_id": {
@@ -2469,6 +2655,11 @@
         "type": "object",
         "required": ["created", "skipped"],
         "title": "BulkResult"
+      },
+      "Cadence": {
+        "type": "string",
+        "enum": ["weekly", "monthly", "yearly"],
+        "title": "Cadence"
       },
       "CategoryCreate": {
         "properties": {
@@ -2671,10 +2862,110 @@
         "required": ["amount", "hours", "hourly_rate"],
         "title": "Conversion"
       },
+      "DailyAllowance": {
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date",
+            "title": "Day"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/Basis"
+          },
+          "month_total": {
+            "type": "string",
+            "title": "Month Total"
+          },
+          "spent_before_today": {
+            "type": "string",
+            "title": "Spent Before Today"
+          },
+          "spent_today": {
+            "type": "string",
+            "title": "Spent Today"
+          },
+          "pending_committed": {
+            "type": "string",
+            "title": "Pending Committed"
+          },
+          "days_remaining": {
+            "type": "integer",
+            "title": "Days Remaining"
+          },
+          "average_per_day": {
+            "type": "string",
+            "title": "Average Per Day"
+          },
+          "allowance_today": {
+            "type": "string",
+            "title": "Allowance Today"
+          },
+          "left_today": {
+            "type": "string",
+            "title": "Left Today"
+          },
+          "pattern_used": {
+            "type": "boolean",
+            "title": "Pattern Used"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "day",
+          "currency",
+          "basis",
+          "month_total",
+          "spent_before_today",
+          "spent_today",
+          "pending_committed",
+          "days_remaining",
+          "average_per_day",
+          "allowance_today",
+          "left_today",
+          "pattern_used",
+          "status"
+        ],
+        "title": "DailyAllowance"
+      },
       "Frequency": {
         "type": "string",
         "enum": ["weekly", "monthly", "yearly"],
         "title": "Frequency"
+      },
+      "GhostReport": {
+        "properties": {
+          "subscriptions": {
+            "items": {
+              "$ref": "#/components/schemas/Subscription"
+            },
+            "type": "array",
+            "title": "Subscriptions"
+          },
+          "alerts": {
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            },
+            "type": "array",
+            "title": "Alerts"
+          },
+          "untracked_monthly": {
+            "items": {
+              "$ref": "#/components/schemas/MonthlyTotal"
+            },
+            "type": "array",
+            "title": "Untracked Monthly"
+          }
+        },
+        "type": "object",
+        "required": ["subscriptions", "alerts", "untracked_monthly"],
+        "title": "GhostReport"
       },
       "GoalCreate": {
         "properties": {
@@ -2908,6 +3199,21 @@
         "type": "object",
         "required": ["month", "income", "expense"],
         "title": "MonthTotal"
+      },
+      "MonthlyTotal": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": ["currency", "total"],
+        "title": "MonthlyTotal"
       },
       "ProfileIn": {
         "properties": {
@@ -3243,6 +3549,70 @@
         "type": "object",
         "required": ["created"],
         "title": "RunResult"
+      },
+      "Status": {
+        "type": "string",
+        "enum": ["ok", "tight", "over", "no_data"],
+        "title": "Status"
+      },
+      "Subscription": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "cadence": {
+            "$ref": "#/components/schemas/Cadence"
+          },
+          "typical_amount": {
+            "type": "string",
+            "title": "Typical Amount"
+          },
+          "last_amount": {
+            "type": "string",
+            "title": "Last Amount"
+          },
+          "last_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Last Date"
+          },
+          "next_expected": {
+            "type": "string",
+            "format": "date",
+            "title": "Next Expected"
+          },
+          "occurrences": {
+            "type": "integer",
+            "title": "Occurrences"
+          },
+          "monthly_cost": {
+            "type": "string",
+            "title": "Monthly Cost"
+          },
+          "tracked": {
+            "type": "boolean",
+            "title": "Tracked"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "currency",
+          "cadence",
+          "typical_amount",
+          "last_amount",
+          "last_date",
+          "next_expected",
+          "occurrences",
+          "monthly_cost",
+          "tracked"
+        ],
+        "title": "Subscription"
       },
       "Summary": {
         "properties": {

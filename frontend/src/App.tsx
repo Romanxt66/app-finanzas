@@ -18,6 +18,7 @@ const MorePage = lazyPage(() => import('./routes/More'), 'MorePage')
 const RecurringPage = lazyPage(() => import('./routes/Recurring'), 'RecurringPage')
 const ImportPage = lazyPage(() => import('./routes/Import'), 'ImportPage')
 const ProfilePage = lazyPage(() => import('./routes/Profile'), 'ProfilePage')
+const SubscriptionsPage = lazyPage(() => import('./routes/Subscriptions'), 'SubscriptionsPage')
 const TransactionsPage = lazyPage(() => import('./routes/Transactions'), 'TransactionsPage')
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ export default function App() {
                 <Route path="budgets" element={<BudgetsPage />} />
                 <Route path="goals" element={<GoalsPage />} />
                 <Route path="recurring" element={<RecurringPage />} />
+                <Route path="subscriptions" element={<SubscriptionsPage />} />
                 <Route path="import" element={<ImportPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="more" element={<MorePage />} />
