@@ -42,7 +42,7 @@ export function Layout() {
           </span>
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
-          <Link to="/profile" className="label cr-muted cr-user" aria-label="Perfil">
+          <Link to="/profile" className="label cr-muted cr-user">
             {user.full_name}
           </Link>
           <Button
