@@ -6,6 +6,8 @@ from app.api.v1 import (
     budgets,
     categories,
     currencies,
+    daily_allowance,
+    ghost_subscriptions,
     goals,
     life_hours,
     recurring,
@@ -25,5 +27,7 @@ for module in (
     reports,
     life_hours,
     currencies,
+    ghost_subscriptions,
+    daily_allowance,
 ):
     api_router.include_router(module.router)
