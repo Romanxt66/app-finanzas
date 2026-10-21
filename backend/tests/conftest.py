@@ -3,7 +3,13 @@ from collections.abc import AsyncIterator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import StaticPool
 
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite://"
@@ -16,14 +22,39 @@ from app.main import create_app  # noqa: E402
 
 
 @pytest.fixture
-async def client() -> AsyncIterator[AsyncClient]:
-    login_limiter._failures.clear()
-    email_limiter._failures.clear()  # el límite es global al proceso: aislar cada test
-    engine = create_async_engine(
+async def engine() -> AsyncIterator[AsyncEngine]:
+    eng = create_async_engine(
         "sqlite+aiosqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False}
     )
-    async with engine.begin() as conn:
+    async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    yield eng
+    await eng.dispose()
+
+
+class QueryCounter:
+    """Cuenta las sentencias SQL ejecutadas (para detectar consultas N+1)."""
+
+    def __init__(self, engine: AsyncEngine) -> None:
+        self.count = 0
+        event.listen(engine.sync_engine, "before_cursor_execute", self._on_execute)
+
+    def _on_execute(self, *_: object) -> None:
+        self.count += 1
+
+    def reset(self) -> None:
+        self.count = 0
+
+
+@pytest.fixture
+def queries(engine: AsyncEngine) -> QueryCounter:
+    return QueryCounter(engine)
+
+
+@pytest.fixture
+async def client(engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
+    login_limiter._failures.clear()
+    email_limiter._failures.clear()  # el límite es global al proceso: aislar cada test
     maker = async_sessionmaker(engine, expire_on_commit=False)
 
     async def _session() -> AsyncIterator[AsyncSession]:
@@ -34,7 +65,6 @@ async def client() -> AsyncIterator[AsyncClient]:
     app.dependency_overrides[get_session] = _session
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
-    await engine.dispose()
 
 
 async def register_and_login(client: AsyncClient, email: str = "a@example.com") -> dict[str, str]:

@@ -82,8 +82,31 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** Change Password */
+    /**
+     * Change Password
+     * @description Cambia la contraseña y cierra las demás sesiones; devuelve tokens nuevos para esta.
+     */
     post: operations['change_password_api_v1_auth_change_password_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/logout-all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Logout All
+     * @description Invalida todos los tokens emitidos hasta ahora (todos los dispositivos).
+     */
+    post: operations['logout_all_api_v1_auth_logout_all_post']
     delete?: never
     options?: never
     head?: never
@@ -220,6 +243,62 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/recurring': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Rules */
+    get: operations['list_rules_api_v1_recurring_get']
+    put?: never
+    /** Create Rule */
+    post: operations['create_rule_api_v1_recurring_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/recurring/run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Run Due
+     * @description Materializa los movimientos vencidos. `today` permite al cliente usar su fecha local.
+     */
+    post: operations['run_due_api_v1_recurring_run_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/recurring/{rule_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete Rule */
+    delete: operations['delete_rule_api_v1_recurring__rule_id__delete']
+    options?: never
+    head?: never
+    /** Update Rule */
+    patch: operations['update_rule_api_v1_recurring__rule_id__patch']
+    trace?: never
+  }
   '/api/v1/budgets': {
     parameters: {
       query?: never
@@ -351,8 +430,31 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** Health */
+    /**
+     * Health
+     * @description Liveness: el proceso responde (lo usa el healthcheck del contenedor).
+     */
     get: operations['health_health_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/health/ready': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Ready
+     * @description Readiness: además comprueba que la base de datos responde.
+     */
+    get: operations['ready_health_ready_get']
     put?: never
     post?: never
     delete?: never
@@ -544,6 +646,11 @@ export interface components {
       /** Note */
       note: string
     }
+    /**
+     * Frequency
+     * @enum {string}
+     */
+    Frequency: 'weekly' | 'monthly' | 'yearly'
     /** GoalCreate */
     GoalCreate: {
       /** Name */
@@ -623,6 +730,82 @@ export interface components {
       /** Full Name */
       full_name: string
     }
+    /** RecurringCreate */
+    RecurringCreate: {
+      type: components['schemas']['TransactionType']
+      /**
+       * Account Id
+       * Format: uuid
+       */
+      account_id: string
+      /** Transfer Account Id */
+      transfer_account_id?: string | null
+      /** Category Id */
+      category_id?: string | null
+      /** Amount */
+      amount: number | string
+      /**
+       * Description
+       * @default
+       */
+      description: string
+      frequency: components['schemas']['Frequency']
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string
+      /** End Date */
+      end_date?: string | null
+    }
+    /** RecurringOut */
+    RecurringOut: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      type: components['schemas']['TransactionType']
+      /**
+       * Account Id
+       * Format: uuid
+       */
+      account_id: string
+      /** Transfer Account Id */
+      transfer_account_id: string | null
+      /** Category Id */
+      category_id: string | null
+      /** Amount */
+      amount: string
+      /** Description */
+      description: string
+      frequency: components['schemas']['Frequency']
+      /**
+       * Next Date
+       * Format: date
+       */
+      next_date: string
+      /** End Date */
+      end_date: string | null
+      /** Active */
+      active: boolean
+    }
+    /** RecurringUpdate */
+    RecurringUpdate: {
+      /** Amount */
+      amount?: number | string | null
+      /** Description */
+      description?: string | null
+      /** Active */
+      active?: boolean | null
+      /** End Date */
+      end_date?: string | null
+    }
     /** RefreshIn */
     RefreshIn: {
       /** Refresh Token */
@@ -639,6 +822,11 @@ export interface components {
       password: string
       /** Full Name */
       full_name: string
+    }
+    /** RunResult */
+    RunResult: {
+      /** Created */
+      created: number
     }
     /** Summary */
     Summary: {
@@ -946,11 +1134,13 @@ export interface operations {
     }
     responses: {
       /** @description Successful Response */
-      204: {
+      200: {
         headers: {
           [name: string]: unknown
         }
-        content?: never
+        content: {
+          'application/json': components['schemas']['TokenPair']
+        }
       }
       /** @description Validation Error */
       422: {
@@ -960,6 +1150,24 @@ export interface operations {
         content: {
           'application/json': components['schemas']['HTTPValidationError']
         }
+      }
+    }
+  }
+  logout_all_api_v1_auth_logout_all_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }
@@ -1441,6 +1649,154 @@ export interface operations {
       }
     }
   }
+  list_rules_api_v1_recurring_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RecurringOut'][]
+        }
+      }
+    }
+  }
+  create_rule_api_v1_recurring_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RecurringCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RecurringOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  run_due_api_v1_recurring_run_post: {
+    parameters: {
+      query?: {
+        today?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RunResult']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_rule_api_v1_recurring__rule_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        rule_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_rule_api_v1_recurring__rule_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        rule_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RecurringUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RecurringOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_budgets_api_v1_budgets_get: {
     parameters: {
       query?: {
@@ -1814,6 +2170,28 @@ export interface operations {
     }
   }
   health_health_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: string
+          }
+        }
+      }
+    }
+  }
+  ready_health_ready_get: {
     parameters: {
       query?: never
       header?: never

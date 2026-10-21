@@ -24,8 +24,8 @@ email_limiter = FailureLimiter(max_failures=20)
 
 def _tokens(user: User) -> TokenPair:
     return TokenPair(
-        access_token=create_token(user.id, "access"),
-        refresh_token=create_token(user.id, "refresh"),
+        access_token=create_token(user.id, "access", user.token_version),
+        refresh_token=create_token(user.id, "refresh", user.token_version),
     )
 
 
@@ -56,9 +56,10 @@ async def login(data: LoginIn, request: Request, session: SessionDep) -> TokenPa
 
 @router.post("/refresh", response_model=TokenPair)
 async def refresh(data: RefreshIn, session: SessionDep) -> TokenPair:
-    user = await session.get(User, decode_token(data.refresh_token, "refresh"))
-    if user is None:
-        raise UnauthorizedError("Usuario no encontrado")
+    claims = decode_token(data.refresh_token, "refresh")
+    user = await session.get(User, claims.user_id)
+    if user is None or claims.version != user.token_version:
+        raise UnauthorizedError("La sesión caducó; inicia sesión de nuevo")
     return _tokens(user)
 
 
@@ -74,11 +75,23 @@ async def update_profile(data: ProfileUpdate, user: CurrentUser, session: Sessio
     return user
 
 
-@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
-async def change_password(data: ChangePasswordIn, user: CurrentUser, session: SessionDep) -> None:
+@router.post("/change-password", response_model=TokenPair)
+async def change_password(
+    data: ChangePasswordIn, user: CurrentUser, session: SessionDep
+) -> TokenPair:
+    """Cambia la contraseña y cierra las demás sesiones; devuelve tokens nuevos para esta."""
     if not verify_password(data.current_password, user.hashed_password):
         raise AppError("La contraseña actual es incorrecta")
     if data.current_password == data.new_password:
         raise AppError("La contraseña nueva debe ser distinta de la actual")
     user.hashed_password = hash_password(data.new_password)
+    user.token_version += 1
+    await session.commit()
+    return _tokens(user)
+
+
+@router.post("/logout-all", status_code=status.HTTP_204_NO_CONTENT)
+async def logout_all(user: CurrentUser, session: SessionDep) -> None:
+    """Invalida todos los tokens emitidos hasta ahora (todos los dispositivos)."""
+    user.token_version += 1
     await session.commit()

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
-import { useChangePassword, useUpdateProfile } from '../api/hooks'
+import { useChangePassword, useLogoutAll, useUpdateProfile } from '../api/hooks'
 import { Button, Card, ErrorText, Input, Segmented, useTheme, type ThemeChoice } from '../design'
 import { useAuth } from '../features/authContext'
 import { PasswordRules } from '../features/PasswordRules'
@@ -27,6 +27,7 @@ export function ProfilePage() {
   const theme = useTheme()
   const update = useUpdateProfile()
   const change = useChangePassword()
+  const logoutAll = useLogoutAll()
   const nameForm = useForm({
     resolver: zodResolver(nameSchema),
     // `values` (no defaultValues): el usuario puede llegar después del primer render
@@ -93,11 +94,19 @@ export function ProfilePage() {
         <Segmented label="Tema" options={THEMES} value={theme.choice} onChange={theme.set} />
       </Card>
 
-      <div>
+      <div className="cr-row">
         <Button variant="ghost" icon="logout" onClick={logout}>
           Cerrar sesión
         </Button>
+        <Button
+          variant="ghost"
+          onClick={() => logoutAll.mutate(undefined, { onSuccess: logout })}
+          disabled={logoutAll.isPending}
+        >
+          Cerrar sesión en todos los dispositivos
+        </Button>
       </div>
+      <ErrorText error={logoutAll.error} />
     </>
   )
 }

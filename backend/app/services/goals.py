@@ -43,7 +43,14 @@ async def list_goals(session: AsyncSession, user_id: uuid.UUID) -> list[GoalOut]
     goals = (
         await session.scalars(select(Goal).where(Goal.user_id == user_id).order_by(Goal.created_at))
     ).all()
-    return [_out(g, await _saved(session, g.id)) for g in goals]
+    # Un único GROUP BY para todas las metas (evita una consulta por meta)
+    rows = await session.execute(
+        select(GoalContribution.goal_id, func.sum(GoalContribution.amount))
+        .where(GoalContribution.user_id == user_id)
+        .group_by(GoalContribution.goal_id)
+    )
+    totals = {goal_id: Decimal(total or 0) for goal_id, total in rows}
+    return [_out(g, totals.get(g.id, Decimal(0))) for g in goals]
 
 
 async def create_goal(session: AsyncSession, user_id: uuid.UUID, data: GoalCreate) -> GoalOut:

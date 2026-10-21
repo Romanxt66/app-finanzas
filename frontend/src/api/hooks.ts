@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../design/toastContext'
-import { api, type Schemas } from './client'
+import { api, tokens, type Schemas } from './client'
 
 export type Account = Schemas['AccountOut']
 export type Category = Schemas['CategoryOut']
@@ -263,7 +263,15 @@ export function useChangePassword() {
   const toast = useToast()
   return useMutation({
     mutationFn: (body: Schemas['ChangePasswordIn']) =>
-      api<void>('/auth/change-password', { method: 'POST', body }),
-    onSuccess: () => toast.success('Contraseña cambiada'),
+      api<Schemas['TokenPair']>('/auth/change-password', { method: 'POST', body }),
+    onSuccess: (pair) => {
+      // El servidor cierra las demás sesiones y entrega tokens nuevos para esta
+      tokens.set(pair)
+      toast.success('Contraseña cambiada. Se cerraron las demás sesiones')
+    },
   })
+}
+
+export function useLogoutAll() {
+  return useMutation({ mutationFn: () => api<void>('/auth/logout-all', { method: 'POST' }) })
 }

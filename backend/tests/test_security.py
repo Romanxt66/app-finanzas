@@ -18,7 +18,8 @@ def test_password_hash_is_salted_and_verifiable() -> None:
 
 def test_token_roundtrip() -> None:
     uid = uuid.uuid4()
-    assert decode_token(create_token(uid, "access"), "access") == uid
+    claims = decode_token(create_token(uid, "access", 3), "access")
+    assert (claims.user_id, claims.version) == (uid, 3)
 
 
 def test_token_type_is_enforced() -> None:

@@ -29,8 +29,35 @@ async def _spent(session: AsyncSession, user_id: uuid.UUID, budget: Budget) -> D
     return Decimal(total or 0)
 
 
+async def _spent_by_budget(
+    session: AsyncSession, user_id: uuid.UUID, budgets: list[Budget]
+) -> dict[uuid.UUID, Decimal]:
+    """Gasto de cada presupuesto con una consulta por mes distinto (no una por presupuesto)."""
+    result: dict[uuid.UUID, Decimal] = {}
+    for month in {b.month for b in budgets}:
+        in_month = [b for b in budgets if b.month == month]
+        rows = await session.execute(
+            select(Transaction.category_id, func.sum(Transaction.amount))
+            .where(
+                Transaction.user_id == user_id,
+                Transaction.type == TransactionType.expense,
+                Transaction.category_id.in_([b.category_id for b in in_month]),
+                Transaction.occurred_on >= month,
+                Transaction.occurred_on < next_month(month),
+            )
+            .group_by(Transaction.category_id)
+        )
+        by_category = {cat: Decimal(total or 0) for cat, total in rows}
+        for b in in_month:
+            result[b.id] = by_category.get(b.category_id, Decimal(0))
+    return result
+
+
 async def _out(session: AsyncSession, user_id: uuid.UUID, budget: Budget) -> BudgetOut:
-    spent = await _spent(session, user_id, budget)
+    return _build(budget, await _spent(session, user_id, budget))
+
+
+def _build(budget: Budget, spent: Decimal) -> BudgetOut:
     return BudgetOut(
         id=budget.id,
         created_at=budget.created_at,
@@ -56,7 +83,8 @@ async def list_budgets(
     if month:
         stmt = stmt.where(Budget.month == month.replace(day=1))
     budgets = (await session.scalars(stmt)).all()
-    return [await _out(session, user_id, b) for b in budgets]
+    spent = await _spent_by_budget(session, user_id, list(budgets))
+    return [_build(b, spent.get(b.id, Decimal(0))) for b in budgets]
 
 
 async def create_budget(session: AsyncSession, user_id: uuid.UUID, data: BudgetCreate) -> BudgetOut:
