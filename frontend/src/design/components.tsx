@@ -184,6 +184,7 @@ export function StatTile(props: {
   invertDelta?: boolean
   icon?: IconName
   tone?: 'mint' | 'amber' | 'negative'
+  note?: string
 }) {
   return (
     <Glass size="md" className="cr-stat">
@@ -198,6 +199,7 @@ export function StatTile(props: {
         <div className="amount">
           <AnimatedMoney value={props.value} currency={props.currency} />
         </div>
+        {props.note && <div className="caption cr-muted">{props.note}</div>}
       </div>
     </Glass>
   )
@@ -483,5 +485,55 @@ export function ProgressCard(props: {
       {props.note && <span className="caption cr-muted">{props.note}</span>}
       {props.actions && <div className="cr-goal-actions">{props.actions}</div>}
     </Glass>
+  )
+}
+
+const DONUT_COLORS = ['var(--mint)', 'var(--amber)', 'var(--negative)', 'var(--ink-muted)']
+
+/** Dona de participación. El color no es la única pista: el significado va en la leyenda (lista) contigua. */
+export function Donut({
+  data,
+  label,
+  size = 132,
+}: {
+  data: { key: string; value: number }[]
+  label: string
+  size?: number
+}) {
+  const total = data.reduce((a, d) => a + d.value, 0)
+  const radius = 15.9155 // circunferencia = 100: los porcentajes caen directo en stroke-dasharray
+  let offset = 25 // arranca arriba
+  return (
+    <svg
+      viewBox="0 0 42 42"
+      width={size}
+      height={size}
+      role="img"
+      aria-label={label}
+      className="cr-donut"
+    >
+      <circle cx="21" cy="21" r={radius} fill="none" stroke="var(--hairline)" strokeWidth="5" />
+      {total > 0 &&
+        data.map((d, i) => {
+          const pct = (d.value / total) * 100
+          const el = (
+            <circle
+              key={d.key}
+              cx="21"
+              cy="21"
+              r={radius}
+              fill="none"
+              stroke={DONUT_COLORS[i % DONUT_COLORS.length]}
+              strokeOpacity={i < DONUT_COLORS.length ? 1 : 0.55}
+              strokeWidth="5"
+              strokeDasharray={`${Math.max(pct - 0.6, 0.01)} ${100 - Math.max(pct - 0.6, 0.01)}`}
+              strokeDashoffset={offset}
+              className="cr-donut-seg"
+            />
+          )
+          offset -= pct
+          return el
+        })}
+    </svg>
   )
 }

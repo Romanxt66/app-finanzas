@@ -243,3 +243,51 @@ async def test_summary_excludes_transfers_and_handles_year_boundary(
 
 async def test_summary_requires_month(client: AsyncClient, auth: H) -> None:
     assert (await client.get("/api/v1/reports/summary", headers=auth)).status_code == 422
+
+
+# ---- reportes por moneda ----------------------------------------------------
+async def test_summary_separates_currencies(client: AsyncClient, auth: H) -> None:
+    cop = await _mk(client, auth, "accounts", _acc("Pesos", "COP"))
+    usd = await _mk(client, auth, "accounts", _acc("Dólares", "USD"))
+    cat = await _mk(client, auth, "categories", {"name": "Viajes", "kind": "expense"})
+    await _mk(
+        client,
+        auth,
+        "transactions",
+        _tx(cop["id"], amount="1000", category_id=cat["id"], occurred_on="2026-03-02"),
+    )
+    await _mk(
+        client,
+        auth,
+        "transactions",
+        _tx(usd["id"], amount="25", category_id=cat["id"], occurred_on="2026-03-03"),
+    )
+    await _mk(
+        client,
+        auth,
+        "transactions",
+        _tx(usd["id"], type="income", amount="300", occurred_on="2026-03-04"),
+    )
+    await _mk(client, auth, "transactions", _tx(usd["id"], amount="10", occurred_on="2026-03-05"))
+
+    def summary(query: str = "") -> object:
+        return client.get(f"/api/v1/reports/summary?month=2026-03-01{query}", headers=auth)
+
+    default = (await summary()).json()
+    assert (default["currency"], default["currencies"]) == ("COP", ["COP", "USD"])
+    assert (default["income"], default["expense"]) == ("0.00", "1000.00")
+    usd_sum = (await summary("&currency=usd")).json()
+    assert usd_sum["currency"] == "USD"
+    assert (usd_sum["income"], usd_sum["expense"], usd_sum["net"]) == ("300.00", "35.00", "265.00")
+    assert [(c["category_id"], c["total"]) for c in usd_sum["expense_by_category"]] == [
+        (cat["id"], "25.00"),
+        (None, "10.00"),
+    ]
+    assert sum(Decimal(m["expense"]) for m in usd_sum["trend"]) == Decimal("35.00")
+    bad = await summary("&currency=EUR")
+    assert bad.status_code == 400 and "esa moneda" in bad.json()["error"]["message"]
+
+
+async def test_summary_without_accounts_has_no_currency(client: AsyncClient, auth: H) -> None:
+    s = (await client.get("/api/v1/reports/summary?month=2026-03-01", headers=auth)).json()
+    assert s["currency"] is None and s["currencies"] == [] and Decimal(s["net"]) == 0

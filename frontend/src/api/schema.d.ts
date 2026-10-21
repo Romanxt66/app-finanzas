@@ -413,7 +413,10 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** Summary */
+    /**
+     * Summary
+     * @description Resumen del mes en una moneda (por defecto la de la primera cuenta).
+     */
     get: operations['summary_api_v1_reports_summary_get']
     put?: never
     post?: never
@@ -835,6 +838,10 @@ export interface components {
        * Format: date
        */
       month: string
+      /** Currency */
+      currency: string | null
+      /** Currencies */
+      currencies: string[]
       /** Income */
       income: string
       /** Expense */
@@ -2142,6 +2149,7 @@ export interface operations {
     parameters: {
       query: {
         month: string
+        currency?: string | null
       }
       header?: never
       path?: never

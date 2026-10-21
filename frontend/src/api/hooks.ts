@@ -165,10 +165,11 @@ export function useDeleteBudget() {
   })
 }
 
-export const useSummary = (month: string) =>
+export const useSummary = (month: string, currency?: string) =>
   useQuery({
-    queryKey: [...keys.summary, month],
-    queryFn: () => api<Summary>('/reports/summary', { query: { month } }),
+    queryKey: [...keys.summary, month, currency ?? null],
+    queryFn: () => api<Summary>('/reports/summary', { query: { month, currency } }),
+    placeholderData: keepPreviousData,
   })
 
 export function useDeleteAccount() {
