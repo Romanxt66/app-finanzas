@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query, Response, status
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Transaction, TransactionType
 from app.schemas.transaction import TransactionCreate, TransactionOut, TransactionPage
-from app.services import transactions
+from app.services import export, transactions
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -42,6 +42,35 @@ async def list_transactions(
         total=total,
         limit=limit,
         offset=offset,
+    )
+
+
+@router.get("/export")
+async def export_transactions(
+    user: CurrentUser,
+    session: SessionDep,
+    account_id: uuid.UUID | None = None,
+    category_id: uuid.UUID | None = None,
+    type: TransactionType | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    search: Annotated[str | None, Query(max_length=100)] = None,
+) -> Response:
+    """CSV (UTF-8 con BOM, para Excel) con los mismos filtros que el listado."""
+    body = await export.transactions_csv(
+        session,
+        user.id,
+        account_id=account_id,
+        category_id=category_id,
+        type_=type,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+    )
+    return Response(
+        content="\ufeff" + body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="movimientos.csv"'},
     )
 
 

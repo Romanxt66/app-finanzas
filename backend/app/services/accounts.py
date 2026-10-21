@@ -1,10 +1,10 @@
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import NotFoundError
+from app.core.errors import ConflictError, NotFoundError
 from app.models import Account, AccountType, Transaction, TransactionType
 from app.schemas.account import AccountCreate, AccountOut, AccountUpdate
 
@@ -87,3 +87,21 @@ async def update_account(
         setattr(account, field, value)
     await session.commit()
     return _out(account, await _balances(session, user_id))
+
+
+async def delete_account(session: AsyncSession, user_id: uuid.UUID, account_id: uuid.UUID) -> None:
+    account = await get_owned(session, user_id, account_id)
+    used = await session.scalar(
+        select(Transaction.id)
+        .where(
+            or_(
+                Transaction.account_id == account.id,
+                Transaction.transfer_account_id == account.id,
+            )
+        )
+        .limit(1)
+    )
+    if used is not None:
+        raise ConflictError("La cuenta tiene movimientos: archívala en lugar de eliminarla")
+    await session.delete(account)
+    await session.commit()

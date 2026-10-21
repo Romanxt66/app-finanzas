@@ -1,7 +1,7 @@
 import uuid
 from datetime import date
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError, NotFoundError
@@ -31,8 +31,7 @@ async def get_owned(
     return tx
 
 
-async def list_transactions(
-    session: AsyncSession,
+def build_conditions(
     user_id: uuid.UUID,
     *,
     account_id: uuid.UUID | None,
@@ -41,10 +40,8 @@ async def list_transactions(
     date_from: date | None,
     date_to: date | None,
     search: str | None,
-    limit: int,
-    offset: int,
-) -> tuple[list[Transaction], int]:
-    conditions = [Transaction.user_id == user_id]
+) -> list[ColumnElement[bool]]:
+    conditions: list[ColumnElement[bool]] = [Transaction.user_id == user_id]
     if account_id:
         conditions.append(
             (Transaction.account_id == account_id) | (Transaction.transfer_account_id == account_id)
@@ -59,6 +56,31 @@ async def list_transactions(
         conditions.append(Transaction.occurred_on <= date_to)
     if search:
         conditions.append(Transaction.description.ilike(f"%{search}%"))
+    return conditions
+
+
+async def list_transactions(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    *,
+    account_id: uuid.UUID | None,
+    category_id: uuid.UUID | None,
+    type_: TransactionType | None,
+    date_from: date | None,
+    date_to: date | None,
+    search: str | None,
+    limit: int,
+    offset: int,
+) -> tuple[list[Transaction], int]:
+    conditions = build_conditions(
+        user_id,
+        account_id=account_id,
+        category_id=category_id,
+        type_=type_,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+    )
     total = await session.scalar(select(func.count()).select_from(Transaction).where(*conditions))
     stmt = (
         select(Transaction)

@@ -51,3 +51,17 @@ class UserOut(ORMModel):
     id: uuid.UUID
     email: EmailStr
     full_name: str
+
+
+class ProfileUpdate(BaseModel):
+    full_name: str = Field(min_length=1, max_length=120)
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def _password_policy(cls, v: str) -> str:
+        return check_password_policy(v)
