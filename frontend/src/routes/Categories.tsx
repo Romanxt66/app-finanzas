@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useCategories, useCreateCategory, useDeleteCategory } from '../api/hooks'
-import { Button, Card, Empty, ErrorText, Input, Select } from '../components/ui'
+import { Button, Card, Empty, ErrorText, Input, Select } from '../design'
 
 const schema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
@@ -22,31 +22,33 @@ export function CategoriesPage() {
 
   return (
     <>
-      <h1 className="text-xl font-bold">Categorías</h1>
+      <h1 className="title">Categorías</h1>
       <Card title="Nueva categoría">
         <form
-          className="grid gap-3 sm:grid-cols-3"
+          className="cr-stack"
           onSubmit={handleSubmit((d) =>
             create.mutate(d, { onSuccess: () => reset({ kind: d.kind, name: '' }) }),
           )}
         >
-          <Input label="Nombre" error={formState.errors.name?.message} {...register('name')} />
-          <Select label="Tipo" {...register('kind')}>
-            <option value="expense">Gasto</option>
-            <option value="income">Ingreso</option>
-          </Select>
-          <div className="flex items-end">
-            <Button type="submit" disabled={create.isPending}>
+          <div className="cr-form-grid">
+            <Input label="Nombre" error={formState.errors.name?.message} {...register('name')} />
+            <Select label="Tipo" {...register('kind')}>
+              <option value="expense">Gasto</option>
+              <option value="income">Ingreso</option>
+            </Select>
+          </div>
+          <div>
+            <Button type="submit" variant="primary" disabled={create.isPending}>
               Añadir
             </Button>
           </div>
+          <ErrorText error={create.error} />
         </form>
-        <ErrorText error={create.error} />
       </Card>
       {isLoading ? (
         <Empty>Cargando…</Empty>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="cr-grid-cols">
           {(['expense', 'income'] as const).map((kind) => {
             const items = categories?.filter((c) => c.kind === kind) ?? []
             return (
@@ -54,11 +56,15 @@ export function CategoriesPage() {
                 {!items.length ? (
                   <Empty>Sin categorías.</Empty>
                 ) : (
-                  <ul className="divide-y divide-slate-100">
+                  <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                     {items.map((c) => (
-                      <li key={c.id} className="flex items-center justify-between py-2">
-                        <span>{c.name}</span>
-                        <Button variant="danger" onClick={() => remove.mutate(c.id)}>
+                      <li
+                        key={c.id}
+                        className="cr-row-split"
+                        style={{ padding: 'var(--space-2) 0' }}
+                      >
+                        <span className="body">{c.name}</span>
+                        <Button variant="danger" size="sm" onClick={() => remove.mutate(c.id)}>
                           Eliminar
                         </Button>
                       </li>

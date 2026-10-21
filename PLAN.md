@@ -87,7 +87,7 @@ app-finanzas/
 **Frontend**
 - React 18+ con TypeScript estricto, Vite
 - React Router, TanStack Query (estado de servidor), React Hook Form + Zod
-- UI: Tailwind CSS + componentes accesibles (shadcn/ui o similar)
+- UI: sistema de diseño **Cristal** (vidrio esmerilado, claro/oscuro) con tokens en `design/tokens.json`, compartidos con la futura app Android (Capacitor o Compose); CSS propio sin Tailwind
 - Gráficos: Recharts (o similar)
 - Tooling: oxlint, Prettier, Vitest + Testing Library (TypeScript 5.9: `openapi-typescript` aún no soporta TS 6)
 - Tipos de API generados con `openapi-typescript`

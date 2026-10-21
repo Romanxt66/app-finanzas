@@ -38,6 +38,12 @@ npm run dev
 
 Los tipos de la API se generan desde el backend: `npm run gen:api` (ejecutar tras cambiar schemas o endpoints y commitear `src/api/openapi.json` y `schema.d.ts`).
 
+## Diseño (Cristal)
+
+El diseño vive en `design/tokens.json` (fuente única, compartida con la futura app Android) y los componentes en
+`frontend/src/design/`. Tras editar los tokens: `cd frontend && npm run gen:tokens`. Detalles y camino a Android
+en [`design/README.md`](design/README.md).
+
 ## Tests
 
 | Capa | Comando | Qué cubre |
