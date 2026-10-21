@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { AuthContext } from './authContext'
 import { api, setUnauthorizedHandler, tokens, type Schemas } from '../api/client'
 
 type User = Schemas['UserOut']
 
-interface AuthValue {
+export interface AuthValue {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
@@ -12,7 +13,6 @@ interface AuthValue {
   logout: () => void
 }
 
-const AuthContext = createContext<AuthValue | null>(null)
 const ME_KEY = ['me']
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -60,10 +60,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
   }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(): AuthValue {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider')
-  return ctx
 }

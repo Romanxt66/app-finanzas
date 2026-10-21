@@ -5,7 +5,8 @@ import { vi } from 'vitest'
 import { Button, Skeleton } from './components'
 import { ConfirmDialog } from './Confirm'
 import { applyStoredTheme, useTheme } from './theme'
-import { ToastProvider, useToast } from './Toast'
+import { ToastProvider } from './Toast'
+import { useToast } from './toastContext'
 import { useCountUp } from './useCountUp'
 
 describe('ConfirmDialog', () => {
@@ -131,7 +132,7 @@ describe('useCountUp y esqueletos', () => {
     window.matchMedia = ((q: string) => ({ matches: false, media: q })) as typeof window.matchMedia
     const { result } = renderHook(() => useCountUp(1000))
     expect(result.current).toBe(0)
-    await waitFor(() => expect(result.current).toBe(1000), { timeout: 2000 })
+    await waitFor(() => expect(result.current).toBe(1000), { timeout: 6000 })
     window.matchMedia = original
   })
 

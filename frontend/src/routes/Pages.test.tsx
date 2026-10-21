@@ -33,9 +33,13 @@ describe('Layout', () => {
     renderApp(app)
     expect(await screen.findByText('Contenido')).toBeInTheDocument()
     expect(screen.getByText('Ana Test')).toBeInTheDocument()
-    // barra superior (escritorio) y de pestañas (móvil): ambas existen en el DOM, el CSS muestra una
-    for (const name of ['Inicio', 'Movimientos', 'Cuentas', 'Presupuestos', 'Categorías'])
-      expect(screen.getAllByRole('link', { name })).toHaveLength(2)
+    // barra superior (escritorio) y pestañas (móvil) existen a la vez en el DOM; el CSS muestra una
+    const count = (name: string) => screen.getAllByRole('link', { name }).length
+    for (const shared of ['Inicio', 'Movimientos', 'Cuentas', 'Metas'])
+      expect(count(shared)).toBe(2)
+    for (const desktopOnly of ['Presupuestos', 'Categorías']) expect(count(desktopOnly)).toBe(1)
+    expect(count('Más')).toBe(1) // solo móvil
+    expect(screen.getByRole('link', { name: 'Perfil' })).toHaveAttribute('href', '/profile')
     await userEvent.click(screen.getByRole('button', { name: 'Salir' }))
     expect(await screen.findByText('Pantalla login')).toBeInTheDocument()
     expect(localStorage.getItem('access_token')).toBeNull()

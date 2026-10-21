@@ -7,7 +7,10 @@ import { LoginPage, RegisterPage } from './routes/AuthPages'
 import { BudgetsPage } from './routes/Budgets'
 import { CategoriesPage } from './routes/Categories'
 import { DashboardPage } from './routes/Dashboard'
+import { GoalsPage } from './routes/Goals'
 import { Layout } from './routes/Layout'
+import { MorePage } from './routes/More'
+import { ProfilePage } from './routes/Profile'
 import { TransactionsPage } from './routes/Transactions'
 
 const queryClient = new QueryClient({
@@ -29,6 +32,9 @@ export default function App() {
                 <Route path="accounts" element={<AccountsPage />} />
                 <Route path="categories" element={<CategoriesPage />} />
                 <Route path="budgets" element={<BudgetsPage />} />
+                <Route path="goals" element={<GoalsPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="more" element={<MorePage />} />
               </Route>
             </Routes>
           </BrowserRouter>

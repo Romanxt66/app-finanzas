@@ -69,6 +69,24 @@ export interface paths {
     delete?: never
     options?: never
     head?: never
+    /** Update Profile */
+    patch: operations['update_profile_api_v1_auth_me_patch']
+    trace?: never
+  }
+  '/api/v1/auth/change-password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Change Password */
+    post: operations['change_password_api_v1_auth_change_password_post']
+    delete?: never
+    options?: never
+    head?: never
     patch?: never
     trace?: never
   }
@@ -101,7 +119,8 @@ export interface paths {
     get: operations['get_account_api_v1_accounts__account_id__get']
     put?: never
     post?: never
-    delete?: never
+    /** Delete Account */
+    delete: operations['delete_account_api_v1_accounts__account_id__delete']
     options?: never
     head?: never
     /** Update Account */
@@ -162,6 +181,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/transactions/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Export Transactions
+     * @description CSV (UTF-8 con BOM, para Excel) con los mismos filtros que el listado.
+     */
+    get: operations['export_transactions_api_v1_transactions_export_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/transactions/{transaction_id}': {
     parameters: {
       query?: never
@@ -215,6 +254,77 @@ export interface paths {
     head?: never
     /** Update Budget */
     patch: operations['update_budget_api_v1_budgets__budget_id__patch']
+    trace?: never
+  }
+  '/api/v1/goals': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Goals */
+    get: operations['list_goals_api_v1_goals_get']
+    put?: never
+    /** Create Goal */
+    post: operations['create_goal_api_v1_goals_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/goals/{goal_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete Goal */
+    delete: operations['delete_goal_api_v1_goals__goal_id__delete']
+    options?: never
+    head?: never
+    /** Update Goal */
+    patch: operations['update_goal_api_v1_goals__goal_id__patch']
+    trace?: never
+  }
+  '/api/v1/goals/{goal_id}/contributions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Contributions */
+    get: operations['list_contributions_api_v1_goals__goal_id__contributions_get']
+    put?: never
+    /** Add Contribution */
+    post: operations['add_contribution_api_v1_goals__goal_id__contributions_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/goals/{goal_id}/contributions/{contribution_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete Contribution */
+    delete: operations['delete_contribution_api_v1_goals__goal_id__contributions__contribution_id__delete']
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/v1/reports/summary': {
@@ -390,6 +500,97 @@ export interface components {
       /** Name */
       name: string
     }
+    /** ChangePasswordIn */
+    ChangePasswordIn: {
+      /** Current Password */
+      current_password: string
+      /** New Password */
+      new_password: string
+    }
+    /** ContributionCreate */
+    ContributionCreate: {
+      /** Amount */
+      amount: number | string
+      /**
+       * Occurred On
+       * Format: date
+       */
+      occurred_on: string
+      /**
+       * Note
+       * @default
+       */
+      note: string
+    }
+    /** ContributionOut */
+    ContributionOut: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * Goal Id
+       * Format: uuid
+       */
+      goal_id: string
+      /** Amount */
+      amount: string
+      /**
+       * Occurred On
+       * Format: date
+       */
+      occurred_on: string
+      /** Note */
+      note: string
+    }
+    /** GoalCreate */
+    GoalCreate: {
+      /** Name */
+      name: string
+      /** Target Amount */
+      target_amount: number | string
+      /** Currency */
+      currency: string
+      /** Deadline */
+      deadline?: string | null
+    }
+    /** GoalOut */
+    GoalOut: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Name */
+      name: string
+      /** Target Amount */
+      target_amount: string
+      /** Currency */
+      currency: string
+      /** Deadline */
+      deadline: string | null
+      /** Saved */
+      saved: string
+      /** Remaining */
+      remaining: string
+      /** Achieved */
+      achieved: boolean
+    }
+    /** GoalUpdate */
+    GoalUpdate: {
+      /** Name */
+      name?: string | null
+      /** Target Amount */
+      target_amount?: number | string | null
+      /** Deadline */
+      deadline?: string | null
+    }
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -416,6 +617,11 @@ export interface components {
       income: string
       /** Expense */
       expense: string
+    }
+    /** ProfileUpdate */
+    ProfileUpdate: {
+      /** Full Name */
+      full_name: string
     }
     /** RefreshIn */
     RefreshIn: {
@@ -693,6 +899,70 @@ export interface operations {
       }
     }
   }
+  update_profile_api_v1_auth_me_patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfileUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  change_password_api_v1_auth_change_password_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangePasswordIn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   list_accounts_api_v1_accounts_get: {
     parameters: {
       query?: {
@@ -776,6 +1046,35 @@ export interface operations {
         content: {
           'application/json': components['schemas']['AccountOut']
         }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_account_api_v1_accounts__account_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        account_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
       /** @description Validation Error */
       422: {
@@ -1011,6 +1310,42 @@ export interface operations {
       }
     }
   }
+  export_transactions_api_v1_transactions_export_get: {
+    parameters: {
+      query?: {
+        account_id?: string | null
+        category_id?: string | null
+        type?: components['schemas']['TransactionType'] | null
+        date_from?: string | null
+        date_to?: string | null
+        search?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   get_transaction_api_v1_transactions__transaction_id__get: {
     parameters: {
       query?: never
@@ -1222,6 +1557,219 @@ export interface operations {
         content: {
           'application/json': components['schemas']['BudgetOut']
         }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_goals_api_v1_goals_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GoalOut'][]
+        }
+      }
+    }
+  }
+  create_goal_api_v1_goals_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GoalCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GoalOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_goal_api_v1_goals__goal_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        goal_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  update_goal_api_v1_goals__goal_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        goal_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GoalUpdate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GoalOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_contributions_api_v1_goals__goal_id__contributions_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        goal_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ContributionOut'][]
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  add_contribution_api_v1_goals__goal_id__contributions_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        goal_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ContributionCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ContributionOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_contribution_api_v1_goals__goal_id__contributions__contribution_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        goal_id: string
+        contribution_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
       /** @description Validation Error */
       422: {

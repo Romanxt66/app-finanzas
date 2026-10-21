@@ -12,28 +12,26 @@ function prefersReducedMotion(): boolean {
 
 /** Anima un número desde su valor anterior hasta `target` (ease-out). Respeta "reducir movimiento". */
 export function useCountUp(target: number): number {
-  const [value, setValue] = useState(() => (prefersReducedMotion() ? target : 0))
-  const from = useRef(value)
+  const reduced = prefersReducedMotion()
+  const [value, setValue] = useState(0)
+  const from = useRef(0)
 
   useEffect(() => {
-    if (prefersReducedMotion()) {
-      setValue(target)
-      return
-    }
+    if (reduced) return
     const start = performance.now()
     const origin = from.current
     let frame = 0
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / DURATION_MS)
       const eased = 1 - Math.pow(1 - t, 3)
-      const current = origin + (target - origin) * eased
+      const current = t === 1 ? target : origin + (target - origin) * eased
       from.current = current
-      setValue(t === 1 ? target : current)
+      setValue(current)
       if (t < 1) frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [target])
+  }, [target, reduced])
 
-  return value
+  return reduced ? target : value
 }

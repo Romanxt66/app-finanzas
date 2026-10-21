@@ -130,3 +130,28 @@ export async function api<T>(path: string, opts: Options = {}): Promise<T> {
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T)
 }
+
+/** Descarga un archivo del backend (con el token) y lo guarda con el nombre indicado. */
+export async function downloadFile(path: string, query: Query, filename: string): Promise<void> {
+  const params = new URLSearchParams()
+  for (const [k, v] of Object.entries(query)) {
+    if (v !== undefined && v !== null && v !== '') params.set(k, String(v))
+  }
+  const url = `${BASE}/api/v1${path}${params.size ? `?${params}` : ''}`
+  const send = () =>
+    sendSafe(() => fetch(url, { headers: { Authorization: `Bearer ${tokens.access}` } }))
+  let res = await send()
+  if (res.status === 401 && tokens.refresh) {
+    refreshing ??= refreshTokens().finally(() => (refreshing = null))
+    if (await refreshing) res = await send()
+  }
+  if (!res.ok) throw new ApiError(res.status, 'download', fallbackMessage(res.status))
+  const blob = await res.blob()
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+}

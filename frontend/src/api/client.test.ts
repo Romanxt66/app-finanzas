@@ -12,9 +12,9 @@ describe('api client', () => {
     tokens.set({ access_token: 'a', refresh_token: 'r' })
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json(200, []))
     await api('/accounts', { query: { include_archived: true, x: '' } })
-    const [url, init] = fetchMock.mock.calls[0]
+    const [url, init] = fetchMock.mock.calls[0]!
     expect(url).toBe('/api/v1/accounts?include_archived=true')
-    expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer a')
+    expect((init!.headers as Record<string, string>).Authorization).toBe('Bearer a')
   })
 
   it('renueva el token ante un 401 y reintenta', async () => {

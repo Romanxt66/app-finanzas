@@ -1,13 +1,23 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Link, Navigate, Outlet } from 'react-router-dom'
 import { Backdrop, Button, Glass, Icon, TabBar, TopNav, useTheme, type NavItem } from '../design'
-import { useAuth } from '../features/auth'
+import { useAuth } from '../features/authContext'
 
-const NAV: NavItem[] = [
+const DESKTOP_NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/transactions', label: 'Movimientos', icon: 'list' },
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
   { to: '/budgets', label: 'Presupuestos', icon: 'target' },
+  { to: '/goals', label: 'Metas', icon: 'chart' },
   { to: '/categories', label: 'Categorías', icon: 'tag' },
+]
+
+// En móvil caben cinco pestañas: lo demás vive en "Más"
+const MOBILE_NAV: NavItem[] = [
+  { to: '/', label: 'Inicio', icon: 'home', end: true },
+  { to: '/transactions', label: 'Movimientos', icon: 'list' },
+  { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
+  { to: '/goals', label: 'Metas', icon: 'chart' },
+  { to: '/more', label: 'Más', icon: 'plus' },
 ]
 
 export function Layout() {
@@ -30,9 +40,11 @@ export function Layout() {
             <Icon name="wallet" />
             Finanzas
           </span>
-          <TopNav items={NAV} />
+          <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
-          <span className="label cr-muted cr-user">{user.full_name}</span>
+          <Link to="/profile" className="label cr-muted cr-user" aria-label="Perfil">
+            {user.full_name}
+          </Link>
           <Button
             variant="ghost"
             size="sm"
@@ -48,7 +60,7 @@ export function Layout() {
           <Outlet />
         </main>
         <div className="cr-bottom">
-          <TabBar items={NAV} />
+          <TabBar items={MOBILE_NAV} />
         </div>
       </div>
     </Backdrop>

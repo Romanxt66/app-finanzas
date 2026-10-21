@@ -442,3 +442,46 @@ export function Skeleton({ lines = 3, height = 56 }: { lines?: number; height?: 
 export function AnimatedMoney({ value, currency }: { value: number; currency?: string }) {
   return <>{formatMoney(useCountUp(value), currency)}</>
 }
+
+/** Tarjeta de progreso positivo (metas de ahorro): llena hacia el objetivo; al lograrlo se destaca. */
+export function ProgressCard(props: {
+  label: string
+  saved: number
+  target: number
+  currency?: string
+  achieved?: boolean
+  note?: string
+  actions?: ReactNode
+}) {
+  const ratio = props.target ? props.saved / props.target : 0
+  return (
+    <Glass size="md" className={cx('cr-budget', props.achieved && 'cr-goal-done')}>
+      <div className="cr-budget-head">
+        <span className="body">{props.label}</span>
+        {props.achieved ? (
+          <Badge tone="positive" icon="check">
+            Lograda
+          </Badge>
+        ) : (
+          <span className="label cr-muted">{Math.round(Math.min(ratio, 1) * 100)} %</span>
+        )}
+      </div>
+      <div className="amount">
+        <AnimatedMoney value={props.saved} currency={props.currency} />
+        <span className="label cr-muted"> de {formatMoney(props.target, props.currency)}</span>
+      </div>
+      <div
+        className="cr-track"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(Math.min(ratio, 1) * 100)}
+        aria-label={props.label}
+      >
+        <div className="cr-fill" style={{ width: `${Math.min(ratio, 1) * 100}%` }} />
+      </div>
+      {props.note && <span className="caption cr-muted">{props.note}</span>}
+      {props.actions && <div className="cr-goal-actions">{props.actions}</div>}
+    </Glass>
+  )
+}

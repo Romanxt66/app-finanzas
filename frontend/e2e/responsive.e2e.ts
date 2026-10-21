@@ -52,6 +52,7 @@ const viewports = [
 for (const vp of viewports) {
   for (const scheme of ['dark', 'light'] as const) {
     test(`${vp.name} (${scheme}): diseño Cristal sin desbordes`, async ({ browser }) => {
+      test.setTimeout(90_000) // recorre todas las pantallas (y captura imágenes con SHOTS=1)
       const context = await browser.newContext({ viewport: vp, colorScheme: scheme })
       const page = await context.newPage()
       await seed(page)
@@ -77,7 +78,15 @@ for (const vp of viewports) {
       expect(overflow).toBeLessThanOrEqual(0)
 
       // ninguna pantalla desborda horizontalmente
-      for (const route of ['/transactions', '/accounts', '/budgets', '/categories']) {
+      for (const route of [
+        '/transactions',
+        '/accounts',
+        '/budgets',
+        '/categories',
+        '/goals',
+        '/profile',
+        '/more',
+      ]) {
         await page.goto(route)
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
         const extra = await page.evaluate(
@@ -119,17 +128,13 @@ for (const vp of viewports) {
           path: `test-results/shots/${vp.name}-${scheme}.png`,
           fullPage: true,
         })
-        for (const [link, file] of [
-          ['Movimientos', 'movimientos'],
-          ['Presupuestos', 'presupuestos'],
-        ] as const) {
-          await page.getByRole('link', { name: link }).filter({ visible: true }).first().click()
+        for (const route of ['transactions', 'budgets', 'goals', 'profile', 'more']) {
+          await page.goto(`/${route}`)
           await page.waitForLoadState('networkidle')
           await page.screenshot({
-            path: `test-results/shots/${vp.name}-${scheme}-${file}.png`,
+            path: `test-results/shots/${vp.name}-${scheme}-${route}.png`,
             fullPage: true,
           })
-          await page.getByRole('link', { name: 'Inicio' }).filter({ visible: true }).first().click()
         }
       }
       await context.close()
