@@ -1,116 +1,214 @@
-import { useState } from 'react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { useEffect, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useAccounts, useCategories, useSummary, useTransactions } from '../api/hooks'
-import { Card, Empty } from '../components/ui'
-import { formatDate, monthStart } from '../lib/format'
-import { money, useDisplayCurrency } from '../lib/useCurrency'
+import {
+  BalanceCard,
+  Card,
+  Empty,
+  Input,
+  StatTile,
+  TransactionList,
+  TransactionRow,
+} from '../design'
+import { formatDate, formatMoney, monthLabel, monthStart } from '../lib/format'
+import { useDisplayCurrency } from '../lib/useCurrency'
 
-function Stat({ label, value, tone = '' }: { label: string; value: string; tone?: string }) {
-  return (
-    <Card>
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className={`mt-1 text-2xl font-bold tabular-nums ${tone}`}>{value}</p>
-    </Card>
-  )
+const compact = (n: number) => new Intl.NumberFormat('es-CO', { notation: 'compact' }).format(n)
+
+const HIDE_KEY = 'balance_hidden'
+
+function useHiddenBalance() {
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(HIDE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try {
+      localStorage.setItem(HIDE_KEY, hidden ? '1' : '0')
+    } catch {
+      /* preferencia opcional */
+    }
+  }, [hidden])
+  return [hidden, () => setHidden((h) => !h)] as const
+}
+
+/** Variación % frente al mes anterior; null si no hay base de comparación. */
+function change(current: number, previous?: number): number | null {
+  return previous ? ((current - previous) / previous) * 100 : null
 }
 
 export function DashboardPage() {
   const [month, setMonth] = useState(monthStart())
+  const [hidden, toggleHidden] = useHiddenBalance()
   const currency = useDisplayCurrency()
   const { data: accounts = [] } = useAccounts()
+  const { data: allAccounts = [] } = useAccounts(true)
   const { data: categories = [] } = useCategories()
   const { data: summary } = useSummary(month)
   const { data: recent } = useTransactions({ limit: 5, offset: 0 })
   const names = new Map(categories.map((c) => [c.id, c.name]))
+  const currencyOf = new Map(allAccounts.map((a) => [a.id, a.currency]))
   const total = accounts.reduce((acc, a) => acc + Number(a.balance), 0)
 
-  const trend = summary?.trend.map((m) => ({
-    mes: new Intl.DateTimeFormat(undefined, { month: 'short' }).format(
-      new Date(`${m.month}T00:00:00`),
-    ),
+  const trend = summary?.trend ?? []
+  const prev = trend.length > 1 ? trend[trend.length - 2] : undefined
+  const income = Number(summary?.income ?? 0)
+  const expense = Number(summary?.expense ?? 0)
+  const chartData = trend.map((m) => ({
+    mes: monthLabel(m.month),
     Ingresos: Number(m.income),
     Gastos: Number(m.expense),
   }))
+  const expenseTotal = (summary?.expense_by_category ?? []).reduce((a, c) => a + Number(c.total), 0)
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Resumen</h1>
-        <input
-          type="month"
-          aria-label="Mes"
-          className="rounded-md border border-slate-300 px-3 py-2 text-sm"
-          value={month.slice(0, 7)}
-          onChange={(e) => e.target.value && setMonth(`${e.target.value}-01`)}
-        />
+      <div className="cr-page-head">
+        <h1 className="title">Resumen</h1>
+        <div className="cr-month">
+          <Input
+            label="Mes"
+            type="month"
+            value={month.slice(0, 7)}
+            onChange={(e) => e.target.value && setMonth(`${e.target.value}-01`)}
+          />
+        </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Balance total" value={money(total, currency)} />
-        <Stat
+
+      <BalanceCard
+        label="Saldo total"
+        value={total}
+        currency={currency}
+        note={
+          accounts.length
+            ? `${accounts.length} cuenta${accounts.length === 1 ? '' : 's'} activa${accounts.length === 1 ? '' : 's'}`
+            : undefined
+        }
+        trend={
+          trend.length > 1 ? trend.map((m) => Number(m.income) - Number(m.expense)) : undefined
+        }
+        trendLabel="Neto de los últimos meses"
+        hidden={hidden}
+        onToggleHidden={toggleHidden}
+      />
+
+      <div className="cr-grid-kpi">
+        <StatTile
           label="Ingresos"
-          value={money(summary?.income ?? 0, currency)}
-          tone="text-emerald-700"
+          value={income}
+          currency={currency}
+          delta={change(income, prev && Number(prev.income))}
+          icon="salary"
+          tone="mint"
         />
-        <Stat label="Gastos" value={money(summary?.expense ?? 0, currency)} tone="text-red-600" />
-        <Stat label="Neto del mes" value={money(summary?.net ?? 0, currency)} />
+        <StatTile
+          label="Gastos"
+          value={expense}
+          currency={currency}
+          delta={change(expense, prev && Number(prev.expense))}
+          invertDelta
+          icon="wallet"
+          tone="amber"
+        />
+        <StatTile label="Neto del mes" value={income - expense} currency={currency} icon="chart" />
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+
+      <div className="cr-grid-cols">
         <Card title="Tendencia (6 meses)">
-          <div className="h-64">
+          <div className="cr-chart">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={trend}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="mes" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Ingresos" fill="#059669" />
-                <Bar dataKey="Gastos" fill="#dc2626" />
+              <BarChart data={chartData}>
+                <CartesianGrid vertical={false} stroke="var(--hairline)" />
+                <XAxis
+                  dataKey="mes"
+                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={44}
+                  tickFormatter={(v) => compact(Number(v))}
+                />
+                <Tooltip
+                  cursor={{ fill: 'var(--glass)' }}
+                  contentStyle={{
+                    background: 'var(--surface-solid)',
+                    border: '1px solid var(--glass-border)',
+                    borderRadius: 12,
+                    color: 'var(--ink)',
+                  }}
+                  formatter={(v) => formatMoney(Number(v), currency)}
+                />
+                <Bar dataKey="Ingresos" className="cr-bar-in" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Gastos" className="cr-bar-out" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
+
         <Card title="Gasto por categoría">
           {!summary?.expense_by_category.length ? (
             <Empty>Sin gastos este mes.</Empty>
           ) : (
-            <ul className="space-y-2">
-              {summary.expense_by_category.map((c) => (
-                <li key={c.category_id ?? 'none'} className="flex justify-between text-sm">
-                  <span>{c.category_id ? names.get(c.category_id) : 'Sin categoría'}</span>
-                  <span className="tabular-nums">{money(c.total, currency)}</span>
-                </li>
-              ))}
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {summary.expense_by_category.map((c) => {
+                const pct = expenseTotal ? (Number(c.total) / expenseTotal) * 100 : 0
+                return (
+                  <li key={c.category_id ?? 'none'} className="cr-cat-row">
+                    <div className="cr-row-split" style={{ padding: 0 }}>
+                      <span className="body">
+                        {c.category_id ? names.get(c.category_id) : 'Sin categoría'}
+                      </span>
+                      <span className="amount-sm">{formatMoney(c.total, currency)}</span>
+                    </div>
+                    <div className="cr-track" aria-hidden="true">
+                      <div className="cr-fill" style={{ width: `${pct}%` }} />
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </Card>
       </div>
-      <Card title="Últimas transacciones">
+
+      <section aria-labelledby="recientes">
+        <div className="cr-card-title">
+          <h2 id="recientes" className="heading">
+            Movimientos recientes
+          </h2>
+        </div>
         {!recent?.items.length ? (
-          <Empty>Aún no hay movimientos.</Empty>
+          <Card>
+            <Empty>Aún no hay movimientos.</Empty>
+          </Card>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <TransactionList label="Movimientos recientes">
             {recent.items.map((t) => (
-              <li key={t.id} className="flex justify-between py-2 text-sm">
-                <span>
-                  {t.description || (t.category_id && names.get(t.category_id)) || t.type} ·{' '}
-                  <span className="text-slate-500">{formatDate(t.occurred_on)}</span>
-                </span>
-                <span className="tabular-nums">{money(t.amount, currency)}</span>
-              </li>
+              <TransactionRow
+                key={t.id}
+                kind={t.type}
+                title={
+                  t.description ||
+                  (t.category_id && names.get(t.category_id)) ||
+                  ({ income: 'Ingreso', expense: 'Gasto', transfer: 'Transferencia' } as const)[
+                    t.type
+                  ]
+                }
+                detail={formatDate(t.occurred_on)}
+                amount={Number(t.amount)}
+                currency={currencyOf.get(t.account_id)}
+              />
             ))}
-          </ul>
+          </TransactionList>
         )}
-      </Card>
+      </section>
     </>
   )
 }

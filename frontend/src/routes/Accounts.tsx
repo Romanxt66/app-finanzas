@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useAccounts, useCreateAccount, useUpdateAccount } from '../api/hooks'
-import { Button, Card, Empty, ErrorText, Input, Select } from '../components/ui'
+import { Button, Card, Empty, ErrorText, Glass, Icon, Input, Select } from '../design'
 import { formatMoney } from '../lib/format'
 
 const schema = z.object({
@@ -25,72 +25,84 @@ export function AccountsPage() {
 
   return (
     <>
-      <h1 className="text-xl font-bold">Cuentas</h1>
+      <h1 className="title">Cuentas</h1>
       <Card title="Nueva cuenta">
         <form
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          className="cr-stack"
           onSubmit={handleSubmit((d) => create.mutate(d, { onSuccess: () => reset() }))}
         >
-          <Input label="Nombre" error={formState.errors.name?.message} {...register('name')} />
-          <Select label="Tipo" {...register('type')}>
-            {Object.entries(TYPE_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </Select>
-          <Input
-            label="Moneda"
-            maxLength={3}
-            placeholder="ISO 4217"
-            error={formState.errors.currency?.message}
-            {...register('currency')}
-          />
-          <Input
-            label="Saldo inicial"
-            inputMode="decimal"
-            error={formState.errors.initial_balance?.message}
-            {...register('initial_balance')}
-          />
-          <div className="sm:col-span-2 lg:col-span-4">
-            <Button type="submit" disabled={create.isPending}>
+          <div className="cr-form-grid">
+            <Input label="Nombre" error={formState.errors.name?.message} {...register('name')} />
+            <Select label="Tipo" {...register('type')}>
+              {Object.entries(TYPE_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </Select>
+            <Input
+              label="Moneda"
+              maxLength={3}
+              placeholder="ISO 4217"
+              error={formState.errors.currency?.message}
+              {...register('currency')}
+            />
+            <Input
+              label="Saldo inicial"
+              inputMode="decimal"
+              error={formState.errors.initial_balance?.message}
+              {...register('initial_balance')}
+            />
+          </div>
+          <div>
+            <Button type="submit" variant="primary" disabled={create.isPending}>
               Crear cuenta
             </Button>
-            <ErrorText error={create.error} />
           </div>
+          <ErrorText error={create.error} />
         </form>
       </Card>
-      <Card>
-        {isLoading ? (
-          <Empty>Cargando…</Empty>
-        ) : !accounts?.length ? (
+      {isLoading ? (
+        <Empty>Cargando…</Empty>
+      ) : !accounts?.length ? (
+        <Card>
           <Empty>Aún no tienes cuentas.</Empty>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {accounts.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 py-3">
-                <div className={a.archived ? 'opacity-50' : ''}>
-                  <p className="font-medium">{a.name}</p>
-                  <p className="text-xs text-slate-500">
+        </Card>
+      ) : (
+        <Glass
+          size="md"
+          as="ul"
+          style={{ listStyle: 'none', margin: 0, padding: 'var(--space-1) 0' }}
+        >
+          {accounts.map((a) => (
+            <li key={a.id} className={`cr-row-split${a.archived ? ' is-archived' : ''}`}>
+              <div className="cr-row" style={{ flexWrap: 'nowrap' }}>
+                <span className="cr-chip cr-chip-mint">
+                  <Icon name="wallet" />
+                </span>
+                <div>
+                  <p className="body" style={{ margin: 0 }}>
+                    {a.name}
+                  </p>
+                  <p className="caption cr-muted" style={{ margin: 0 }}>
                     {TYPE_LABELS[a.type]} · {a.currency}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold tabular-nums">
-                    {formatMoney(a.balance, a.currency)}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    onClick={() => update.mutate({ id: a.id, archived: !a.archived })}
-                  >
-                    {a.archived ? 'Restaurar' : 'Archivar'}
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+              </div>
+              <div className="cr-row" style={{ flexWrap: 'nowrap' }}>
+                <span className="amount-sm">{formatMoney(a.balance, a.currency)}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => update.mutate({ id: a.id, archived: !a.archived })}
+                >
+                  {a.archived ? 'Restaurar' : 'Archivar'}
+                </Button>
+              </div>
+            </li>
+          ))}
+        </Glass>
+      )}
     </>
   )
 }

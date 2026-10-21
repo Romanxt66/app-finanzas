@@ -14,9 +14,9 @@ async function signUp(page: Page) {
 }
 
 /** Navega por el menú y espera al título de la página (evita escribir en la vista anterior). */
-async function goTo(page: Page, name: string) {
+async function goTo(page: Page, name: string, heading = name) {
   await page.getByRole('link', { name }).click()
-  await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible()
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -66,7 +66,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   await expect(page.getByRole('listitem').filter({ hasText: 'Nómina' })).toBeVisible()
 
   // Transacciones: gasto, ingreso y transferencia
-  await goTo(page, 'Transacciones')
+  await goTo(page, 'Movimientos')
   const addTx = async (fill: (form: ReturnType<Page['locator']>) => Promise<void>) => {
     await page.getByRole('button', { name: 'Nueva', exact: true }).click()
     const form = page.locator('section', { hasText: 'Nueva transacción' })
@@ -114,8 +114,13 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100')
 
   // Resumen
-  await goTo(page, 'Resumen')
-  await expect(page.getByText('Balance total')).toBeVisible()
+  await goTo(page, 'Inicio', 'Resumen')
+  await expect(page.getByText('Saldo total')).toBeVisible()
+  if (process.env.SHOTS)
+    await page.screenshot({
+      path: `test-results/shots/dashboard-${page.viewportSize()?.width}.png`,
+      fullPage: true,
+    })
   await expect(page.getByText('Supermercado')).toBeVisible()
   await expect(page.getByText(/Compra semanal/)).toBeVisible()
 

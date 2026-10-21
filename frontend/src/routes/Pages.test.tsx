@@ -33,8 +33,9 @@ describe('Layout', () => {
     renderApp(app)
     expect(await screen.findByText('Contenido')).toBeInTheDocument()
     expect(screen.getByText('Ana Test')).toBeInTheDocument()
-    for (const name of ['Resumen', 'Transacciones', 'Cuentas', 'Categorías', 'Presupuestos'])
-      expect(screen.getByRole('link', { name })).toBeInTheDocument()
+    // barra superior (escritorio) y de pestañas (móvil): ambas existen en el DOM, el CSS muestra una
+    for (const name of ['Inicio', 'Movimientos', 'Cuentas', 'Presupuestos', 'Categorías'])
+      expect(screen.getAllByRole('link', { name })).toHaveLength(2)
     await userEvent.click(screen.getByRole('button', { name: 'Salir' }))
     expect(await screen.findByText('Pantalla login')).toBeInTheDocument()
     expect(localStorage.getItem('access_token')).toBeNull()
@@ -294,7 +295,7 @@ describe('BudgetsPage', () => {
     expect(await screen.findByRole('progressbar')).toBeInTheDocument()
     expect(within(screen.getByRole('listitem')).getByText('Comida')).toBeInTheDocument()
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '38')
-    expect(screen.getByText(/Restante/)).toBeInTheDocument()
+    expect(screen.getByText(/Quedan/)).toBeInTheDocument()
   })
 
   it('marca presupuestos excedidos', async () => {
@@ -359,7 +360,7 @@ describe('DashboardPage', () => {
       'GET /transactions': page([transaction()]),
     })
     renderApp(<DashboardPage />)
-    expect(await screen.findByText('Balance total')).toBeInTheDocument()
+    expect(await screen.findByText('Saldo total')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText(/200/)).toBeInTheDocument())
     expect(await screen.findByText('Sin categoría')).toBeInTheDocument()
     expect(screen.getByText(/Almuerzo/)).toBeInTheDocument()
