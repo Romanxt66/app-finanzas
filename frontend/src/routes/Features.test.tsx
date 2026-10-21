@@ -230,7 +230,7 @@ describe('MorePage', () => {
   it('enlaza a lo que no cabe en la barra móvil', () => {
     renderApp(<MorePage />)
     const hrefs = screen.getAllByRole('link').map((l) => l.getAttribute('href'))
-    expect(hrefs).toEqual(['/budgets', '/recurring', '/categories', '/profile'])
+    expect(hrefs).toEqual(['/budgets', '/recurring', '/import', '/categories', '/profile'])
   })
 })
 

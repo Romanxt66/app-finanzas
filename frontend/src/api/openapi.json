@@ -981,6 +981,51 @@
         }
       }
     },
+    "/api/v1/transactions/bulk": {
+      "post": {
+        "tags": ["transactions"],
+        "summary": "Bulk Import",
+        "description": "Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes.",
+        "operationId": "bulk_import_api_v1_transactions_bulk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/transactions/{transaction_id}": {
       "get": {
         "tags": ["transactions"],
@@ -2154,6 +2199,88 @@
         "type": "object",
         "required": ["amount"],
         "title": "BudgetUpdate"
+      },
+      "BulkCreate": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BulkItem"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Items"
+          },
+          "skip_duplicates": {
+            "type": "boolean",
+            "title": "Skip Duplicates",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": ["account_id", "items"],
+        "title": "BulkCreate"
+      },
+      "BulkItem": {
+        "properties": {
+          "occurred_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Occurred On"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Description",
+            "default": ""
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          }
+        },
+        "type": "object",
+        "required": ["occurred_on", "amount"],
+        "title": "BulkItem"
+      },
+      "BulkResult": {
+        "properties": {
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          }
+        },
+        "type": "object",
+        "required": ["created", "skipped"],
+        "title": "BulkResult"
       },
       "CategoryCreate": {
         "properties": {

@@ -1,12 +1,14 @@
 import uuid
+from collections import Counter
 from datetime import date
+from decimal import Decimal
 
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError, NotFoundError
 from app.models import CategoryKind, Transaction, TransactionType
-from app.schemas.transaction import TransactionCreate
+from app.schemas.transaction import BulkCreate, BulkItem, BulkResult, TransactionCreate
 from app.services import accounts, categories
 
 
@@ -120,3 +122,66 @@ async def delete_transaction(
     tx = await get_owned(session, user_id, transaction_id)
     await session.delete(tx)
     await session.commit()
+
+
+async def bulk_create(session: AsyncSession, user_id: uuid.UUID, data: BulkCreate) -> BulkResult:
+    """Importa movimientos de un extracto: positivo = ingreso, negativo = gasto.
+
+    Con `skip_duplicates` se omiten filas que ya existen (misma cuenta, fecha, tipo, monto y
+    descripción); es un multiconjunto, así que dos cafés idénticos el mismo día siguen siendo dos.
+    """
+    await accounts.get_owned(session, user_id, data.account_id)
+    category_ids = {i.category_id for i in data.items if i.category_id}
+    kinds: dict[uuid.UUID, CategoryKind] = {}
+    for cid in category_ids:
+        kinds[cid] = (await categories.get_owned(session, user_id, cid)).kind
+
+    prepared: list[tuple[TransactionType, BulkItem]] = []
+    for index, item in enumerate(data.items, start=1):
+        ttype = TransactionType.income if item.amount > 0 else TransactionType.expense
+        if item.category_id and kinds[item.category_id] != CategoryKind(ttype.value):
+            raise AppError(f"Fila {index}: la categoría no corresponde a un {ttype.value}")
+        prepared.append((ttype, item))
+
+    existing: Counter[tuple[date, str, Decimal, str]] = Counter()
+    if data.skip_duplicates:
+        first = min(i.occurred_on for i in data.items)
+        last = max(i.occurred_on for i in data.items)
+        rows = await session.execute(
+            select(
+                Transaction.occurred_on,
+                Transaction.type,
+                Transaction.amount,
+                Transaction.description,
+            ).where(
+                Transaction.user_id == user_id,
+                Transaction.account_id == data.account_id,
+                Transaction.occurred_on >= first,
+                Transaction.occurred_on <= last,
+            )
+        )
+        for occurred_on, ttype_value, amount, description in rows:
+            existing[(occurred_on, ttype_value, Decimal(amount), description)] += 1
+
+    created = skipped = 0
+    for ttype, item in prepared:
+        amount = abs(item.amount)
+        key = (item.occurred_on, ttype.value, amount, item.description)
+        if data.skip_duplicates and existing[key] > 0:
+            existing[key] -= 1
+            skipped += 1
+            continue
+        session.add(
+            Transaction(
+                user_id=user_id,
+                account_id=data.account_id,
+                category_id=item.category_id,
+                type=ttype,
+                amount=amount,
+                description=item.description,
+                occurred_on=item.occurred_on,
+            )
+        )
+        created += 1
+    await session.commit()
+    return BulkResult(created=created, skipped=skipped)

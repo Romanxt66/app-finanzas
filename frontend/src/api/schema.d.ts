@@ -224,6 +224,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/transactions/bulk': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Bulk Import
+     * @description Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes.
+     */
+    post: operations['bulk_import_api_v1_transactions_bulk_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/transactions/{transaction_id}': {
     parameters: {
       query?: never
@@ -562,6 +582,45 @@ export interface components {
     BudgetUpdate: {
       /** Amount */
       amount: number | string
+    }
+    /** BulkCreate */
+    BulkCreate: {
+      /**
+       * Account Id
+       * Format: uuid
+       */
+      account_id: string
+      /** Items */
+      items: components['schemas']['BulkItem'][]
+      /**
+       * Skip Duplicates
+       * @default true
+       */
+      skip_duplicates: boolean
+    }
+    /** BulkItem */
+    BulkItem: {
+      /**
+       * Occurred On
+       * Format: date
+       */
+      occurred_on: string
+      /**
+       * Description
+       * @default
+       */
+      description: string
+      /** Amount */
+      amount: number | string
+      /** Category Id */
+      category_id?: string | null
+    }
+    /** BulkResult */
+    BulkResult: {
+      /** Created */
+      created: number
+      /** Skipped */
+      skipped: number
     }
     /** CategoryCreate */
     CategoryCreate: {
@@ -1541,6 +1600,39 @@ export interface operations {
         }
         content: {
           'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  bulk_import_api_v1_transactions_bulk_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BulkCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BulkResult']
         }
       }
       /** @description Validation Error */

@@ -6,7 +6,13 @@ from fastapi import APIRouter, Query, Response, status
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Transaction, TransactionType
-from app.schemas.transaction import TransactionCreate, TransactionOut, TransactionPage
+from app.schemas.transaction import (
+    BulkCreate,
+    BulkResult,
+    TransactionCreate,
+    TransactionOut,
+    TransactionPage,
+)
 from app.services import export, transactions
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -72,6 +78,12 @@ async def export_transactions(
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": 'attachment; filename="movimientos.csv"'},
     )
+
+
+@router.post("/bulk", response_model=BulkResult)
+async def bulk_import(data: BulkCreate, user: CurrentUser, session: SessionDep) -> BulkResult:
+    """Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes."""
+    return await transactions.bulk_create(session, user.id, data)
 
 
 @router.post("", response_model=TransactionOut, status_code=status.HTTP_201_CREATED)

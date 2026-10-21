@@ -4,6 +4,7 @@ import { Glass, Icon, type IconName } from '../design'
 const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: '/budgets', label: 'Presupuestos', icon: 'target' },
   { to: '/recurring', label: 'Recurrentes', icon: 'swap' },
+  { to: '/import', label: 'Importar CSV', icon: 'download' },
   { to: '/categories', label: 'Categorías', icon: 'tag' },
   { to: '/profile', label: 'Perfil y ajustes', icon: 'user' },
 ]
