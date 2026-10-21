@@ -6,8 +6,14 @@ from fastapi import APIRouter, Query, Response, status
 
 from app.api.deps import CurrentUser, SessionDep
 from app.models import Transaction, TransactionType
-from app.schemas.transaction import TransactionCreate, TransactionOut, TransactionPage
-from app.services import transactions
+from app.schemas.transaction import (
+    BulkCreate,
+    BulkResult,
+    TransactionCreate,
+    TransactionOut,
+    TransactionPage,
+)
+from app.services import export, transactions
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -43,6 +49,41 @@ async def list_transactions(
         limit=limit,
         offset=offset,
     )
+
+
+@router.get("/export")
+async def export_transactions(
+    user: CurrentUser,
+    session: SessionDep,
+    account_id: uuid.UUID | None = None,
+    category_id: uuid.UUID | None = None,
+    type: TransactionType | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    search: Annotated[str | None, Query(max_length=100)] = None,
+) -> Response:
+    """CSV (UTF-8 con BOM, para Excel) con los mismos filtros que el listado."""
+    body = await export.transactions_csv(
+        session,
+        user.id,
+        account_id=account_id,
+        category_id=category_id,
+        type_=type,
+        date_from=date_from,
+        date_to=date_to,
+        search=search,
+    )
+    return Response(
+        content="\ufeff" + body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="movimientos.csv"'},
+    )
+
+
+@router.post("/bulk", response_model=BulkResult)
+async def bulk_import(data: BulkCreate, user: CurrentUser, session: SessionDep) -> BulkResult:
+    """Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes."""
+    return await transactions.bulk_create(session, user.id, data)
 
 
 @router.post("", response_model=TransactionOut, status_code=status.HTTP_201_CREATED)

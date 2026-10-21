@@ -1,0 +1,39 @@
+# Despliegue (Coolify) — Alvea: backend FastAPI + frontend React servido por nginx.
+# La base de datos NO está aquí: es el Postgres existente. Las variables llegan del entorno
+# (en Coolify: variables de entorno secretas del recurso). Nada de credenciales en el repositorio.
+#
+# Nombres de servicio únicos (alvea-*): la red "coolify" es compartida con otras apps y los
+# nombres de servicio se publican como alias DNS en ella.
+services:
+  alvea-api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?define DATABASE_URL}
+      SECRET_KEY: ${SECRET_KEY:?define SECRET_KEY (>=32 caracteres)}
+      ENVIRONMENT: production
+      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-15}
+      REFRESH_TOKEN_DAYS: ${REFRESH_TOKEN_DAYS:-7}
+      CORS_ORIGINS: '[]'
+    networks:
+      - default
+      - coolify # alcanzar el Postgres (master-db-central)
+    expose:
+      - '8000'
+
+  alvea-web:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      alvea-api:
+        condition: service_healthy
+    networks:
+      - default
+    expose:
+      - '80'
+
+networks:
+  coolify:
+    external: true

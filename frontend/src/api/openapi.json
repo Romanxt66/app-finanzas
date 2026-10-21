@@ -7,7 +7,9 @@
   "paths": {
     "/api/v1/auth/register": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Register",
         "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
@@ -46,7 +48,9 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Login",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
@@ -85,7 +89,9 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Refresh",
         "operationId": "refresh_api_v1_auth_refresh_post",
         "requestBody": {
@@ -124,7 +130,9 @@
     },
     "/api/v1/auth/me": {
       "get": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Me",
         "operationId": "me_api_v1_auth_me_get",
         "responses": {
@@ -144,11 +152,124 @@
             "HTTPBearer": []
           }
         ]
+      },
+      "patch": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Update Profile",
+        "operationId": "update_profile_api_v1_auth_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Change Password",
+        "description": "Cambia la contraseña y cierra las demás sesiones; devuelve tokens nuevos para esta.",
+        "operationId": "change_password_api_v1_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout All",
+        "description": "Invalida todos los tokens emitidos hasta ahora (todos los dispositivos).",
+        "operationId": "logout_all_api_v1_auth_logout_all_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/accounts": {
       "get": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "List Accounts",
         "operationId": "list_accounts_api_v1_accounts_get",
         "security": [
@@ -196,7 +317,9 @@
         }
       },
       "post": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "Create Account",
         "operationId": "create_account_api_v1_accounts_post",
         "security": [
@@ -240,7 +363,9 @@
     },
     "/api/v1/accounts/{account_id}": {
       "get": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "Get Account",
         "operationId": "get_account_api_v1_accounts__account_id__get",
         "security": [
@@ -284,7 +409,9 @@
         }
       },
       "patch": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "Update Account",
         "operationId": "update_account_api_v1_accounts__account_id__patch",
         "security": [
@@ -336,11 +463,52 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "accounts"
+        ],
+        "summary": "Delete Account",
+        "operationId": "delete_account_api_v1_accounts__account_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Account Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/categories": {
       "get": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "List Categories",
         "operationId": "list_categories_api_v1_categories_get",
         "responses": {
@@ -366,7 +534,9 @@
         ]
       },
       "post": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "Create Category",
         "operationId": "create_category_api_v1_categories_post",
         "requestBody": {
@@ -410,7 +580,9 @@
     },
     "/api/v1/categories/{category_id}": {
       "patch": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "Update Category",
         "operationId": "update_category_api_v1_categories__category_id__patch",
         "security": [
@@ -464,7 +636,9 @@
         }
       },
       "delete": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "Delete Category",
         "operationId": "delete_category_api_v1_categories__category_id__delete",
         "security": [
@@ -503,7 +677,9 @@
     },
     "/api/v1/transactions": {
       "get": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "List Transactions",
         "operationId": "list_transactions_api_v1_transactions_get",
         "security": [
@@ -661,7 +837,9 @@
         }
       },
       "post": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Create Transaction",
         "operationId": "create_transaction_api_v1_transactions_post",
         "security": [
@@ -703,9 +881,196 @@
         }
       }
     },
+    "/api/v1/transactions/export": {
+      "get": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Export Transactions",
+        "description": "CSV (UTF-8 con BOM, para Excel) con los mismos filtros que el listado.",
+        "operationId": "export_transactions_api_v1_transactions_export_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/TransactionType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transactions/bulk": {
+      "post": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Bulk Import",
+        "description": "Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes.",
+        "operationId": "bulk_import_api_v1_transactions_bulk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/transactions/{transaction_id}": {
       "get": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Get Transaction",
         "operationId": "get_transaction_api_v1_transactions__transaction_id__get",
         "security": [
@@ -749,7 +1114,9 @@
         }
       },
       "put": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Update Transaction",
         "operationId": "update_transaction_api_v1_transactions__transaction_id__put",
         "security": [
@@ -803,7 +1170,9 @@
         }
       },
       "delete": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Delete Transaction",
         "operationId": "delete_transaction_api_v1_transactions__transaction_id__delete",
         "security": [
@@ -840,9 +1209,238 @@
         }
       }
     },
+    "/api/v1/recurring": {
+      "get": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "List Rules",
+        "operationId": "list_rules_api_v1_recurring_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Rules Api V1 Recurring Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Create Rule",
+        "operationId": "create_rule_api_v1_recurring_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recurring/run": {
+      "post": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Run Due",
+        "description": "Materializa los movimientos vencidos. `today` permite al cliente usar su fecha local.",
+        "operationId": "run_due_api_v1_recurring_run_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "today",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Today"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recurring/{rule_id}": {
+      "patch": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Update Rule",
+        "operationId": "update_rule_api_v1_recurring__rule_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "recurring"
+        ],
+        "summary": "Delete Rule",
+        "operationId": "delete_rule_api_v1_recurring__rule_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/budgets": {
       "get": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "List Budgets",
         "operationId": "list_budgets_api_v1_budgets_get",
         "security": [
@@ -897,7 +1495,9 @@
         }
       },
       "post": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "Create Budget",
         "operationId": "create_budget_api_v1_budgets_post",
         "security": [
@@ -941,7 +1541,9 @@
     },
     "/api/v1/budgets/{budget_id}": {
       "patch": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "Update Budget",
         "operationId": "update_budget_api_v1_budgets__budget_id__patch",
         "security": [
@@ -995,7 +1597,9 @@
         }
       },
       "delete": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "Delete Budget",
         "operationId": "delete_budget_api_v1_budgets__budget_id__delete",
         "security": [
@@ -1032,9 +1636,341 @@
         }
       }
     },
+    "/api/v1/goals": {
+      "get": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "List Goals",
+        "operationId": "list_goals_api_v1_goals_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GoalOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Goals Api V1 Goals Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "Create Goal",
+        "operationId": "create_goal_api_v1_goals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/goals/{goal_id}": {
+      "patch": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "Update Goal",
+        "operationId": "update_goal_api_v1_goals__goal_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "Delete Goal",
+        "operationId": "delete_goal_api_v1_goals__goal_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/goals/{goal_id}/contributions": {
+      "get": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "List Contributions",
+        "operationId": "list_contributions_api_v1_goals__goal_id__contributions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContributionOut"
+                  },
+                  "title": "Response List Contributions Api V1 Goals  Goal Id  Contributions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "Add Contribution",
+        "operationId": "add_contribution_api_v1_goals__goal_id__contributions_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContributionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContributionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/goals/{goal_id}/contributions/{contribution_id}": {
+      "delete": {
+        "tags": [
+          "goals"
+        ],
+        "summary": "Delete Contribution",
+        "operationId": "delete_contribution_api_v1_goals__goal_id__contributions__contribution_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "goal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Goal Id"
+            }
+          },
+          {
+            "name": "contribution_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Contribution Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/reports/summary": {
       "get": {
-        "tags": ["reports"],
+        "tags": [
+          "reports"
+        ],
         "summary": "Summary",
         "operationId": "summary_api_v1_reports_summary_get",
         "security": [
@@ -1080,7 +2016,9 @@
     },
     "/api/v1/life-hours/profile": {
       "get": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Get Profile",
         "operationId": "get_profile_api_v1_life_hours_profile_get",
         "responses": {
@@ -1102,7 +2040,9 @@
         ]
       },
       "put": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Save Profile",
         "operationId": "save_profile_api_v1_life_hours_profile_put",
         "requestBody": {
@@ -1146,7 +2086,9 @@
     },
     "/api/v1/life-hours/convert": {
       "get": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Convert",
         "operationId": "convert_api_v1_life_hours_convert_get",
         "security": [
@@ -1199,7 +2141,9 @@
     },
     "/api/v1/life-hours/summary": {
       "get": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Summary",
         "operationId": "summary_api_v1_life_hours_summary_get",
         "security": [
@@ -1245,7 +2189,9 @@
     },
     "/api/v1/currencies": {
       "get": {
-        "tags": ["currencies"],
+        "tags": [
+          "currencies"
+        ],
         "summary": "List Currencies",
         "operationId": "list_currencies_api_v1_currencies_get",
         "responses": {
@@ -1268,8 +2214,11 @@
     },
     "/health": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "Health",
+        "description": "Liveness: el proceso responde (lo usa el healthcheck del contenedor).",
         "operationId": "health_health_get",
         "responses": {
           "200": {
@@ -1282,6 +2231,32 @@
                   },
                   "type": "object",
                   "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Ready",
+        "description": "Readiness: además comprueba que la base de datos responde.",
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Ready Health Ready Get"
                 }
               }
             }
@@ -1323,7 +2298,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "type", "currency", "initial_balance"],
+        "required": [
+          "name",
+          "type",
+          "currency",
+          "initial_balance"
+        ],
         "title": "AccountCreate"
       },
       "AccountOut": {
@@ -1377,7 +2357,12 @@
       },
       "AccountType": {
         "type": "string",
-        "enum": ["cash", "bank", "card", "savings"],
+        "enum": [
+          "cash",
+          "bank",
+          "card",
+          "savings"
+        ],
         "title": "AccountType"
       },
       "AccountUpdate": {
@@ -1446,7 +2431,11 @@
           }
         },
         "type": "object",
-        "required": ["category_id", "month", "amount"],
+        "required": [
+          "category_id",
+          "month",
+          "amount"
+        ],
         "title": "BudgetCreate"
       },
       "BudgetOut": {
@@ -1485,7 +2474,15 @@
           }
         },
         "type": "object",
-        "required": ["id", "created_at", "category_id", "month", "amount", "spent", "remaining"],
+        "required": [
+          "id",
+          "created_at",
+          "category_id",
+          "month",
+          "amount",
+          "spent",
+          "remaining"
+        ],
         "title": "BudgetOut"
       },
       "BudgetUpdate": {
@@ -1504,8 +2501,101 @@
           }
         },
         "type": "object",
-        "required": ["amount"],
+        "required": [
+          "amount"
+        ],
         "title": "BudgetUpdate"
+      },
+      "BulkCreate": {
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BulkItem"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Items"
+          },
+          "skip_duplicates": {
+            "type": "boolean",
+            "title": "Skip Duplicates",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_id",
+          "items"
+        ],
+        "title": "BulkCreate"
+      },
+      "BulkItem": {
+        "properties": {
+          "occurred_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Occurred On"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Description",
+            "default": ""
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "occurred_on",
+          "amount"
+        ],
+        "title": "BulkItem"
+      },
+      "BulkResult": {
+        "properties": {
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created",
+          "skipped"
+        ],
+        "title": "BulkResult"
       },
       "CategoryCreate": {
         "properties": {
@@ -1520,7 +2610,10 @@
           }
         },
         "type": "object",
-        "required": ["name", "kind"],
+        "required": [
+          "name",
+          "kind"
+        ],
         "title": "CategoryCreate"
       },
       "CategoryHours": {
@@ -1547,12 +2640,19 @@
           }
         },
         "type": "object",
-        "required": ["category_id", "total", "hours"],
+        "required": [
+          "category_id",
+          "total",
+          "hours"
+        ],
         "title": "CategoryHours"
       },
       "CategoryKind": {
         "type": "string",
-        "enum": ["income", "expense"],
+        "enum": [
+          "income",
+          "expense"
+        ],
         "title": "CategoryKind"
       },
       "CategoryOut": {
@@ -1576,7 +2676,12 @@
           }
         },
         "type": "object",
-        "required": ["id", "created_at", "name", "kind"],
+        "required": [
+          "id",
+          "created_at",
+          "name",
+          "kind"
+        ],
         "title": "CategoryOut"
       },
       "CategoryTotal": {
@@ -1599,7 +2704,10 @@
           }
         },
         "type": "object",
-        "required": ["category_id", "total"],
+        "required": [
+          "category_id",
+          "total"
+        ],
         "title": "CategoryTotal"
       },
       "CategoryUpdate": {
@@ -1612,8 +2720,96 @@
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "CategoryUpdate"
+      },
+      "ChangePasswordIn": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password"
+          },
+          "new_password": {
+            "type": "string",
+            "title": "New Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordIn"
+      },
+      "ContributionCreate": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "occurred_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Occurred On"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Note",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "amount",
+          "occurred_on"
+        ],
+        "title": "ContributionCreate"
+      },
+      "ContributionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "goal_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Goal Id"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "occurred_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Occurred On"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "goal_id",
+          "amount",
+          "occurred_on",
+          "note"
+        ],
+        "title": "ContributionOut"
       },
       "Conversion": {
         "properties": {
@@ -1631,8 +2827,178 @@
           }
         },
         "type": "object",
-        "required": ["amount", "hours", "hourly_rate"],
+        "required": [
+          "amount",
+          "hours",
+          "hourly_rate"
+        ],
         "title": "Conversion"
+      },
+      "Frequency": {
+        "type": "string",
+        "enum": [
+          "weekly",
+          "monthly",
+          "yearly"
+        ],
+        "title": "Frequency"
+      },
+      "GoalCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "target_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Target Amount"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Za-z]{3}$",
+            "title": "Currency"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "target_amount",
+          "currency"
+        ],
+        "title": "GoalCreate"
+      },
+      "GoalOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "target_amount": {
+            "type": "string",
+            "title": "Target Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "saved": {
+            "type": "string",
+            "title": "Saved"
+          },
+          "remaining": {
+            "type": "string",
+            "title": "Remaining"
+          },
+          "achieved": {
+            "type": "boolean",
+            "title": "Achieved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "name",
+          "target_amount",
+          "currency",
+          "deadline",
+          "saved",
+          "remaining",
+          "achieved"
+        ],
+        "title": "GoalOut"
+      },
+      "GoalUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "target_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Amount"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          }
+        },
+        "type": "object",
+        "title": "GoalUpdate"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1660,7 +3026,10 @@
           }
         },
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "title": "LoginIn"
       },
       "MonthHours": {
@@ -1691,7 +3060,13 @@
           }
         },
         "type": "object",
-        "required": ["month", "hourly_rate", "total", "total_hours", "by_category"],
+        "required": [
+          "month",
+          "hourly_rate",
+          "total",
+          "total_hours",
+          "by_category"
+        ],
         "title": "MonthHours"
       },
       "MonthTotal": {
@@ -1711,7 +3086,11 @@
           }
         },
         "type": "object",
-        "required": ["month", "income", "expense"],
+        "required": [
+          "month",
+          "income",
+          "expense"
+        ],
         "title": "MonthTotal"
       },
       "ProfileIn": {
@@ -1743,7 +3122,10 @@
           }
         },
         "type": "object",
-        "required": ["monthly_net_income", "weekly_hours"],
+        "required": [
+          "monthly_net_income",
+          "weekly_hours"
+        ],
         "title": "ProfileIn"
       },
       "ProfileOut": {
@@ -1762,8 +3144,260 @@
           }
         },
         "type": "object",
-        "required": ["monthly_net_income", "weekly_hours", "hourly_rate"],
+        "required": [
+          "monthly_net_income",
+          "weekly_hours",
+          "hourly_rate"
+        ],
         "title": "ProfileOut"
+      },
+      "ProfileUpdate": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name"
+        ],
+        "title": "ProfileUpdate"
+      },
+      "RecurringCreate": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "transfer_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transfer Account Id"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Description",
+            "default": ""
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "account_id",
+          "amount",
+          "frequency",
+          "start_date"
+        ],
+        "title": "RecurringCreate"
+      },
+      "RecurringOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Account Id"
+          },
+          "transfer_account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transfer Account Id"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/Frequency"
+          },
+          "next_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Next Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "type",
+          "account_id",
+          "transfer_account_id",
+          "category_id",
+          "amount",
+          "description",
+          "frequency",
+          "next_date",
+          "end_date",
+          "active"
+        ],
+        "title": "RecurringOut"
+      },
+      "RecurringUpdate": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          }
+        },
+        "type": "object",
+        "title": "RecurringUpdate"
       },
       "RefreshIn": {
         "properties": {
@@ -1773,7 +3407,9 @@
           }
         },
         "type": "object",
-        "required": ["refresh_token"],
+        "required": [
+          "refresh_token"
+        ],
         "title": "RefreshIn"
       },
       "RegisterIn": {
@@ -1785,8 +3421,6 @@
           },
           "password": {
             "type": "string",
-            "maxLength": 128,
-            "minLength": 8,
             "title": "Password"
           },
           "full_name": {
@@ -1797,8 +3431,25 @@
           }
         },
         "type": "object",
-        "required": ["email", "password", "full_name"],
+        "required": [
+          "email",
+          "password",
+          "full_name"
+        ],
         "title": "RegisterIn"
+      },
+      "RunResult": {
+        "properties": {
+          "created": {
+            "type": "integer",
+            "title": "Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "created"
+        ],
+        "title": "RunResult"
       },
       "Summary": {
         "properties": {
@@ -1835,7 +3486,14 @@
           }
         },
         "type": "object",
-        "required": ["month", "income", "expense", "net", "expense_by_category", "trend"],
+        "required": [
+          "month",
+          "income",
+          "expense",
+          "net",
+          "expense_by_category",
+          "trend"
+        ],
         "title": "Summary"
       },
       "TokenPair": {
@@ -1855,7 +3513,10 @@
           }
         },
         "type": "object",
-        "required": ["access_token", "refresh_token"],
+        "required": [
+          "access_token",
+          "refresh_token"
+        ],
         "title": "TokenPair"
       },
       "TransactionCreate": {
@@ -1917,7 +3578,12 @@
           }
         },
         "type": "object",
-        "required": ["type", "account_id", "amount", "occurred_on"],
+        "required": [
+          "type",
+          "account_id",
+          "amount",
+          "occurred_on"
+        ],
         "title": "TransactionCreate"
       },
       "TransactionOut": {
@@ -2015,12 +3681,21 @@
           }
         },
         "type": "object",
-        "required": ["items", "total", "limit", "offset"],
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
         "title": "TransactionPage"
       },
       "TransactionType": {
         "type": "string",
-        "enum": ["income", "expense", "transfer"],
+        "enum": [
+          "income",
+          "expense",
+          "transfer"
+        ],
         "title": "TransactionType"
       },
       "UserOut": {
@@ -2041,7 +3716,11 @@
           }
         },
         "type": "object",
-        "required": ["id", "email", "full_name"],
+        "required": [
+          "id",
+          "email",
+          "full_name"
+        ],
         "title": "UserOut"
       },
       "ValidationError": {
@@ -2077,7 +3756,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       }
     },

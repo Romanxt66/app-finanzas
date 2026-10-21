@@ -1,0 +1,44 @@
+# Pruebas locales con contenedores (incluye su propio Postgres):
+#   cp .env.local.example .env.local   # y completa los valores
+#   docker compose -f docker-compose.local.yml --env-file .env.local up --build
+# Abre http://localhost:8080
+services:
+  alvea-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?}
+      POSTGRES_USER: ${POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - alvea-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      retries: 10
+
+  alvea-api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?}
+      SECRET_KEY: ${SECRET_KEY:?}
+      ENVIRONMENT: development
+      CORS_ORIGINS: '[]'
+    depends_on:
+      alvea-db:
+        condition: service_healthy
+
+  alvea-web:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      alvea-api:
+        condition: service_healthy
+    ports:
+      - '8080:80'
+
+volumes:
+  alvea-db-data:

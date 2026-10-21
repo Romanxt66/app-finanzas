@@ -20,9 +20,12 @@ async def get_current_user(
 ) -> User:
     if credentials is None:
         raise UnauthorizedError("Falta el token de autenticación")
-    user = await session.get(User, decode_token(credentials.credentials, "access"))
+    claims = decode_token(credentials.credentials, "access")
+    user = await session.get(User, claims.user_id)
     if user is None:
         raise UnauthorizedError("Usuario no encontrado")
+    if claims.version != user.token_version:
+        raise UnauthorizedError("La sesión caducó; inicia sesión de nuevo")
     return user
 
 

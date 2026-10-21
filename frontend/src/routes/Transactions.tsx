@@ -10,8 +10,20 @@ import {
   useTransactions,
   type Transaction,
 } from '../api/hooks'
-import { Button, Card, Empty, ErrorText, Input, Select } from '../components/ui'
-import { formatDate, formatMoney, todayISO } from '../lib/format'
+import { downloadFile } from '../api/client'
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  Empty,
+  ErrorText,
+  Input,
+  Select,
+  Skeleton,
+  TransactionList,
+  TransactionRow,
+} from '../design'
+import { formatDate, todayISO } from '../lib/format'
 
 const PAGE_SIZE = 20
 const TYPE_LABELS = { income: 'Ingreso', expense: 'Gasto', transfer: 'Transferencia' } as const
@@ -69,31 +81,19 @@ function TransactionForm({ editing, onDone }: { editing: Transaction | null; onD
 
   return (
     <Card title={editing ? 'Editar transacción' : 'Nueva transacción'}>
-      <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" onSubmit={submit}>
-        <Select label="Tipo" {...register('type')}>
-          {Object.entries(TYPE_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </Select>
-        <Select
-          label={type === 'transfer' ? 'Cuenta origen' : 'Cuenta'}
-          error={formState.errors.account_id?.message}
-          {...register('account_id')}
-        >
-          <option value="">Selecciona…</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name} ({a.currency})
-            </option>
-          ))}
-        </Select>
-        {type === 'transfer' ? (
+      <form className="cr-stack" onSubmit={submit}>
+        <div className="cr-form-grid">
+          <Select label="Tipo" {...register('type')}>
+            {Object.entries(TYPE_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </Select>
           <Select
-            label="Cuenta destino"
-            error={formState.errors.transfer_account_id?.message}
-            {...register('transfer_account_id')}
+            label={type === 'transfer' ? 'Cuenta origen' : 'Cuenta'}
+            error={formState.errors.account_id?.message}
+            {...register('account_id')}
           >
             <option value="">Selecciona…</option>
             {accounts.map((a) => (
@@ -102,37 +102,51 @@ function TransactionForm({ editing, onDone }: { editing: Transaction | null; onD
               </option>
             ))}
           </Select>
-        ) : (
-          <Select label="Categoría" {...register('category_id')}>
-            <option value="">Sin categoría</option>
-            {categories
-              .filter((c) => c.kind === type)
-              .map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+          {type === 'transfer' ? (
+            <Select
+              label="Cuenta destino"
+              error={formState.errors.transfer_account_id?.message}
+              {...register('transfer_account_id')}
+            >
+              <option value="">Selecciona…</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} ({a.currency})
                 </option>
               ))}
-          </Select>
-        )}
-        <Input
-          label="Monto"
-          inputMode="decimal"
-          error={formState.errors.amount?.message}
-          {...register('amount')}
-        />
-        <Input
-          label="Fecha"
-          type="date"
-          error={formState.errors.occurred_on?.message}
-          {...register('occurred_on')}
-        />
-        <Input
-          label="Descripción"
-          error={formState.errors.description?.message}
-          {...register('description')}
-        />
-        <div className="flex gap-2 sm:col-span-2 lg:col-span-3">
-          <Button type="submit" disabled={save.isPending}>
+            </Select>
+          ) : (
+            <Select label="Categoría" {...register('category_id')}>
+              <option value="">Sin categoría</option>
+              {categories
+                .filter((c) => c.kind === type)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+            </Select>
+          )}
+          <Input
+            label="Monto"
+            inputMode="decimal"
+            error={formState.errors.amount?.message}
+            {...register('amount')}
+          />
+          <Input
+            label="Fecha"
+            type="date"
+            error={formState.errors.occurred_on?.message}
+            {...register('occurred_on')}
+          />
+          <Input
+            label="Descripción"
+            error={formState.errors.description?.message}
+            {...register('description')}
+          />
+        </div>
+        <div className="cr-row">
+          <Button type="submit" variant="primary" disabled={save.isPending}>
             Guardar
           </Button>
           <Button type="button" variant="ghost" onClick={onDone}>
@@ -163,6 +177,9 @@ export function TransactionsPage() {
     offset: page * PAGE_SIZE,
   })
   const remove = useDeleteTransaction()
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<unknown>(null)
+  const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null)
 
   const accountById = new Map(accounts.map((a) => [a.id, a]))
   const categoryById = new Map(categories.map((c) => [c.id, c.name]))
@@ -175,10 +192,39 @@ export function TransactionsPage() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Transacciones</h1>
-        {!form && <Button onClick={() => setForm({ editing: null })}>Nueva</Button>}
+      <div className="cr-page-head">
+        <h1 className="title">Movimientos</h1>
+        <div className="cr-row">
+          <Button
+            variant="ghost"
+            icon="download"
+            disabled={exporting}
+            onClick={async () => {
+              setExporting(true)
+              setExportError(null)
+              try {
+                await downloadFile(
+                  '/transactions/export',
+                  Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
+                  'movimientos.csv',
+                )
+              } catch (e) {
+                setExportError(e)
+              } finally {
+                setExporting(false)
+              }
+            }}
+          >
+            Exportar CSV
+          </Button>
+          {!form && (
+            <Button variant="primary" icon="plus" onClick={() => setForm({ editing: null })}>
+              Nueva
+            </Button>
+          )}
+        </div>
       </div>
+      <ErrorText error={exportError} />
       {form && (
         <TransactionForm
           key={form.editing?.id ?? 'new'}
@@ -186,8 +232,8 @@ export function TransactionsPage() {
           onDone={() => setForm(null)}
         />
       )}
-      <Card>
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <Card title="Filtros">
+        <div className="cr-form-grid">
           <Input label="Buscar" value={filters.search} onChange={setFilter('search')} />
           <Select label="Tipo" value={filters.type} onChange={setFilter('type')}>
             <option value="">Todos</option>
@@ -218,69 +264,89 @@ export function TransactionsPage() {
             onChange={setFilter('date_to')}
           />
         </div>
-        {isLoading ? (
-          <Empty>Cargando…</Empty>
-        ) : !data?.items.length ? (
-          <Empty>No hay transacciones.</Empty>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {data.items.map((t) => {
-              const account = accountById.get(t.account_id)
-              const sign = t.type === 'income' ? '+' : t.type === 'expense' ? '−' : ''
-              const tone =
-                t.type === 'income'
-                  ? 'text-emerald-700'
-                  : t.type === 'expense'
-                    ? 'text-red-600'
-                    : 'text-slate-600'
-              return (
-                <li key={t.id} className="flex items-center justify-between gap-3 py-3">
-                  <div>
-                    <p className="font-medium">
-                      {t.description ||
-                        (t.category_id && categoryById.get(t.category_id)) ||
-                        TYPE_LABELS[t.type]}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {formatDate(t.occurred_on)} · {account?.name}
-                      {t.transfer_account_id &&
-                        ` → ${accountById.get(t.transfer_account_id)?.name}`}
-                      {t.category_id && ` · ${categoryById.get(t.category_id)}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`font-semibold tabular-nums ${tone}`}>
-                      {sign}
-                      {account ? formatMoney(t.amount, account.currency) : t.amount}
-                    </span>
-                    <Button variant="ghost" onClick={() => setForm({ editing: t })}>
-                      Editar
-                    </Button>
-                    <Button variant="danger" onClick={() => remove.mutate(t.id)}>
-                      Eliminar
-                    </Button>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-        <ErrorText error={remove.error} />
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <span className="text-slate-500">{data?.total ?? 0} resultados</span>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" disabled={page === 0} onClick={() => setPage(page - 1)}>
-              Anterior
-            </Button>
-            <span>
-              {page + 1} / {pages}
-            </span>
-            <Button variant="ghost" disabled={page + 1 >= pages} onClick={() => setPage(page + 1)}>
-              Siguiente
-            </Button>
-          </div>
-        </div>
       </Card>
+      {isLoading ? (
+        <Skeleton lines={4} />
+      ) : !data?.items.length ? (
+        <Card>
+          <Empty>No hay transacciones.</Empty>
+        </Card>
+      ) : (
+        <TransactionList label="Movimientos">
+          {data.items.map((t) => {
+            const account = accountById.get(t.account_id)
+            const category = t.category_id ? categoryById.get(t.category_id) : undefined
+            const target = t.transfer_account_id
+              ? accountById.get(t.transfer_account_id)?.name
+              : undefined
+            return (
+              <TransactionRow
+                key={t.id}
+                kind={t.type}
+                title={t.description || category || TYPE_LABELS[t.type]}
+                detail={[
+                  formatDate(t.occurred_on),
+                  target ? `${account?.name} → ${target}` : account?.name,
+                  category,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                amount={Number(t.amount)}
+                currency={account?.currency}
+                actions={
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon="edit"
+                      aria-label="Editar"
+                      onClick={() => setForm({ editing: t })}
+                    />
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      icon="trash"
+                      aria-label="Eliminar"
+                      onClick={() => setPendingDelete(t)}
+                    />
+                  </>
+                }
+              />
+            )
+          })}
+        </TransactionList>
+      )}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="¿Eliminar este movimiento?"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) remove.mutate(pendingDelete.id)
+          setPendingDelete(null)
+        }}
+      >
+        Se ajustará el saldo de la cuenta. Esta acción no se puede deshacer.
+      </ConfirmDialog>
+      <ErrorText error={remove.error} />
+      <div className="cr-pagination">
+        <span className="label cr-muted">{data?.total ?? 0} resultados</span>
+        <div className="cr-row">
+          <Button variant="ghost" size="sm" disabled={page === 0} onClick={() => setPage(page - 1)}>
+            Anterior
+          </Button>
+          <span className="label">
+            {page + 1} / {pages}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={page + 1 >= pages}
+            onClick={() => setPage(page + 1)}
+          >
+            Siguiente
+          </Button>
+        </div>
+      </div>
     </>
   )
 }

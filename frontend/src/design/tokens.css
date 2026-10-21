@@ -1,0 +1,95 @@
+/* Cristal — generated from design/tokens.json. No editar a mano: npm run gen:tokens */
+:root {
+  --font-sans: Manrope, 'Segoe UI', system-ui, sans-serif;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 32px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+  --blur-md: 24px;
+  --blur-lg: 40px;
+  --bg: #0a0e13;
+  --bg-glow-mint: rgba(52, 211, 153, 0.28);
+  --bg-glow-amber: rgba(245, 158, 11, 0.2);
+  --glass: rgba(255, 255, 255, 0.06);
+  --glass-strong: rgba(255, 255, 255, 0.11);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --surface-solid: #161d26;
+  --ink: #f1f5f8;
+  --ink-muted: #9aa7b4;
+  --ink-faint: #6b7886;
+  --mint: #34d399;
+  --mint-soft: rgba(52, 211, 153, 0.16);
+  --on-mint: #032419;
+  --amber: #fbbf24;
+  --amber-soft: rgba(251, 191, 36, 0.16);
+  --positive: #6ee7b7;
+  --negative: #fda4af;
+  --negative-soft: rgba(253, 164, 175, 0.14);
+  --focus: var(--mint);
+  --shadow-glass: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --shadow-lift: 0 20px 60px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #eaf0f4;
+    --bg-glow-mint: rgba(16, 185, 129, 0.3);
+    --bg-glow-amber: rgba(245, 158, 11, 0.26);
+    --glass: rgba(255, 255, 255, 0.55);
+    --glass-strong: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.85);
+    --glass-highlight: rgba(255, 255, 255, 1);
+    --hairline: rgba(14, 22, 32, 0.08);
+    --surface-solid: #ffffff;
+    --ink: #0e1620;
+    --ink-muted: #4c5a68;
+    --ink-faint: #6f7c89;
+    --mint: #047857;
+    --mint-soft: rgba(4, 120, 87, 0.12);
+    --on-mint: #ffffff;
+    --amber: #b45309;
+    --amber-soft: rgba(180, 83, 9, 0.12);
+    --positive: #047857;
+    --negative: #be123c;
+    --negative-soft: rgba(190, 18, 60, 0.1);
+    --focus: var(--mint);
+    --shadow-glass: 0 12px 36px rgba(30, 50, 70, 0.14);
+    --shadow-lift: 0 20px 56px rgba(30, 50, 70, 0.2);
+    color-scheme: light;
+  }
+}
+:root[data-theme='light'] {
+  --bg: #eaf0f4;
+  --bg-glow-mint: rgba(16, 185, 129, 0.3);
+  --bg-glow-amber: rgba(245, 158, 11, 0.26);
+  --glass: rgba(255, 255, 255, 0.55);
+  --glass-strong: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-highlight: rgba(255, 255, 255, 1);
+  --hairline: rgba(14, 22, 32, 0.08);
+  --surface-solid: #ffffff;
+  --ink: #0e1620;
+  --ink-muted: #4c5a68;
+  --ink-faint: #6f7c89;
+  --mint: #047857;
+  --mint-soft: rgba(4, 120, 87, 0.12);
+  --on-mint: #ffffff;
+  --amber: #b45309;
+  --amber-soft: rgba(180, 83, 9, 0.12);
+  --positive: #047857;
+  --negative: #be123c;
+  --negative-soft: rgba(190, 18, 60, 0.1);
+  --focus: var(--mint);
+  --shadow-glass: 0 12px 36px rgba(30, 50, 70, 0.14);
+  --shadow-lift: 0 20px 56px rgba(30, 50, 70, 0.2);
+  color-scheme: light;
+}

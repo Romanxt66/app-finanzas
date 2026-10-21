@@ -1,8 +1,29 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useAccounts, useCreateAccount, useCurrencies, useUpdateAccount } from '../api/hooks'
-import { Button, Card, Empty, ErrorText, Input, Select } from '../components/ui'
+import {
+  useAccounts,
+  useCreateAccount,
+  useCurrencies,
+  useDeleteAccount,
+  useUpdateAccount,
+  type Account,
+} from '../api/hooks'
+import {
+  Button,
+  Card,
+  Empty,
+  ErrorText,
+  Glass,
+  Icon,
+  Input,
+  Select,
+  Skeleton,
+  ConfirmDialog,
+  FormDialog,
+} from '../design'
+import { RenameForm } from '../features/RenameForm'
 import { currencyLabel, formatMoney } from '../lib/format'
 
 const schema = z.object({
@@ -18,7 +39,10 @@ export function AccountsPage() {
   const { data: accounts, isLoading } = useAccounts(true)
   const create = useCreateAccount()
   const update = useUpdateAccount()
+  const remove = useDeleteAccount()
   const { data: currencies } = useCurrencies()
+  const [renaming, setRenaming] = useState<Account | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Account | null>(null)
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { type: 'bank' as const, currency: '', initial_balance: '0' },
@@ -26,77 +50,130 @@ export function AccountsPage() {
 
   return (
     <>
-      <h1 className="text-xl font-bold">Cuentas</h1>
+      <h1 className="title">Cuentas</h1>
       <Card title="Nueva cuenta">
         <form
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          className="cr-stack"
           onSubmit={handleSubmit((d) => create.mutate(d, { onSuccess: () => reset() }))}
         >
-          <Input label="Nombre" error={formState.errors.name?.message} {...register('name')} />
-          <Select label="Tipo" {...register('type')}>
-            {Object.entries(TYPE_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </Select>
-          <Select
-            label="Moneda"
-            error={formState.errors.currency?.message}
-            {...register('currency')}
-          >
-            <option value="">Selecciona…</option>
-            {currencies?.map((code) => (
-              <option key={code} value={code}>
-                {currencyLabel(code)}
-              </option>
-            ))}
-          </Select>
-          <Input
-            label="Saldo inicial"
-            inputMode="decimal"
-            error={formState.errors.initial_balance?.message}
-            {...register('initial_balance')}
-          />
-          <div className="sm:col-span-2 lg:col-span-4">
-            <Button type="submit" disabled={create.isPending}>
+          <div className="cr-form-grid">
+            <Input label="Nombre" error={formState.errors.name?.message} {...register('name')} />
+            <Select label="Tipo" {...register('type')}>
+              {Object.entries(TYPE_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </Select>
+            <Select
+              label="Moneda"
+              error={formState.errors.currency?.message}
+              {...register('currency')}
+            >
+              <option value="">Selecciona…</option>
+              {currencies?.map((code) => (
+                <option key={code} value={code}>
+                  {currencyLabel(code)}
+                </option>
+              ))}
+            </Select>
+            <Input
+              label="Saldo inicial"
+              inputMode="decimal"
+              error={formState.errors.initial_balance?.message}
+              {...register('initial_balance')}
+            />
+          </div>
+          <div>
+            <Button type="submit" variant="primary" disabled={create.isPending}>
               Crear cuenta
             </Button>
-            <ErrorText error={create.error} />
           </div>
+          <ErrorText error={create.error} />
         </form>
       </Card>
-      <Card>
-        {isLoading ? (
-          <Empty>Cargando…</Empty>
-        ) : !accounts?.length ? (
+      {isLoading ? (
+        <Skeleton lines={3} />
+      ) : !accounts?.length ? (
+        <Card>
           <Empty>Aún no tienes cuentas.</Empty>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {accounts.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 py-3">
-                <div className={a.archived ? 'opacity-50' : ''}>
-                  <p className="font-medium">{a.name}</p>
-                  <p className="text-xs text-slate-500">
+        </Card>
+      ) : (
+        <Glass
+          size="md"
+          as="ul"
+          style={{ listStyle: 'none', margin: 0, padding: 'var(--space-1) 0' }}
+        >
+          {accounts.map((a) => (
+            <li key={a.id} className={`cr-row-split${a.archived ? ' is-archived' : ''}`}>
+              <div className="cr-row" style={{ flexWrap: 'nowrap' }}>
+                <span className="cr-chip cr-chip-mint">
+                  <Icon name="wallet" />
+                </span>
+                <div>
+                  <p className="body" style={{ margin: 0 }}>
+                    {a.name}
+                  </p>
+                  <p className="caption cr-muted" style={{ margin: 0 }}>
                     {TYPE_LABELS[a.type]} · {a.currency}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold tabular-nums">
-                    {formatMoney(a.balance, a.currency)}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    onClick={() => update.mutate({ id: a.id, archived: !a.archived })}
-                  >
-                    {a.archived ? 'Restaurar' : 'Archivar'}
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
+              </div>
+              <div className="cr-row" style={{ flexWrap: 'nowrap' }}>
+                <span className="amount-sm">{formatMoney(a.balance, a.currency)}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon="edit"
+                  aria-label={`Renombrar ${a.name}`}
+                  onClick={() => setRenaming(a)}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => update.mutate({ id: a.id, archived: !a.archived })}
+                >
+                  {a.archived ? 'Restaurar' : 'Archivar'}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  icon="trash"
+                  aria-label={`Eliminar ${a.name}`}
+                  onClick={() => setPendingDelete(a)}
+                />
+              </div>
+            </li>
+          ))}
+        </Glass>
+      )}
+      <FormDialog open={!!renaming} title="Renombrar cuenta" onClose={() => setRenaming(null)}>
+        {renaming && (
+          <RenameForm
+            key={renaming.id}
+            initial={renaming.name}
+            label="Nombre"
+            pending={update.isPending}
+            error={update.error}
+            onCancel={() => setRenaming(null)}
+            onSubmit={(name) =>
+              update.mutate({ id: renaming.id, name }, { onSuccess: () => setRenaming(null) })
+            }
+          />
         )}
-      </Card>
+      </FormDialog>
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={`¿Eliminar la cuenta «${pendingDelete?.name}»?`}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) remove.mutate(pendingDelete.id)
+          setPendingDelete(null)
+        }}
+      >
+        Solo se puede eliminar si no tiene movimientos; si los tiene, archívala.
+      </ConfirmDialog>
+      <ErrorText error={remove.error} />
     </>
   )
 }

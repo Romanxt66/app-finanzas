@@ -1,47 +1,85 @@
-import { Navigate, NavLink, Outlet } from 'react-router-dom'
-import { Button } from '../components/ui'
-import { useAuth } from '../features/auth'
+import { Suspense } from 'react'
+import { Link, Navigate, Outlet } from 'react-router-dom'
+import { useRunDueRecurring } from '../api/hooks'
+import {
+  Backdrop,
+  Button,
+  Glass,
+  Icon,
+  Skeleton,
+  TabBar,
+  TopNav,
+  useTheme,
+  type NavItem,
+} from '../design'
+import { useAuth } from '../features/authContext'
 
-const links = [
-  ['/', 'Resumen'],
-  ['/transactions', 'Transacciones'],
-  ['/accounts', 'Cuentas'],
-  ['/categories', 'Categorías'],
-  ['/budgets', 'Presupuestos'],
-] as const
+const DESKTOP_NAV: NavItem[] = [
+  { to: '/', label: 'Inicio', icon: 'home', end: true },
+  { to: '/transactions', label: 'Movimientos', icon: 'list' },
+  { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
+  { to: '/budgets', label: 'Presupuestos', icon: 'target' },
+  { to: '/goals', label: 'Metas', icon: 'chart' },
+  { to: '/recurring', label: 'Recurrentes', icon: 'swap' },
+  { to: '/categories', label: 'Categorías', icon: 'tag' },
+]
+
+// En móvil caben cinco pestañas: lo demás vive en "Más"
+const MOBILE_NAV: NavItem[] = [
+  { to: '/', label: 'Inicio', icon: 'home', end: true },
+  { to: '/transactions', label: 'Movimientos', icon: 'list' },
+  { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
+  { to: '/goals', label: 'Metas', icon: 'chart' },
+  { to: '/more', label: 'Más', icon: 'plus' },
+]
 
 export function Layout() {
   const { user, loading, logout } = useAuth()
-  if (loading) return <p className="p-8 text-center text-slate-500">Cargando…</p>
+  const theme = useTheme()
+  useRunDueRecurring(!!user)
+  if (loading)
+    return (
+      <Backdrop>
+        <p className="cr-empty" role="status">
+          Cargando…
+        </p>
+      </Backdrop>
+    )
   if (!user) return <Navigate to="/login" replace />
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-4 py-3">
-          <strong className="text-emerald-700">Finanzas</strong>
-          <nav className="flex flex-1 flex-wrap gap-1" aria-label="Principal">
-            {links.map(([to, label]) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/'}
-                className={({ isActive }) =>
-                  `rounded-md px-3 py-1.5 text-sm ${isActive ? 'bg-emerald-50 font-medium text-emerald-800' : 'text-slate-600 hover:bg-slate-100'}`
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-          <span className="text-sm text-slate-500">{user.full_name}</span>
-          <Button variant="ghost" onClick={logout}>
+    <Backdrop>
+      <div className="cr-shell">
+        <Glass as="header" className="cr-topbar">
+          <span className="cr-brand">
+            <Icon name="wallet" />
+            Finanzas
+          </span>
+          <TopNav items={DESKTOP_NAV} />
+          <span className="cr-spacer" />
+          <Link to="/profile" className="label cr-muted cr-user" title="Perfil">
+            <Icon name="user" />
+            <span className="cr-user-name">{user.full_name}</span>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={theme.choice === 'dark' ? 'moon' : 'sun'}
+            aria-label={`Tema: ${{ system: 'automático', light: 'claro', dark: 'oscuro' }[theme.choice]}. Cambiar`}
+            onClick={theme.cycle}
+          />
+          <Button variant="ghost" size="sm" icon="logout" onClick={logout}>
             Salir
           </Button>
+        </Glass>
+        <main className="cr-main">
+          <Suspense fallback={<Skeleton lines={3} height={96} />}>
+            <Outlet />
+          </Suspense>
+        </main>
+        <div className="cr-bottom">
+          <TabBar items={MOBILE_NAV} />
         </div>
-      </header>
-      <main className="mx-auto max-w-5xl space-y-4 px-4 py-6">
-        <Outlet />
-      </main>
-    </div>
+      </div>
+    </Backdrop>
   )
 }

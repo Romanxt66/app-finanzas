@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
-import { Button, Card, ErrorText, Input } from '../components/ui'
-import { useAuth } from '../features/auth'
+import { Backdrop, Button, ErrorText, Glass, Icon, Input } from '../design'
+import { useAuth } from '../features/authContext'
+import { PasswordRules } from '../features/PasswordRules'
+import { passwordProblem } from '../lib/password'
 
 const loginSchema = z.object({
   email: z.email('Correo inválido'),
@@ -12,28 +14,38 @@ const loginSchema = z.object({
 })
 const registerSchema = loginSchema.extend({
   full_name: z.string().min(1, 'Requerido').max(120),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password: z.string().superRefine((value, ctx) => {
+    const problem = passwordProblem(value)
+    if (problem) ctx.addIssue({ code: 'custom', message: problem })
+  }),
 })
 
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto mt-16 max-w-sm px-4">
-      <h1 className="mb-4 text-2xl font-bold">{title}</h1>
-      <Card>{children}</Card>
-    </main>
+    <Backdrop>
+      <main className="cr-auth">
+        <span className="cr-brand">
+          <Icon name="wallet" />
+          Finanzas
+        </span>
+        <h1 className="title">{title}</h1>
+        <Glass strong padded>
+          {children}
+        </Glass>
+      </main>
+    </Backdrop>
   )
 }
 
 export function LoginPage() {
   const { user, login } = useAuth()
   const [error, setError] = useState<unknown>(null)
-  const form = useForm({ resolver: zodResolver(loginSchema) })
+  const { register, handleSubmit, formState } = useForm({ resolver: zodResolver(loginSchema) })
   if (user) return <Navigate to="/" replace />
-  const { register, handleSubmit, formState } = form
   return (
     <Shell title="Iniciar sesión">
       <form
-        className="space-y-3"
+        className="cr-stack"
         onSubmit={handleSubmit((d) => login(d.email, d.password).catch(setError))}
       >
         <Input
@@ -51,13 +63,13 @@ export function LoginPage() {
           {...register('password')}
         />
         <ErrorText error={error} />
-        <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+        <Button type="submit" variant="primary" disabled={formState.isSubmitting}>
           Entrar
         </Button>
       </form>
-      <p className="mt-3 text-center text-sm">
+      <p className="label cr-muted" style={{ marginTop: 'var(--space-4)', textAlign: 'center' }}>
         ¿Sin cuenta?{' '}
-        <Link className="text-emerald-700 underline" to="/register">
+        <Link to="/register" style={{ color: 'var(--mint)' }}>
           Regístrate
         </Link>
       </p>
@@ -68,11 +80,14 @@ export function LoginPage() {
 export function RegisterPage() {
   const { user, register: signUp } = useAuth()
   const [error, setError] = useState<unknown>(null)
-  const { register, handleSubmit, formState } = useForm({ resolver: zodResolver(registerSchema) })
+  const { register, handleSubmit, formState, control } = useForm({
+    resolver: zodResolver(registerSchema),
+  })
+  const password = useWatch({ control, name: 'password', defaultValue: '' })
   if (user) return <Navigate to="/" replace />
   return (
     <Shell title="Crear cuenta">
-      <form className="space-y-3" onSubmit={handleSubmit((d) => signUp(d).catch(setError))}>
+      <form className="cr-stack" onSubmit={handleSubmit((d) => signUp(d).catch(setError))}>
         <Input
           label="Nombre"
           autoComplete="name"
@@ -93,14 +108,15 @@ export function RegisterPage() {
           error={formState.errors.password?.message}
           {...register('password')}
         />
+        <PasswordRules value={password ?? ''} />
         <ErrorText error={error} />
-        <Button type="submit" className="w-full" disabled={formState.isSubmitting}>
+        <Button type="submit" variant="primary" disabled={formState.isSubmitting}>
           Crear cuenta
         </Button>
       </form>
-      <p className="mt-3 text-center text-sm">
+      <p className="label cr-muted" style={{ marginTop: 'var(--space-4)', textAlign: 'center' }}>
         ¿Ya tienes cuenta?{' '}
-        <Link className="text-emerald-700 underline" to="/login">
+        <Link to="/login" style={{ color: 'var(--mint)' }}>
           Inicia sesión
         </Link>
       </p>

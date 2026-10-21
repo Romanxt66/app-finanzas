@@ -1,7 +1,7 @@
 """life hours profiles
 
-Revision ID: 0002
-Revises: 0001
+Revision ID: 0005
+Revises: 0004
 Create Date: 2026-10-21 12:00:00.000000
 """
 
@@ -9,8 +9,8 @@ import sqlalchemy as sa
 
 from alembic import op
 
-revision = "0002"
-down_revision = "0001"
+revision = "0005"
+down_revision = "0004"
 branch_labels = None
 depends_on = None
 

@@ -1,60 +1,30 @@
-# TASKS.md — Reparto de tareas
+# TASKS — reparto entre sesiones y estado de funciones
 
-> Fase 1 de `PLAN.md`. Nombre del producto: **Alvea**.
-> Este archivo es compartido: solo se modifica en PR pequeños y se avisa al usuario.
+> Complementa `PLAN.md`. Reglas de ramas: `cli/*` (sesión CLI) y `desktop/*` (sesión Desktop); `main` solo por PR con CI en verde.
 
-## Contexto
+## Estado actual (hecho en `main`)
 
-- La sesión **Desktop** desarrolla el núcleo de la app (auth, cuentas, categorías, transacciones, presupuestos, dashboard).
-- Esta sesión (**CLI**) añade funciones diferenciadoras como **módulos independientes**, sin editar archivos del núcleo.
-- Se aplican todas las reglas de `PLAN.md` §1 y §8 (sin datos hardcodeados, `Decimal`, tipado estricto, tests, migraciones reversibles).
+| Área | Funciones |
+|---|---|
+| Autenticación | registro/login JWT (access+refresh), política de contraseña con motivo, límite de intentos (IP+correo), cambio de contraseña y "cerrar sesión en todos los dispositivos" (`token_version`) |
+| Finanzas | cuentas (renombrar/archivar/eliminar sin movimientos), categorías, movimientos (ingreso/gasto/transferencia, filtros, paginación, exportar CSV), presupuestos mensuales, metas de ahorro (aportes/retiros), movimientos recurrentes (semanal/mensual/anual) |
+| Resumen | saldo total, KPIs con variación mensual, tendencia 6 meses, gasto por categoría, próximos recurrentes |
+| UX | diseño Cristal (claro/oscuro/auto), animaciones con `prefers-reduced-motion`, avisos, confirmaciones, esqueletos, navegación móvil + "Más", PWA instalable |
+| Calidad | tests backend (pytest + hypothesis, ≥88), frontend (vitest, ≥113), E2E Playwright (flujos, responsive, a11y axe WCAG AA), CI en GitHub Actions |
+| Despliegue | Docker + `docker-compose.yml` en Coolify → https://alvea.softlane.click (esquema `alvea`, usuario `rmn_alvea`) |
 
-## Funciones de la sesión CLI
+## Pendiente / ideas (candidatas para la sesión Desktop)
 
-| # | Función | Rama | Estado |
-|---|---|---|---|
-| 1 | **Horas de vida**: cada gasto expresado en horas de trabajo según el ingreso neto por hora del usuario | `cli/life-hours` | backend listo |
-| 3 | **Suscripciones fantasma**: detecta cobros recurrentes no marcados, alzas silenciosas de precio, duplicados y pruebas gratuitas que pasan a pago | `cli/ghost-subscriptions` | pendiente |
-| 4 | **Presupuesto por ritmo ("disponible hoy")**: cuánto se puede gastar hoy según días restantes, gastos fijos pendientes y patrones de gasto | `cli/daily-allowance` | pendiente |
+- [ ] Importar movimientos desde CSV del banco (vista previa y mapeo de columnas).
+- [ ] Reportes por moneda (hoy el resumen asume la moneda de la primera cuenta).
+- [ ] Gráfico de dona por categoría y "tasa de ahorro" en el resumen.
+- [ ] Onboarding guiado cuando no hay cuentas.
+- [ ] App Android (Capacitor sobre la web, o Compose leyendo `design/tokens.json`).
+- [ ] Despliegue automático (webhook de GitHub → Coolify) y copias de seguridad externas.
+- [ ] Seguridad de la BD: pasar Lab/Prácticas/Polla a usuarios propios, cerrar el 5433, TLS (ver conversación de auditoría).
 
-Una rama y un PR por función, en este orden: 1 → 3 → 4.
+## Cómo trabajar sin pisarse
 
-## Carpetas propias de la sesión CLI
-
-Ningún otro PR debería tocar estas rutas. Todas son archivos nuevos dentro de la estructura de `PLAN.md` §4.
-
-| Función | Backend | Frontend |
-|---|---|---|
-| Horas de vida | `backend/app/{models,schemas,repositories,services,api/v1}/life_hours*.py` | `frontend/src/features/life-hours/` |
-| Suscripciones fantasma | `backend/app/{models,schemas,repositories,services,api/v1}/ghost_subscriptions*.py` | `frontend/src/features/ghost-subscriptions/` |
-| Presupuesto por ritmo | `backend/app/{schemas,services,api/v1}/daily_allowance*.py` | `frontend/src/features/daily-allowance/` |
-| Tests | `backend/tests/{life_hours,ghost_subscriptions,daily_allowance}/` | junto a cada feature |
-
-## Dependencias con el núcleo (a acordar con Desktop)
-
-Las funciones **leen** datos del núcleo y no deben modificar sus tablas ni sus servicios.
-
-1. **Transacciones**: fecha, importe (`Decimal`), cuenta, categoría, comercio/descripción y tipo. Necesario para las 3 funciones.
-2. **Usuario autenticado**: dependencia de FastAPI para obtener el usuario actual.
-3. **Gastos recurrentes / fijos**: la función 4 los necesita. El plan los sitúa después del MVP, así que la función 4 deriva los fijos pendientes de las transacciones históricas hasta que existan.
-4. **Migraciones Alembic**: las tablas nuevas (por ejemplo, el ingreso por hora del usuario o las suscripciones detectadas) van en migraciones propias que encadenan sobre la última revisión de `main`. Rebase antes de abrir PR para evitar dos cabezas en Alembic.
-5. **Contrato OpenAPI**: los endpoints nuevos cuelgan de prefijos propios (`/api/v1/life-hours`, `/api/v1/ghost-subscriptions`, `/api/v1/daily-allowance`) y el frontend consume los tipos generados.
-
-## Bloqueos actuales
-
-- Ninguno. `main` ya incluye el backend y el frontend base de Desktop.
-- Sin motor de base de datos definido (`PLAN.md` §6): desarrollar contra SQLite/contenedor local.
-
-## Deuda conocida
-
-- **Totales con varias monedas**: cada cuenta tiene su moneda (selector con las más conocidas), pero dashboard, presupuestos y balance total suman importes sin convertir y usan la moneda de la primera cuenta. Decisión del usuario: dejarlo por ahora. Resolverlo requiere moneda base o tasas de cambio de una fuente externa.
-
-## Decisiones tomadas
-
-- Función 1: el ingreso por hora se calcula desde ingreso neto mensual + horas semanales.
-- Moneda: selector por cuenta con las monedas más conocidas (`backend/app/core/currencies.py`).
-
-## Estado
-
-- Función 1 (horas de vida): backend listo; falta frontend.
-- Funciones 3 y 4: pendientes.
+- Backend: `backend/app/{models,schemas,services,api/v1}` + migración Alembic por cambio de esquema (`uv run alembic revision --autogenerate`). El test `test_migrations_match_models` falla si falta.
+- Frontend: tipos desde OpenAPI (`npm run gen:api`), tokens desde `design/tokens.json` (`npm run gen:tokens`).
+- Antes de abrir PR: `uv run pytest && uv run ruff check . && uv run mypy app` y `npm test && npm run typecheck && npm run lint && npm run e2e`.
