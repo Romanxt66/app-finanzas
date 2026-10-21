@@ -730,3 +730,25 @@ select.cr-input option {
     margin-top: calc(var(--space-2) * -1);
   }
 }
+
+.cr-rules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font: 500 12px/16px var(--font-sans);
+  color: var(--ink-muted);
+}
+.cr-rules li[data-ok='true'] {
+  color: var(--positive);
+}
+.cr-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

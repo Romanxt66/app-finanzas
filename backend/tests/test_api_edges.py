@@ -75,3 +75,43 @@ async def test_openapi_exposes_all_routers(client: AsyncClient) -> None:
     paths = (await client.get("/openapi.json")).json()["paths"]
     for prefix in ("auth", "accounts", "categories", "transactions", "budgets", "reports"):
         assert any(p.startswith(f"/api/v1/{prefix}") for p in paths)
+
+
+async def _register(client: AsyncClient, password: str) -> dict[str, object]:
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "p@example.com", "password": password, "full_name": "P"},
+    )
+    assert resp.status_code == 422, resp.text
+    return dict(resp.json()["error"])
+
+
+async def test_password_errors_explain_the_reason(client: AsyncClient) -> None:
+    cases = {
+        "corta1": "al menos 8 caracteres",
+        "soloLetrasAqui": "al menos un número",
+        "1234567890": "al menos una letra",
+        "a1" * 70: "no puede superar 128",
+    }
+    for password, reason in cases.items():
+        error = await _register(client, password)
+        assert reason in str(error["message"]), (password[:10], error)
+        assert error["code"] == "validation_error"
+        details = error["details"]
+        assert isinstance(details, list) and details[0]["field"] == "password"
+
+
+async def test_validation_messages_are_in_spanish(client: AsyncClient) -> None:
+    resp = await client.post("/api/v1/auth/register", json={"email": "no-email", "full_name": ""})
+    messages = {d["field"]: d["msg"] for d in resp.json()["error"]["details"]}
+    assert messages["email"] == "Correo electrónico inválido"
+    assert messages["password"] == "Campo requerido"
+    assert "al menos 1 caracteres" in messages["full_name"]
+
+
+async def test_valid_password_is_accepted(client: AsyncClient) -> None:
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "ok@example.com", "password": "Clave-segura-2026", "full_name": "Ok"},
+    )
+    assert resp.status_code == 201
