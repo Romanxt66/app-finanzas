@@ -57,6 +57,7 @@ const routes: [string, string][] = [
   ['/budgets', 'Presupuestos'],
   ['/goals', 'Metas'],
   ['/recurring', 'Recurrentes'],
+  ['/import', 'Importar movimientos'],
   ['/categories', 'Categorías'],
   ['/profile', 'Perfil'],
   ['/more', 'Más'],

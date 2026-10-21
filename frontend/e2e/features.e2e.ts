@@ -238,3 +238,60 @@ test('recurrentes: los vencidos se registran solos al abrir la app', async ({ pa
   await page.getByRole('alertdialog').getByRole('button', { name: 'Eliminar' }).click()
   await expect(page.getByText(/Aún no tienes movimientos recurrentes/)).toBeVisible()
 })
+
+test('importar CSV del banco: vista previa, importación y re-importación sin duplicar', async ({
+  page,
+  request,
+}) => {
+  const stamp = Date.now()
+  const c = { email: `imp-${stamp}@example.com`, password: `Clave-${stamp}-i` }
+  await request.post('/api/v1/auth/register', { data: { ...c, full_name: 'Persona Importa' } })
+  const tokens = await (await request.post('/api/v1/auth/login', { data: c })).json()
+  await request.post('/api/v1/accounts', {
+    data: { name: 'Banco', type: 'bank', currency: 'COP', initial_balance: '0' },
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  })
+  await page.addInitScript((t) => {
+    localStorage.setItem('access_token', t.access_token)
+    localStorage.setItem('refresh_token', t.refresh_token)
+  }, tokens)
+
+  const csv =
+    'Fecha;Descripción;Monto\n05/03/2026;Supermercado;-186.400,50\n06/03/2026;Nómina;4.850.000\n31/02/2026;Fecha mala;5\n'
+  const upload = () =>
+    page.getByLabel('Archivo CSV del banco').setInputFiles({
+      name: 'extracto.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csv, 'utf8'),
+    })
+
+  await open(page, '/import', 'Importar movimientos')
+  await page.getByLabel('Cuenta de destino').selectOption({ label: 'Banco (COP)' })
+  await upload()
+  await expect(page.getByText('2 filas válidas')).toBeVisible()
+  await expect(page.getByText('1 con errores (se omiten)')).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Filas con errores' })).toContainText(
+    'Fila 4: Fecha no válida',
+  )
+  await page.getByRole('button', { name: 'Importar 2 movimientos' }).click()
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Se importaron 2 movimientos' }).first(),
+  ).toBeVisible()
+
+  await open(page, '/transactions', 'Movimientos')
+  await expect(page.getByText('2 resultados')).toBeVisible()
+  await expect(page.getByText('Supermercado')).toBeVisible()
+  await open(page, '/accounts', 'Cuentas')
+  await expect(page.getByRole('listitem').filter({ hasText: 'Banco' })).toContainText(
+    /4\D?663\D?600/,
+  )
+
+  // el mismo archivo otra vez: todo se detecta como existente
+  await open(page, '/import', 'Importar movimientos')
+  await page.getByLabel('Cuenta de destino').selectOption({ label: 'Banco (COP)' })
+  await upload()
+  await page.getByRole('button', { name: 'Importar 2 movimientos' }).click()
+  await expect(page.getByText(/Se importaron 0 movimientos \(2 ya existían/)).toBeVisible()
+  await open(page, '/transactions', 'Movimientos')
+  await expect(page.getByText('2 resultados')).toBeVisible()
+})

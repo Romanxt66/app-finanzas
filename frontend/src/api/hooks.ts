@@ -350,3 +350,14 @@ export function useRunDueRecurring(enabled: boolean) {
     },
   })
 }
+
+export function useBulkImport() {
+  const toast = useToast()
+  return useMutation({
+    mutationFn: (body: Schemas['BulkCreate']) =>
+      api<Schemas['BulkResult']>('/transactions/bulk', { method: 'POST', body }),
+    onSuccess: (res) => {
+      if (res.created > 0) toast.success(`Se importaron ${res.created} movimientos`)
+    },
+  })
+}

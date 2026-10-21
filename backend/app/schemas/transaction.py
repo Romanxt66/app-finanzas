@@ -1,11 +1,12 @@
 import uuid
 from datetime import date
+from decimal import Decimal
 from typing import Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models.transaction import TransactionType
-from app.schemas.common import Entity, PositiveMoney
+from app.schemas.common import Entity, Money, PositiveMoney
 
 
 class TransactionCreate(BaseModel):
@@ -46,3 +47,29 @@ class TransactionPage(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class BulkItem(BaseModel):
+    occurred_on: date
+    description: str = Field(default="", max_length=255)
+    # Con signo: positivo = ingreso, negativo = gasto (como en un extracto bancario)
+    amount: Money
+    category_id: uuid.UUID | None = None
+
+    @field_validator("amount")
+    @classmethod
+    def _non_zero(cls, v: Decimal) -> Decimal:
+        if v == 0:
+            raise ValueError("El monto no puede ser cero")
+        return v
+
+
+class BulkCreate(BaseModel):
+    account_id: uuid.UUID
+    items: list[BulkItem] = Field(min_length=1, max_length=1000)
+    skip_duplicates: bool = True
+
+
+class BulkResult(BaseModel):
+    created: int
+    skipped: int
