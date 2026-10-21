@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
+from app.core.observability import install_observability
 from app.db.session import get_session
 
 
@@ -21,6 +22,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     register_error_handlers(app)
+    install_observability(app)
     app.include_router(api_router)
 
     @app.get("/health", tags=["health"])
