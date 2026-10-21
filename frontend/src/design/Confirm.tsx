@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Button, Glass } from './components'
 
 /** Diálogo modal de confirmación: Escape cancela, el foco entra al botón seguro y vuelve al cerrar. */
@@ -27,7 +28,8 @@ export function ConfirmDialog(props: {
   }, [open, onCancel])
 
   if (!props.open) return null
-  return (
+  // En el <body>: así ningún contexto de apilamiento de la página (animaciones) lo tapa
+  return createPortal(
     <div
       className="cr cr-overlay"
       onMouseDown={(e) => e.target === e.currentTarget && props.onCancel()}
@@ -53,6 +55,7 @@ export function ConfirmDialog(props: {
           </Button>
         </div>
       </Glass>
-    </div>
+    </div>,
+    document.body,
   )
 }
