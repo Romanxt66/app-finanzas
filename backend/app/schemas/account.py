@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from app.models.account import AccountType
 from app.schemas.common import Currency, Entity, Money
@@ -9,11 +9,6 @@ class AccountCreate(BaseModel):
     type: AccountType
     currency: Currency
     initial_balance: Money
-
-    @field_validator("currency")
-    @classmethod
-    def _upper(cls, v: str) -> str:
-        return v.upper()
 
 
 class AccountUpdate(BaseModel):

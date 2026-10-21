@@ -8,7 +8,7 @@ type User = Schemas['UserOut']
 export interface AuthValue {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, remember?: boolean) => Promise<void>
   register: (data: Schemas['RegisterIn']) => Promise<void>
   logout: () => void
 }
@@ -34,13 +34,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => setUnauthorizedHandler(logout), [logout])
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, remember = true) => {
     const pair = await api<Schemas['TokenPair']>('/auth/login', {
       method: 'POST',
       body: { email, password },
       auth: false,
     })
-    tokens.set(pair)
+    tokens.set(pair, remember)
     setAuthed(true)
   }, [])
 

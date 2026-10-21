@@ -13,6 +13,10 @@ import {
   TransactionList,
   TransactionRow,
 } from '../design'
+import { DailyAllowanceCard } from '../features/DailyAllowanceCard'
+import { GhostTeaser } from '../features/GhostTeaser'
+import { LifeHoursCard } from '../features/LifeHoursCard'
+import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { formatDate, formatMoney, monthLabel, monthStart } from '../lib/format'
 import { Link } from 'react-router-dom'
 
@@ -88,7 +92,7 @@ function GettingStarted(props: {
       </ol>
       <p className="caption cr-muted" style={{ marginTop: 'var(--space-3)' }}>
         ¿Vienes de otra app? Puedes{' '}
-        <Link to="/import" style={{ color: 'var(--mint)' }}>
+        <Link to="/import" style={{ color: 'var(--brand)' }}>
           importar el CSV de tu banco
         </Link>
         .
@@ -101,6 +105,7 @@ export function DashboardPage() {
   const [month, setMonth] = useState(monthStart())
   const [hidden, toggleHidden] = useHiddenBalance()
   const [chosenCurrency, setChosenCurrency] = useState<string | undefined>()
+  const lifeNote = useLifeHoursNote()
   const { data: accounts = [] } = useAccounts()
   const { data: allAccounts = [] } = useAccounts(true)
   const { data: categories = [] } = useCategories()
@@ -178,6 +183,8 @@ export function DashboardPage() {
         onToggleHidden={toggleHidden}
       />
 
+      <DailyAllowanceCard />
+
       <div className="cr-grid-kpi">
         <StatTile
           label="Ingresos"
@@ -185,7 +192,7 @@ export function DashboardPage() {
           currency={currency}
           delta={change(income, prev && Number(prev.income))}
           icon="salary"
-          tone="mint"
+          tone="brand"
         />
         <StatTile
           label="Gastos"
@@ -280,7 +287,7 @@ export function DashboardPage() {
                             aria-hidden="true"
                             style={{
                               background: [
-                                'var(--mint)',
+                                'var(--brand)',
                                 'var(--amber)',
                                 'var(--negative)',
                                 'var(--ink-muted)',
@@ -302,6 +309,11 @@ export function DashboardPage() {
             </div>
           )}
         </Card>
+      </div>
+
+      <div className="cr-grid-cols">
+        <LifeHoursCard month={month} />
+        <GhostTeaser />
       </div>
 
       {upcoming.length > 0 && (
@@ -349,7 +361,14 @@ export function DashboardPage() {
                     t.type
                   ]
                 }
-                detail={formatDate(t.occurred_on)}
+                detail={[
+                  formatDate(t.occurred_on),
+                  t.type === 'expense'
+                    ? lifeNote(Number(t.amount), currencyOf.get(t.account_id))
+                    : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
                 amount={Number(t.amount)}
                 currency={currencyOf.get(t.account_id)}
               />

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Glass } from './components'
 
 /** Diálogo modal para formularios cortos. Escape y clic fuera cierran; el foco vuelve al origen. */
@@ -29,7 +30,8 @@ export function FormDialog({
   }, [open, onClose])
 
   if (!open) return null
-  return (
+  // En el <body>: así ningún contexto de apilamiento de la página (animaciones) lo tapa
+  return createPortal(
     <div className="cr cr-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <Glass
         strong
@@ -46,6 +48,7 @@ export function FormDialog({
           {children}
         </div>
       </Glass>
-    </div>
+    </div>,
+    document.body,
   )
 }

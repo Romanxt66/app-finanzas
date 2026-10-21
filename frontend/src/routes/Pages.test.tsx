@@ -80,15 +80,16 @@ describe('AccountsPage', () => {
   it('valida y crea una cuenta', async () => {
     const calls = mockApi({
       'GET /accounts': [],
+      'GET /currencies': ['EUR', 'COP'],
       'POST /accounts': { status: 201, body: account() },
     })
     renderApp(<AccountsPage />)
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
     expect(await screen.findByText('Requerido')).toBeInTheDocument()
-    expect(screen.getByText(/Código de 3 letras/)).toBeInTheDocument()
+    expect(screen.getByText('Selecciona una moneda')).toBeInTheDocument()
 
     await userEvent.type(screen.getByLabelText('Nombre'), 'Ahorros')
-    await userEvent.type(screen.getByLabelText('Moneda'), 'eur')
+    await userEvent.selectOptions(await screen.findByLabelText('Moneda'), 'EUR')
     await userEvent.clear(screen.getByLabelText('Saldo inicial'))
     await userEvent.type(screen.getByLabelText('Saldo inicial'), '25.5')
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
@@ -96,7 +97,7 @@ describe('AccountsPage', () => {
     expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({
       name: 'Ahorros',
       type: 'bank',
-      currency: 'eur',
+      currency: 'EUR',
       initial_balance: '25.5',
     })
   })
@@ -113,6 +114,7 @@ describe('AccountsPage', () => {
   it('muestra el error de la API al crear', async () => {
     mockApi({
       'GET /accounts': [],
+      'GET /currencies': ['EUR', 'COP'],
       'POST /accounts': {
         status: 400,
         body: { error: { code: 'bad_request', message: 'Moneda no válida' } },
@@ -120,7 +122,7 @@ describe('AccountsPage', () => {
     })
     renderApp(<AccountsPage />)
     await userEvent.type(screen.getByLabelText('Nombre'), 'X')
-    await userEvent.type(screen.getByLabelText('Moneda'), 'eur')
+    await userEvent.selectOptions(await screen.findByLabelText('Moneda'), 'EUR')
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Moneda no válida')
   })

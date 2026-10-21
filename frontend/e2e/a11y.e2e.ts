@@ -37,6 +37,24 @@ async function seed(page: Page) {
     occurred_on: today,
     description: 'Mercado de la semana',
   })
+  // Cobro mensual repetido: aparece como suscripción sin registrar, con alza de precio
+  for (let i = 3; i >= 0; i--) {
+    const d = new Date()
+    d.setMonth(d.getMonth() - i)
+    d.setDate(5)
+    await post('/transactions', {
+      type: 'expense',
+      account_id: account.id,
+      category_id: food.id,
+      amount: i === 0 ? '52000' : '45000',
+      occurred_on: d.toISOString().slice(0, 10),
+      description: 'Plataforma de video',
+    })
+  }
+  await page.request.put('/api/v1/life-hours/profile', {
+    data: { monthly_net_income: '4850000', weekly_hours: '40' },
+    headers,
+  })
   await post('/budgets', { category_id: food.id, month: today, amount: '600000' }) // excedido: estado de error
   await post('/goals', {
     name: 'Viaje',
@@ -57,6 +75,8 @@ const routes: [string, string][] = [
   ['/budgets', 'Presupuestos'],
   ['/goals', 'Metas'],
   ['/recurring', 'Recurrentes'],
+  ['/subscriptions', 'Suscripciones'],
+  ['/import', 'Importar movimientos'],
   ['/categories', 'Categorías'],
   ['/profile', 'Perfil'],
   ['/more', 'Más'],

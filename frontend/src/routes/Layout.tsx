@@ -14,6 +14,7 @@ import {
   type NavItem,
 } from '../design'
 import { useAuth } from '../features/authContext'
+import { APP_NAME } from '../lib/brand'
 
 const DESKTOP_NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
@@ -53,8 +54,10 @@ export function Layout() {
       <div className="cr-shell">
         <Glass as="header" className="cr-topbar">
           <span className="cr-brand">
-            <Icon name="wallet" />
-            Finanzas
+            <span className="cr-brand-mark">
+              <Icon name="wallet" />
+            </span>
+            {APP_NAME}
           </span>
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />

@@ -1,12 +1,12 @@
 import {
   forwardRef,
   useId,
+  useState,
   type ButtonHTMLAttributes,
   type ElementType,
   type HTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
-  type SelectHTMLAttributes,
 } from 'react'
 import { NavLink } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
@@ -183,7 +183,7 @@ export function StatTile(props: {
   delta?: number | null
   invertDelta?: boolean
   icon?: IconName
-  tone?: 'mint' | 'amber' | 'negative'
+  tone?: 'brand' | 'amber' | 'negative'
   note?: string
 }) {
   return (
@@ -208,7 +208,7 @@ export function StatTile(props: {
 export type TxKind = 'income' | 'expense' | 'transfer'
 const KIND_ICON: Record<TxKind, IconName> = { income: 'salary', expense: 'card', transfer: 'swap' }
 const KIND_TONE: Record<TxKind, string | undefined> = {
-  income: 'mint',
+  income: 'brand',
   expense: undefined,
   transfer: 'amber',
 }
@@ -352,45 +352,83 @@ interface FieldProps {
 
 export const Input = forwardRef<
   HTMLInputElement,
-  FieldProps & InputHTMLAttributes<HTMLInputElement>
->(({ label, error, className, ...props }, ref) => {
+  FieldProps & { icon?: IconName; trailing?: ReactNode } & InputHTMLAttributes<HTMLInputElement>
+>(({ label, error, className, icon, trailing, ...props }, ref) => {
   const id = useId()
+  const input = (
+    <input
+      id={id}
+      ref={ref}
+      className={cx('cr-input', icon && 'cr-input-icon', trailing && 'cr-input-trail', className)}
+      aria-invalid={!!error}
+      aria-describedby={error ? `${id}-error` : undefined}
+      {...props}
+    />
+  )
   return (
     <div className="cr-field">
       <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        ref={ref}
-        className={cx('cr-input', className)}
-        aria-invalid={!!error}
-        {...props}
-      />
-      {error && <p className="cr-error">{error}</p>}
+      {icon || trailing ? (
+        <div className="cr-input-wrap">
+          {icon && (
+            <span className="cr-input-lead" aria-hidden="true">
+              <Icon name={icon} />
+            </span>
+          )}
+          {input}
+          {trailing && <span className="cr-input-end">{trailing}</span>}
+        </div>
+      ) : (
+        input
+      )}
+      {error && (
+        <p className="cr-error" id={`${id}-error`}>
+          {error}
+        </p>
+      )}
     </div>
   )
 })
 
-export const Select = forwardRef<
-  HTMLSelectElement,
-  FieldProps & SelectHTMLAttributes<HTMLSelectElement>
->(({ label, error, className, children, ...props }, ref) => {
-  const id = useId()
+/** Contraseña con candado y botón para mostrarla u ocultarla. */
+export const PasswordInput = forwardRef<
+  HTMLInputElement,
+  FieldProps & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>
+>((props, ref) => {
+  const [visible, setVisible] = useState(false)
   return (
-    <div className="cr-field">
-      <label htmlFor={id}>{label}</label>
-      <select
-        id={id}
-        ref={ref}
-        className={cx('cr-input', className)}
-        aria-invalid={!!error}
-        {...props}
-      >
-        {children}
-      </select>
-      {error && <p className="cr-error">{error}</p>}
-    </div>
+    <Input
+      {...props}
+      ref={ref}
+      type={visible ? 'text' : 'password'}
+      icon="lock"
+      trailing={
+        <button
+          type="button"
+          className="cr-input-toggle"
+          aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          aria-pressed={visible}
+          onClick={() => setVisible((v) => !v)}
+        >
+          <Icon name={visible ? 'eyeOff' : 'eye'} />
+        </button>
+      }
+    />
   )
 })
+
+export const Checkbox = forwardRef<
+  HTMLInputElement,
+  { label: ReactNode } & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>
+>(({ label, className, ...props }, ref) => (
+  <label className={cx('cr-check', className)}>
+    <input ref={ref} type="checkbox" {...props} />
+    <span className="cr-check-box" aria-hidden="true">
+      <Icon name="check" />
+    </span>
+    <span>{label}</span>
+  </label>
+))
 
 export function Card({
   title,
@@ -488,7 +526,7 @@ export function ProgressCard(props: {
   )
 }
 
-const DONUT_COLORS = ['var(--mint)', 'var(--amber)', 'var(--negative)', 'var(--ink-muted)']
+const DONUT_COLORS = ['var(--brand)', 'var(--amber)', 'var(--negative)', 'var(--ink-muted)']
 
 /** Dona de participación. El color no es la única pista: el significado va en la leyenda (lista) contigua. */
 export function Donut({

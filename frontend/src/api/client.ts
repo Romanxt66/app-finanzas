@@ -34,20 +34,32 @@ function fallbackMessage(status: number): string {
   return `La solicitud no se pudo completar (código ${status}).`
 }
 
+/** Con «mantener sesión» los tokens van a localStorage; si no, a sessionStorage (mueren con la pestaña). */
+const stores = () => [localStorage, sessionStorage]
+
 export const tokens = {
   get access() {
-    return localStorage.getItem(ACCESS)
+    return stores().reduce<string | null>((found, st) => found ?? st.getItem(ACCESS), null)
   },
   get refresh() {
-    return localStorage.getItem(REFRESH)
+    return stores().reduce<string | null>((found, st) => found ?? st.getItem(REFRESH), null)
   },
-  set(pair: { access_token: string; refresh_token: string }) {
-    localStorage.setItem(ACCESS, pair.access_token)
-    localStorage.setItem(REFRESH, pair.refresh_token)
+  /** `remember` indefinido conserva el almacén actual (al renovar el token no cambia de lugar). */
+  set(pair: { access_token: string; refresh_token: string }, remember?: boolean) {
+    const keepSession = remember === undefined ? !!sessionStorage.getItem(REFRESH) : !remember
+    const [target, other] = keepSession
+      ? [sessionStorage, localStorage]
+      : [localStorage, sessionStorage]
+    other.removeItem(ACCESS)
+    other.removeItem(REFRESH)
+    target.setItem(ACCESS, pair.access_token)
+    target.setItem(REFRESH, pair.refresh_token)
   },
   clear() {
-    localStorage.removeItem(ACCESS)
-    localStorage.removeItem(REFRESH)
+    for (const st of stores()) {
+      st.removeItem(ACCESS)
+      st.removeItem(REFRESH)
+    }
   },
 }
 
