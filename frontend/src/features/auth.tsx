@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createContext, useCallback, useContext, useEffect, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, setUnauthorizedHandler, tokens, type Schemas } from '../api/client'
 
 type User = Schemas['UserOut']
@@ -17,32 +17,32 @@ const ME_KEY = ['me']
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient()
+  // Estado reactivo: leer localStorage en el render no provoca re-render al iniciar sesión.
+  const [authed, setAuthed] = useState(() => !!tokens.access)
   const { data, isLoading } = useQuery({
     queryKey: ME_KEY,
     queryFn: () => api<User>('/auth/me'),
-    enabled: !!tokens.access,
+    enabled: authed,
     retry: false,
   })
 
   const logout = useCallback(() => {
     tokens.clear()
+    setAuthed(false)
     qc.clear()
   }, [qc])
 
   useEffect(() => setUnauthorizedHandler(logout), [logout])
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const pair = await api<Schemas['TokenPair']>('/auth/login', {
-        method: 'POST',
-        body: { email, password },
-        auth: false,
-      })
-      tokens.set(pair)
-      await qc.invalidateQueries({ queryKey: ME_KEY })
-    },
-    [qc],
-  )
+  const login = useCallback(async (email: string, password: string) => {
+    const pair = await api<Schemas['TokenPair']>('/auth/login', {
+      method: 'POST',
+      body: { email, password },
+      auth: false,
+    })
+    tokens.set(pair)
+    setAuthed(true)
+  }, [])
 
   const register = useCallback(
     async (body: Schemas['RegisterIn']) => {
@@ -53,8 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value: AuthValue = {
-    user: tokens.access ? (data ?? null) : null,
-    loading: !!tokens.access && isLoading,
+    user: authed ? (data ?? null) : null,
+    loading: authed && isLoading,
     login,
     register,
     logout,
