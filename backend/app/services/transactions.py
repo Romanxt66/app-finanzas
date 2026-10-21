@@ -1,0 +1,100 @@
+import uuid
+from datetime import date
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.errors import AppError, NotFoundError
+from app.models import CategoryKind, Transaction, TransactionType
+from app.schemas.transaction import TransactionCreate
+from app.services import accounts, categories
+
+
+async def _validate(session: AsyncSession, user_id: uuid.UUID, data: TransactionCreate) -> None:
+    source = await accounts.get_owned(session, user_id, data.account_id)
+    if data.transfer_account_id is not None:
+        target = await accounts.get_owned(session, user_id, data.transfer_account_id)
+        if target.currency != source.currency:
+            raise AppError("Las transferencias entre monedas distintas no están soportadas")
+    if data.category_id is not None:
+        category = await categories.get_owned(session, user_id, data.category_id)
+        if category.kind != CategoryKind(data.type.value):
+            raise AppError("El tipo de la categoría no coincide con el de la transacción")
+
+
+async def get_owned(
+    session: AsyncSession, user_id: uuid.UUID, transaction_id: uuid.UUID
+) -> Transaction:
+    tx = await session.get(Transaction, transaction_id)
+    if tx is None or tx.user_id != user_id:
+        raise NotFoundError("Transacción no encontrada")
+    return tx
+
+
+async def list_transactions(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    *,
+    account_id: uuid.UUID | None,
+    category_id: uuid.UUID | None,
+    type_: TransactionType | None,
+    date_from: date | None,
+    date_to: date | None,
+    search: str | None,
+    limit: int,
+    offset: int,
+) -> tuple[list[Transaction], int]:
+    conditions = [Transaction.user_id == user_id]
+    if account_id:
+        conditions.append(
+            (Transaction.account_id == account_id) | (Transaction.transfer_account_id == account_id)
+        )
+    if category_id:
+        conditions.append(Transaction.category_id == category_id)
+    if type_:
+        conditions.append(Transaction.type == type_)
+    if date_from:
+        conditions.append(Transaction.occurred_on >= date_from)
+    if date_to:
+        conditions.append(Transaction.occurred_on <= date_to)
+    if search:
+        conditions.append(Transaction.description.ilike(f"%{search}%"))
+    total = await session.scalar(select(func.count()).select_from(Transaction).where(*conditions))
+    stmt = (
+        select(Transaction)
+        .where(*conditions)
+        .order_by(Transaction.occurred_on.desc(), Transaction.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    return list((await session.scalars(stmt)).all()), total or 0
+
+
+async def create_transaction(
+    session: AsyncSession, user_id: uuid.UUID, data: TransactionCreate
+) -> Transaction:
+    await _validate(session, user_id, data)
+    tx = Transaction(user_id=user_id, **data.model_dump())
+    session.add(tx)
+    await session.commit()
+    await session.refresh(tx)
+    return tx
+
+
+async def update_transaction(
+    session: AsyncSession, user_id: uuid.UUID, transaction_id: uuid.UUID, data: TransactionCreate
+) -> Transaction:
+    tx = await get_owned(session, user_id, transaction_id)
+    await _validate(session, user_id, data)
+    for field, value in data.model_dump().items():
+        setattr(tx, field, value)
+    await session.commit()
+    return tx
+
+
+async def delete_transaction(
+    session: AsyncSession, user_id: uuid.UUID, transaction_id: uuid.UUID
+) -> None:
+    tx = await get_owned(session, user_id, transaction_id)
+    await session.delete(tx)
+    await session.commit()
