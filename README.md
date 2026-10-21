@@ -45,6 +45,7 @@ Los tipos de la API se generan desde el backend: `npm run gen:api` (ejecutar tra
 - `docker-compose.yml`: despliegue (Coolify). Requiere las variables `DATABASE_URL` y `SECRET_KEY` en el entorno
   (secretas en Coolify). La BD es externa: ver `backend/.env.example` para el formato de la URL.
 - `docker-compose.local.yml`: pruebas locales con su propio Postgres (`.env.local.example`).
+- Prueba de humo del despliegue: `cd frontend && E2E_BASE_URL=https://<dominio> npm run e2e:prod` (crea un usuario desechable `e2e-prod-*`).
 - La app usa su propio usuario y esquema en Postgres (`search_path` del rol), por lo que sus tablas no se mezclan con las de otras apps.
 
 ## Diseño (Cristal)

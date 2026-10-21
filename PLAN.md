@@ -138,11 +138,11 @@ app-finanzas/
 | 1 | División de tareas por sesión/rama → `TASKS.md` | ⏳ pendiente (Desktop añadirá funciones) |
 | 2 | Repo GitHub + scaffolding backend/frontend + CI | ✅ |
 | 3 | Reconciliar contexto previo de Desktop (`docs/contexto-previo.md`) | |
-| 4 | Conectar la BD real del usuario + migración baseline | |
+| 4 | Conectar la BD real del usuario + migración baseline | ✅ (esquema `alvea`, usuario `rmn_alvea`) |
 | 5 | Auth y base del modelo de datos | ✅ |
 | 6 | Cuentas, categorías, transacciones (API + UI) | ✅ |
 | 7 | Presupuestos y dashboard | ✅ (MVP inicial) |
-| 8 | Pulido, E2E, documentación, despliegue | |
+| 8 | Pulido, E2E, documentación, despliegue | ✅ desplegado en https://alvea.softlane.click (Coolify, docker compose) |
 
 ## 10. Instrucciones para la sesión Desktop
 

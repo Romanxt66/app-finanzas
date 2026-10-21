@@ -14,7 +14,8 @@
     "test": "vitest run",
     "format": "prettier --write src",
     "e2e": "playwright test",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e:prod": "playwright test -c playwright.prod.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",
