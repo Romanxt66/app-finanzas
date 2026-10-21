@@ -817,3 +817,27 @@ a.cr-user:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+
+/* Barra superior en anchos medios: iconos y solo la etiqueta de la página activa (evita desbordar) */
+.cr-user {
+  align-items: center;
+  gap: var(--space-2);
+}
+.cr-user svg {
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 1359px) {
+  .cr-nav a:not([aria-current='page']) .cr-nav-label,
+  .cr-user .cr-user-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .cr-nav a {
+    padding: 0 var(--space-3);
+  }
+}

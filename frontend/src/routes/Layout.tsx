@@ -56,8 +56,9 @@ export function Layout() {
           </span>
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
-          <Link to="/profile" className="label cr-muted cr-user">
-            {user.full_name}
+          <Link to="/profile" className="label cr-muted cr-user" title="Perfil">
+            <Icon name="user" />
+            <span className="cr-user-name">{user.full_name}</span>
           </Link>
           <Button
             variant="ghost"
