@@ -1078,6 +1078,194 @@
         }
       }
     },
+    "/api/v1/life-hours/profile": {
+      "get": {
+        "tags": ["life-hours"],
+        "summary": "Get Profile",
+        "operationId": "get_profile_api_v1_life_hours_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["life-hours"],
+        "summary": "Save Profile",
+        "operationId": "save_profile_api_v1_life_hours_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/life-hours/convert": {
+      "get": {
+        "tags": ["life-hours"],
+        "summary": "Convert",
+        "operationId": "convert_api_v1_life_hours_convert_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "amount",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0.0
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "title": "Amount"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/life-hours/summary": {
+      "get": {
+        "tags": ["life-hours"],
+        "summary": "Summary",
+        "operationId": "summary_api_v1_life_hours_summary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Month"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthHours"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/currencies": {
+      "get": {
+        "tags": ["currencies"],
+        "summary": "List Currencies",
+        "operationId": "list_currencies_api_v1_currencies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "title": "Response List Currencies Api V1 Currencies Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health"],
@@ -1335,6 +1523,33 @@
         "required": ["name", "kind"],
         "title": "CategoryCreate"
       },
+      "CategoryHours": {
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "hours": {
+            "type": "string",
+            "title": "Hours"
+          }
+        },
+        "type": "object",
+        "required": ["category_id", "total", "hours"],
+        "title": "CategoryHours"
+      },
       "CategoryKind": {
         "type": "string",
         "enum": ["income", "expense"],
@@ -1400,6 +1615,25 @@
         "required": ["name"],
         "title": "CategoryUpdate"
       },
+      "Conversion": {
+        "properties": {
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "hours": {
+            "type": "string",
+            "title": "Hours"
+          },
+          "hourly_rate": {
+            "type": "string",
+            "title": "Hourly Rate"
+          }
+        },
+        "type": "object",
+        "required": ["amount", "hours", "hourly_rate"],
+        "title": "Conversion"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1429,6 +1663,37 @@
         "required": ["email", "password"],
         "title": "LoginIn"
       },
+      "MonthHours": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date",
+            "title": "Month"
+          },
+          "hourly_rate": {
+            "type": "string",
+            "title": "Hourly Rate"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "total_hours": {
+            "type": "string",
+            "title": "Total Hours"
+          },
+          "by_category": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryHours"
+            },
+            "type": "array",
+            "title": "By Category"
+          }
+        },
+        "type": "object",
+        "required": ["month", "hourly_rate", "total", "total_hours", "by_category"],
+        "title": "MonthHours"
+      },
       "MonthTotal": {
         "properties": {
           "month": {
@@ -1448,6 +1713,57 @@
         "type": "object",
         "required": ["month", "income", "expense"],
         "title": "MonthTotal"
+      },
+      "ProfileIn": {
+        "properties": {
+          "monthly_net_income": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Monthly Net Income"
+          },
+          "weekly_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 168.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Weekly Hours"
+          }
+        },
+        "type": "object",
+        "required": ["monthly_net_income", "weekly_hours"],
+        "title": "ProfileIn"
+      },
+      "ProfileOut": {
+        "properties": {
+          "monthly_net_income": {
+            "type": "string",
+            "title": "Monthly Net Income"
+          },
+          "weekly_hours": {
+            "type": "string",
+            "title": "Weekly Hours"
+          },
+          "hourly_rate": {
+            "type": "string",
+            "title": "Hourly Rate"
+          }
+        },
+        "type": "object",
+        "required": ["monthly_net_income", "weekly_hours", "hourly_rate"],
+        "title": "ProfileOut"
       },
       "RefreshIn": {
         "properties": {

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 
+from app.core.currencies import SUPPORTED_CURRENCIES
 from app.models.account import AccountType
 from app.schemas.common import Currency, Entity, Money
 
@@ -12,8 +13,11 @@ class AccountCreate(BaseModel):
 
     @field_validator("currency")
     @classmethod
-    def _upper(cls, v: str) -> str:
-        return v.upper()
+    def _supported(cls, v: str) -> str:
+        code = v.upper()
+        if code not in SUPPORTED_CURRENCIES:
+            raise ValueError("Moneda no admitida")
+        return code
 
 
 class AccountUpdate(BaseModel):

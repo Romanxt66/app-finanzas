@@ -57,6 +57,14 @@ export function useUpdateAccount() {
   })
 }
 
+/** Lista fija del servidor: no cambia durante la sesión. */
+export const useCurrencies = () =>
+  useQuery({
+    queryKey: ['currencies'] as const,
+    queryFn: () => api<string[]>('/currencies'),
+    staleTime: Infinity,
+  })
+
 export const useCategories = () =>
   useQuery({ queryKey: keys.categories, queryFn: () => api<Category[]>('/categories') })
 

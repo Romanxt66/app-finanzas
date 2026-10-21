@@ -234,6 +234,75 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/life-hours/profile': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Profile */
+    get: operations['get_profile_api_v1_life_hours_profile_get']
+    /** Save Profile */
+    put: operations['save_profile_api_v1_life_hours_profile_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/life-hours/convert': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Convert */
+    get: operations['convert_api_v1_life_hours_convert_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/life-hours/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Summary */
+    get: operations['summary_api_v1_life_hours_summary_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/currencies': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Currencies */
+    get: operations['list_currencies_api_v1_currencies_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -357,6 +426,15 @@ export interface components {
       name: string
       kind: components['schemas']['CategoryKind']
     }
+    /** CategoryHours */
+    CategoryHours: {
+      /** Category Id */
+      category_id: string | null
+      /** Total */
+      total: string
+      /** Hours */
+      hours: string
+    }
     /**
      * CategoryKind
      * @enum {string}
@@ -390,6 +468,15 @@ export interface components {
       /** Name */
       name: string
     }
+    /** Conversion */
+    Conversion: {
+      /** Amount */
+      amount: string
+      /** Hours */
+      hours: string
+      /** Hourly Rate */
+      hourly_rate: string
+    }
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
@@ -405,6 +492,22 @@ export interface components {
       /** Password */
       password: string
     }
+    /** MonthHours */
+    MonthHours: {
+      /**
+       * Month
+       * Format: date
+       */
+      month: string
+      /** Hourly Rate */
+      hourly_rate: string
+      /** Total */
+      total: string
+      /** Total Hours */
+      total_hours: string
+      /** By Category */
+      by_category: components['schemas']['CategoryHours'][]
+    }
     /** MonthTotal */
     MonthTotal: {
       /**
@@ -416,6 +519,22 @@ export interface components {
       income: string
       /** Expense */
       expense: string
+    }
+    /** ProfileIn */
+    ProfileIn: {
+      /** Monthly Net Income */
+      monthly_net_income: number | string
+      /** Weekly Hours */
+      weekly_hours: number | string
+    }
+    /** ProfileOut */
+    ProfileOut: {
+      /** Monthly Net Income */
+      monthly_net_income: string
+      /** Weekly Hours */
+      weekly_hours: string
+      /** Hourly Rate */
+      hourly_rate: string
     }
     /** RefreshIn */
     RefreshIn: {
@@ -1261,6 +1380,141 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_profile_api_v1_life_hours_profile_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileOut']
+        }
+      }
+    }
+  }
+  save_profile_api_v1_life_hours_profile_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfileIn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  convert_api_v1_life_hours_convert_get: {
+    parameters: {
+      query: {
+        amount: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Conversion']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  summary_api_v1_life_hours_summary_get: {
+    parameters: {
+      query: {
+        month: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MonthHours']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_currencies_api_v1_currencies_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': string[]
         }
       }
     }

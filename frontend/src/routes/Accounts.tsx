@@ -1,14 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useAccounts, useCreateAccount, useUpdateAccount } from '../api/hooks'
+import { useAccounts, useCreateAccount, useCurrencies, useUpdateAccount } from '../api/hooks'
 import { Button, Card, Empty, ErrorText, Input, Select } from '../components/ui'
-import { formatMoney } from '../lib/format'
+import { currencyLabel, formatMoney } from '../lib/format'
 
 const schema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
   type: z.enum(['cash', 'bank', 'card', 'savings']),
-  currency: z.string().regex(/^[A-Za-z]{3}$/, 'Código de 3 letras (ISO 4217)'),
+  currency: z.string().min(1, 'Selecciona una moneda'),
   initial_balance: z.string().regex(/^-?\d+(\.\d{1,2})?$/, 'Número con hasta 2 decimales'),
 })
 
@@ -18,9 +18,10 @@ export function AccountsPage() {
   const { data: accounts, isLoading } = useAccounts(true)
   const create = useCreateAccount()
   const update = useUpdateAccount()
+  const { data: currencies } = useCurrencies()
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { type: 'bank' as const, initial_balance: '0' },
+    defaultValues: { type: 'bank' as const, currency: '', initial_balance: '0' },
   })
 
   return (
@@ -39,13 +40,18 @@ export function AccountsPage() {
               </option>
             ))}
           </Select>
-          <Input
+          <Select
             label="Moneda"
-            maxLength={3}
-            placeholder="ISO 4217"
             error={formState.errors.currency?.message}
             {...register('currency')}
-          />
+          >
+            <option value="">Selecciona…</option>
+            {currencies?.map((code) => (
+              <option key={code} value={code}>
+                {currencyLabel(code)}
+              </option>
+            ))}
+          </Select>
           <Input
             label="Saldo inicial"
             inputMode="decimal"
