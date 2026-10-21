@@ -129,8 +129,11 @@ test('perfil: cambiar nombre y contraseña, y entrar con la nueva', async ({ pag
   await page.getByLabel('Contraseña actual').fill(creds.password)
   await page.getByRole('button', { name: 'Cambiar contraseña' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Contraseña cambiada' })).toBeVisible()
+  // la sesión actual sigue activa (tokens nuevos): una recarga no la pierde
+  await page.reload()
+  await expect(page.getByRole('heading', { level: 1, name: 'Perfil' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+  await page.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
   await expect(page).toHaveURL(/\/login$/)
   await page.getByLabel('Correo').fill(creds.email)
   await page.getByLabel('Contraseña', { exact: true }).fill(creds.password)

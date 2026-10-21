@@ -1,6 +1,6 @@
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import Literal
+from typing import Literal, NamedTuple
 
 import jwt
 from argon2 import PasswordHasher
@@ -25,22 +25,32 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def create_token(user_id: uuid.UUID, token_type: TokenType) -> str:
+class TokenClaims(NamedTuple):
+    user_id: uuid.UUID
+    version: int
+
+
+def create_token(user_id: uuid.UUID, token_type: TokenType, version: int = 0) -> str:
     settings = get_settings()
     delta = (
         timedelta(minutes=settings.access_token_minutes)
         if token_type == "access"
         else timedelta(days=settings.refresh_token_days)
     )
-    payload = {"sub": str(user_id), "type": token_type, "exp": datetime.now(UTC) + delta}
+    payload = {
+        "sub": str(user_id),
+        "type": token_type,
+        "ver": version,
+        "exp": datetime.now(UTC) + delta,
+    }
     return jwt.encode(payload, settings.secret_key, algorithm=_ALGORITHM)
 
 
-def decode_token(token: str, expected: TokenType) -> uuid.UUID:
+def decode_token(token: str, expected: TokenType) -> TokenClaims:
     try:
         payload = jwt.decode(token, get_settings().secret_key, algorithms=[_ALGORITHM])
         if payload.get("type") != expected:
             raise UnauthorizedError("Tipo de token inválido")
-        return uuid.UUID(payload["sub"])
+        return TokenClaims(uuid.UUID(payload["sub"]), int(payload.get("ver", 0)))
     except (jwt.PyJWTError, KeyError, ValueError) as exc:
         raise UnauthorizedError("Token inválido o expirado") from exc

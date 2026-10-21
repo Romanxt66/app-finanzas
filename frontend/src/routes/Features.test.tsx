@@ -185,7 +185,7 @@ describe('ProfilePage', () => {
                 error: { code: 'bad_request', message: 'La contraseña actual es incorrecta' },
               },
             }
-          : { status: 204, body: null },
+          : { access_token: 'nuevo-a', refresh_token: 'nuevo-r', token_type: 'bearer' },
     })
     renderApp(<ProfilePage />)
     await userEvent.type(await screen.findByLabelText('Contraseña actual'), 'mala-clave1')
@@ -196,6 +196,22 @@ describe('ProfilePage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Cambiar contraseña' }))
     await waitFor(() => expect(screen.getByLabelText('Contraseña nueva')).toHaveValue(''))
     expect(calls.filter((c) => c.method === 'POST')).toHaveLength(2)
+    // la sesión actual sigue viva con los tokens nuevos
+    expect(localStorage.getItem('access_token')).toBe('nuevo-a')
+    expect(localStorage.getItem('refresh_token')).toBe('nuevo-r')
+  })
+
+  it('cierra la sesión en todos los dispositivos', async () => {
+    const calls = mockApi({
+      'GET /auth/me': user,
+      'POST /auth/logout-all': { status: 204, body: null },
+    })
+    renderApp(<ProfilePage />)
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Cerrar sesión en todos los dispositivos' }),
+    )
+    await waitFor(() => expect(calls.some((c) => c.path === '/auth/logout-all')).toBe(true))
+    await waitFor(() => expect(localStorage.getItem('access_token')).toBeNull())
   })
 
   it('el selector de tema aplica y guarda la preferencia', async () => {

@@ -259,7 +259,7 @@ async def test_change_password(client: AsyncClient, auth: H) -> None:
         headers=auth,
         json={"current_password": "password-123", "new_password": "NuevaClave-99"},
     )
-    assert ok.status_code == 204
+    assert ok.status_code == 200 and ok.json()["access_token"]
     old = await client.post(
         "/api/v1/auth/login", json={"email": "a@example.com", "password": "password-123"}
     )
