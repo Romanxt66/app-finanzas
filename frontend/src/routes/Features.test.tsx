@@ -63,21 +63,25 @@ describe('GoalsPage', () => {
   })
 
   it('valida y crea una meta (fecha vacía → null)', async () => {
-    const calls = mockApi({ 'GET /goals': [], 'POST /goals': { status: 201, body: goal() } })
+    const calls = mockApi({
+      'GET /goals': [],
+      'GET /currencies': ['EUR', 'COP'],
+      'POST /goals': { status: 201, body: goal() },
+    })
     renderApp(<GoalsPage />)
     await userEvent.click(screen.getByRole('button', { name: 'Crear meta' }))
     expect(
-      await screen.findAllByText(/Requerido|Código de 3 letras|Monto positivo/),
+      await screen.findAllByText(/Requerido|Selecciona una moneda|Monto positivo/),
     ).not.toHaveLength(0)
     await userEvent.type(screen.getByLabelText('Nombre'), 'Casa')
     await userEvent.type(screen.getByLabelText('Monto objetivo'), '5000000')
-    await userEvent.type(screen.getByLabelText('Moneda'), 'cop')
+    await userEvent.selectOptions(await screen.findByLabelText('Moneda'), 'COP')
     await userEvent.click(screen.getByRole('button', { name: 'Crear meta' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
     expect(calls.find((c) => c.method === 'POST')?.body).toEqual({
       name: 'Casa',
       target_amount: '5000000',
-      currency: 'cop',
+      currency: 'COP',
       deadline: null,
     })
   })

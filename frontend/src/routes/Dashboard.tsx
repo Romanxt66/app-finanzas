@@ -107,7 +107,7 @@ export function DashboardPage() {
           currency={currency}
           delta={change(income, prev && Number(prev.income))}
           icon="salary"
-          tone="mint"
+          tone="brand"
         />
         <StatTile
           label="Gastos"

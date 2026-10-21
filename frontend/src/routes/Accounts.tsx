@@ -5,7 +5,6 @@ import { z } from 'zod'
 import {
   useAccounts,
   useCreateAccount,
-  useCurrencies,
   useDeleteAccount,
   useUpdateAccount,
   type Account,
@@ -23,8 +22,9 @@ import {
   ConfirmDialog,
   FormDialog,
 } from '../design'
+import { CurrencySelect } from '../features/CurrencySelect'
 import { RenameForm } from '../features/RenameForm'
-import { currencyLabel, formatMoney } from '../lib/format'
+import { formatMoney } from '../lib/format'
 
 const schema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
@@ -40,7 +40,6 @@ export function AccountsPage() {
   const create = useCreateAccount()
   const update = useUpdateAccount()
   const remove = useDeleteAccount()
-  const { data: currencies } = useCurrencies()
   const [renaming, setRenaming] = useState<Account | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Account | null>(null)
   const { register, handleSubmit, reset, formState } = useForm({
@@ -65,18 +64,7 @@ export function AccountsPage() {
                 </option>
               ))}
             </Select>
-            <Select
-              label="Moneda"
-              error={formState.errors.currency?.message}
-              {...register('currency')}
-            >
-              <option value="">Selecciona…</option>
-              {currencies?.map((code) => (
-                <option key={code} value={code}>
-                  {currencyLabel(code)}
-                </option>
-              ))}
-            </Select>
+            <CurrencySelect error={formState.errors.currency?.message} {...register('currency')} />
             <Input
               label="Saldo inicial"
               inputMode="decimal"
@@ -107,7 +95,7 @@ export function AccountsPage() {
           {accounts.map((a) => (
             <li key={a.id} className={`cr-row-split${a.archived ? ' is-archived' : ''}`}>
               <div className="cr-row" style={{ flexWrap: 'nowrap' }}>
-                <span className="cr-chip cr-chip-mint">
+                <span className="cr-chip cr-chip-brand">
                   <Icon name="wallet" />
                 </span>
                 <div>
