@@ -13,7 +13,7 @@
 
 | # | Función | Rama | Estado |
 |---|---|---|---|
-| 1 | **Horas de vida**: cada gasto expresado en horas de trabajo según el ingreso neto por hora del usuario | `cli/life-hours` | pendiente |
+| 1 | **Horas de vida**: cada gasto expresado en horas de trabajo según el ingreso neto por hora del usuario | `cli/life-hours` | backend listo |
 | 3 | **Suscripciones fantasma**: detecta cobros recurrentes no marcados, alzas silenciosas de precio, duplicados y pruebas gratuitas que pasan a pago | `cli/ghost-subscriptions` | pendiente |
 | 4 | **Presupuesto por ritmo ("disponible hoy")**: cuánto se puede gastar hoy según días restantes, gastos fijos pendientes y patrones de gasto | `cli/daily-allowance` | pendiente |
 
@@ -42,14 +42,19 @@ Las funciones **leen** datos del núcleo y no deben modificar sus tablas ni sus 
 
 ## Bloqueos actuales
 
-- `main` solo contiene `PLAN.md` y `.gitignore`. Aún no hay scaffolding de backend/frontend (Fase 2), así que la implementación espera a que Desktop lo suba, o se acuerda con el usuario quién lo crea.
-- Sin motor de base de datos definido (`PLAN.md` §6): desarrollar contra el contenedor local de docker-compose.
+- Ninguno. `main` ya incluye el backend y el frontend base de Desktop.
+- Sin motor de base de datos definido (`PLAN.md` §6): desarrollar contra SQLite/contenedor local.
 
 ## Deuda conocida
 
 - **Totales con varias monedas**: cada cuenta tiene su moneda (selector con las más conocidas), pero dashboard, presupuestos y balance total suman importes sin convertir y usan la moneda de la primera cuenta. Decisión del usuario: dejarlo por ahora. Resolverlo requiere moneda base o tasas de cambio de una fuente externa.
 
-## Preguntas abiertas
+## Decisiones tomadas
 
-- ¿Quién crea el scaffolding de la Fase 2?
-- Función 1: ¿el ingreso por hora se introduce a mano o se calcula desde horas semanales + ingreso neto del usuario?
+- Función 1: el ingreso por hora se calcula desde ingreso neto mensual + horas semanales.
+- Moneda: selector por cuenta con las monedas más conocidas (`backend/app/core/currencies.py`).
+
+## Estado
+
+- Función 1 (horas de vida): backend listo; falta frontend.
+- Funciones 3 y 4: pendientes.
