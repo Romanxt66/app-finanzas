@@ -177,3 +177,64 @@ test.describe('móvil', () => {
     }
   })
 })
+
+test('recurrentes: los vencidos se registran solos al abrir la app', async ({ page, request }) => {
+  const run2 = Date.now()
+  const c = { email: `rec-${run2}@example.com`, password: `Clave-${run2}-r` }
+  await request.post('/api/v1/auth/register', { data: { ...c, full_name: 'Persona Recurrente' } })
+  const tokens = await (await request.post('/api/v1/auth/login', { data: c })).json()
+  const headers = { Authorization: `Bearer ${tokens.access_token}` }
+  const post = async (path: string, data: unknown) =>
+    (await request.post(`/api/v1${path}`, { data, headers })).json()
+  const acc = await post('/accounts', {
+    name: 'Principal',
+    type: 'bank',
+    currency: 'COP',
+    initial_balance: '0',
+  })
+  const cat = await post('/categories', { name: 'Arriendo', kind: 'expense' })
+  // primera fecha hace ~2 meses y medio → 3 ocurrencias vencidas
+  const start = new Date()
+  start.setMonth(start.getMonth() - 2)
+  start.setDate(1)
+  const iso = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`
+  await post('/recurring', {
+    type: 'expense',
+    account_id: acc.id,
+    category_id: cat.id,
+    amount: '800000',
+    description: 'Arriendo',
+    frequency: 'monthly',
+    start_date: iso,
+  })
+
+  await page.addInitScript((t) => {
+    localStorage.setItem('access_token', t.access_token)
+    localStorage.setItem('refresh_token', t.refresh_token)
+  }, tokens)
+  await page.goto('/')
+  await expect(
+    page.getByRole('status').filter({ hasText: /Se registraron 3 movimientos recurrentes/ }),
+  ).toBeVisible()
+  await expect(page.getByText('Próximos recurrentes')).toBeVisible()
+
+  await open(page, '/transactions', 'Movimientos')
+  await expect(page.getByText('3 resultados')).toBeVisible()
+  await open(page, '/accounts', 'Cuentas')
+  await expect(page.getByRole('listitem').filter({ hasText: 'Principal' })).toContainText(
+    /2\D?400\D?000/,
+  )
+
+  // volver a abrir la app no duplica (idempotente)
+  await page.reload()
+  await open(page, '/transactions', 'Movimientos')
+  await expect(page.getByText('3 resultados')).toBeVisible()
+
+  // gestionar: pausar y eliminar desde la pantalla
+  await open(page, '/recurring', 'Recurrentes')
+  await page.getByRole('button', { name: 'Pausar Arriendo' }).click()
+  await expect(page.getByText(/pausado/).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Eliminar' }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Eliminar' }).click()
+  await expect(page.getByText(/Aún no tienes movimientos recurrentes/)).toBeVisible()
+})

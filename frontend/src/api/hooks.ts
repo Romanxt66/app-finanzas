@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../design/toastContext'
+import { todayISO } from '../lib/format'
 import { api, tokens, type Schemas } from './client'
 
 export type Account = Schemas['AccountOut']
@@ -8,6 +9,7 @@ export type Transaction = Schemas['TransactionOut']
 export type Budget = Schemas['BudgetOut']
 export type Summary = Schemas['Summary']
 export type TransactionInput = Schemas['TransactionCreate']
+export type Recurring = Schemas['RecurringOut']
 export type Goal = Schemas['GoalOut']
 export type Contribution = Schemas['ContributionOut']
 
@@ -29,6 +31,7 @@ export const keys = {
   budgets: ['budgets'] as const,
   summary: ['summary'] as const,
   goals: ['goals'] as const,
+  recurring: ['recurring'] as const,
 }
 
 /** Una transacción cambia saldos, presupuestos y reportes: se invalida todo lo derivado. */
@@ -274,4 +277,76 @@ export function useChangePassword() {
 
 export function useLogoutAll() {
   return useMutation({ mutationFn: () => api<void>('/auth/logout-all', { method: 'POST' }) })
+}
+
+export const useRecurring = () =>
+  useQuery({ queryKey: keys.recurring, queryFn: () => api<Recurring[]>('/recurring') })
+
+export function useCreateRecurring() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.recurring)
+  return useMutation({
+    mutationFn: (body: Schemas['RecurringCreate']) =>
+      api<Recurring>('/recurring', { method: 'POST', body }),
+    onSuccess: () => {
+      toast.success('Movimiento recurrente creado')
+      return invalidate()
+    },
+  })
+}
+
+export function useUpdateRecurring() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.recurring)
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & Schemas['RecurringUpdate']) =>
+      api<Recurring>(`/recurring/${id}`, { method: 'PATCH', body }),
+    onSuccess: (_d, vars) => {
+      toast.success(vars.active === false ? 'Recurrente pausado' : 'Recurrente actualizado')
+      return invalidate()
+    },
+  })
+}
+
+export function useDeleteRecurring() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.recurring)
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/recurring/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Recurrente eliminado')
+      return invalidate()
+    },
+  })
+}
+
+/** Registra los movimientos recurrentes vencidos (una vez por sesión) y refresca lo derivado. */
+export function useRunDueRecurring(enabled: boolean) {
+  const qc = useQueryClient()
+  const toast = useToast()
+  return useQuery({
+    queryKey: ['recurring-run'],
+    enabled,
+    staleTime: Infinity,
+    retry: false,
+    queryFn: async () => {
+      const { created } = await api<Schemas['RunResult']>('/recurring/run', {
+        method: 'POST',
+        query: { today: todayISO() },
+      })
+      if (created > 0) {
+        toast.success(
+          created === 1
+            ? 'Se registró 1 movimiento recurrente'
+            : `Se registraron ${created} movimientos recurrentes`,
+        )
+        await Promise.all(
+          [keys.transactions, keys.accounts, keys.budgets, keys.summary, keys.recurring].map(
+            (queryKey) => qc.invalidateQueries({ queryKey }),
+          ),
+        )
+      }
+      return created
+    },
+  })
 }

@@ -37,7 +37,8 @@ describe('Layout', () => {
     const count = (name: string) => screen.getAllByRole('link', { name }).length
     for (const shared of ['Inicio', 'Movimientos', 'Cuentas', 'Metas'])
       expect(count(shared)).toBe(2)
-    for (const desktopOnly of ['Presupuestos', 'Categorías']) expect(count(desktopOnly)).toBe(1)
+    for (const desktopOnly of ['Presupuestos', 'Recurrentes', 'Categorías'])
+      expect(count(desktopOnly)).toBe(1)
     expect(count('Más')).toBe(1) // solo móvil
     expect(screen.getByRole('link', { name: 'Ana Test' })).toHaveAttribute('href', '/profile')
     await userEvent.click(screen.getByRole('button', { name: 'Salir' }))
@@ -341,6 +342,74 @@ describe('BudgetsPage', () => {
       category_id: 'c1',
       amount: '99',
     })
+  })
+})
+
+describe('DashboardPage · próximos recurrentes', () => {
+  it('muestra los 3 próximos activos, ordenados por fecha', async () => {
+    const r = (id: string, d: string, over = {}) => ({
+      id,
+      created_at: '2026-01-01T00:00:00Z',
+      type: 'expense',
+      account_id: 'a1',
+      transfer_account_id: null,
+      category_id: null,
+      amount: '10.00',
+      description: id,
+      frequency: 'monthly',
+      next_date: d,
+      end_date: null,
+      active: true,
+      ...over,
+    })
+    mockApi({
+      'GET /accounts': [account()],
+      'GET /categories': [],
+      'GET /transactions': page([]),
+      'GET /reports/summary': {
+        month: '2026-03-01',
+        income: '0',
+        expense: '0',
+        net: '0',
+        expense_by_category: [],
+        trend: [],
+      },
+      'GET /recurring': [
+        r('D', '2026-06-01'),
+        r('A', '2026-04-01'),
+        r('B', '2026-05-01'),
+        r('pausada', '2026-03-01', { active: false }),
+        r('C', '2026-07-01'),
+      ],
+    })
+    renderApp(<DashboardPage />)
+    const list = await screen.findByRole('list', { name: 'Próximos recurrentes' })
+    expect(
+      within(list)
+        .getAllByRole('listitem')
+        .map((i) => i.textContent?.slice(0, 1)),
+    ).toEqual(['A', 'B', 'D'])
+    expect(within(list).queryByText('pausada')).not.toBeInTheDocument()
+  })
+
+  it('sin reglas no muestra la sección', async () => {
+    mockApi({
+      'GET /accounts': [],
+      'GET /categories': [],
+      'GET /transactions': page([]),
+      'GET /reports/summary': {
+        month: '2026-03-01',
+        income: '0',
+        expense: '0',
+        net: '0',
+        expense_by_category: [],
+        trend: [],
+      },
+      'GET /recurring': [],
+    })
+    renderApp(<DashboardPage />)
+    await screen.findByText('Sin gastos este mes.')
+    expect(screen.queryByText('Próximos recurrentes')).not.toBeInTheDocument()
   })
 })
 
