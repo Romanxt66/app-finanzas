@@ -1008,6 +1008,71 @@ a.cr-user:focus-visible {
   }
 }
 
+.cr-donut {
+  flex: none;
+  transform: rotate(0deg);
+}
+.cr-donut-seg {
+  transition: stroke-dasharray 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: cr-fade 0.6s ease both;
+}
+.cr-donut-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+.cr-donut-row ul {
+  flex: 1;
+  min-width: 180px;
+}
+.cr-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: var(--space-2);
+  flex: none;
+}
+.cr-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.cr-steps a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--glass);
+}
+.cr-steps a:hover {
+  background: var(--glass-strong);
+}
+.cr-steps a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.cr-steps [data-done='true'] {
+  color: var(--ink-muted);
+}
+.cr-steps [data-done='true'] .cr-chip {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cr-donut-seg {
+    animation: none;
+    transition: none;
+  }
+}
+
 /* Marca */
 .cr-brand-mark {
   width: 34px;

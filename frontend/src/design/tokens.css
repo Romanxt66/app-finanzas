@@ -1,6 +1,6 @@
 /* Cristal — generated from design/tokens.json. No editar a mano: npm run gen:tokens */
 :root {
-  --font-sans: Manrope, 'Segoe UI', system-ui, sans-serif;
+  --font-sans: Manrope, "Segoe UI", system-ui, sans-serif;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -46,7 +46,7 @@
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) {
     --bg: #ede9f6;
-    --bg-glow-brand: rgba(124, 58, 237, 0.3);
+    --bg-glow-brand: rgba(124, 58, 237, 0.30);
     --bg-glow-alt: rgba(217, 70, 239, 0.22);
     --glass: rgba(255, 255, 255, 0.55);
     --glass-strong: rgba(255, 255, 255, 0.78);
@@ -67,17 +67,17 @@
     --positive: #047857;
     --positive-soft: rgba(4, 120, 87, 0.12);
     --negative: #be123c;
-    --negative-soft: rgba(190, 18, 60, 0.1);
+    --negative-soft: rgba(190, 18, 60, 0.10);
     --focus: var(--brand);
     --shadow-glass: 0 12px 36px rgba(30, 50, 70, 0.14);
     --shadow-brand: 0 10px 28px rgba(109, 40, 217, 0.38);
-    --shadow-lift: 0 20px 56px rgba(30, 50, 70, 0.2);
+    --shadow-lift: 0 20px 56px rgba(30, 50, 70, 0.20);
     color-scheme: light;
   }
 }
 :root[data-theme='light'] {
   --bg: #ede9f6;
-  --bg-glow-brand: rgba(124, 58, 237, 0.3);
+  --bg-glow-brand: rgba(124, 58, 237, 0.30);
   --bg-glow-alt: rgba(217, 70, 239, 0.22);
   --glass: rgba(255, 255, 255, 0.55);
   --glass-strong: rgba(255, 255, 255, 0.78);
@@ -98,10 +98,10 @@
   --positive: #047857;
   --positive-soft: rgba(4, 120, 87, 0.12);
   --negative: #be123c;
-  --negative-soft: rgba(190, 18, 60, 0.1);
+  --negative-soft: rgba(190, 18, 60, 0.10);
   --focus: var(--brand);
   --shadow-glass: 0 12px 36px rgba(30, 50, 70, 0.14);
   --shadow-brand: 0 10px 28px rgba(109, 40, 217, 0.38);
-  --shadow-lift: 0 20px 56px rgba(30, 50, 70, 0.2);
+  --shadow-lift: 0 20px 56px rgba(30, 50, 70, 0.20);
   color-scheme: light;
 }

@@ -7,7 +7,9 @@
   "paths": {
     "/api/v1/auth/register": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Register",
         "operationId": "register_api_v1_auth_register_post",
         "requestBody": {
@@ -46,7 +48,9 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Login",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
@@ -85,7 +89,9 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Refresh",
         "operationId": "refresh_api_v1_auth_refresh_post",
         "requestBody": {
@@ -124,7 +130,9 @@
     },
     "/api/v1/auth/me": {
       "get": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Me",
         "operationId": "me_api_v1_auth_me_get",
         "responses": {
@@ -146,7 +154,9 @@
         ]
       },
       "patch": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Update Profile",
         "operationId": "update_profile_api_v1_auth_me_patch",
         "requestBody": {
@@ -190,7 +200,9 @@
     },
     "/api/v1/auth/change-password": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Change Password",
         "description": "Cambia la contraseña y cierra las demás sesiones; devuelve tokens nuevos para esta.",
         "operationId": "change_password_api_v1_auth_change_password_post",
@@ -235,7 +247,9 @@
     },
     "/api/v1/auth/logout-all": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Logout All",
         "description": "Invalida todos los tokens emitidos hasta ahora (todos los dispositivos).",
         "operationId": "logout_all_api_v1_auth_logout_all_post",
@@ -253,7 +267,9 @@
     },
     "/api/v1/accounts": {
       "get": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "List Accounts",
         "operationId": "list_accounts_api_v1_accounts_get",
         "security": [
@@ -301,7 +317,9 @@
         }
       },
       "post": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "Create Account",
         "operationId": "create_account_api_v1_accounts_post",
         "security": [
@@ -345,7 +363,9 @@
     },
     "/api/v1/accounts/{account_id}": {
       "get": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "Get Account",
         "operationId": "get_account_api_v1_accounts__account_id__get",
         "security": [
@@ -389,7 +409,9 @@
         }
       },
       "patch": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "Update Account",
         "operationId": "update_account_api_v1_accounts__account_id__patch",
         "security": [
@@ -443,7 +465,9 @@
         }
       },
       "delete": {
-        "tags": ["accounts"],
+        "tags": [
+          "accounts"
+        ],
         "summary": "Delete Account",
         "operationId": "delete_account_api_v1_accounts__account_id__delete",
         "security": [
@@ -482,7 +506,9 @@
     },
     "/api/v1/categories": {
       "get": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "List Categories",
         "operationId": "list_categories_api_v1_categories_get",
         "responses": {
@@ -508,7 +534,9 @@
         ]
       },
       "post": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "Create Category",
         "operationId": "create_category_api_v1_categories_post",
         "requestBody": {
@@ -552,7 +580,9 @@
     },
     "/api/v1/categories/{category_id}": {
       "patch": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "Update Category",
         "operationId": "update_category_api_v1_categories__category_id__patch",
         "security": [
@@ -606,7 +636,9 @@
         }
       },
       "delete": {
-        "tags": ["categories"],
+        "tags": [
+          "categories"
+        ],
         "summary": "Delete Category",
         "operationId": "delete_category_api_v1_categories__category_id__delete",
         "security": [
@@ -645,7 +677,9 @@
     },
     "/api/v1/transactions": {
       "get": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "List Transactions",
         "operationId": "list_transactions_api_v1_transactions_get",
         "security": [
@@ -803,7 +837,9 @@
         }
       },
       "post": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Create Transaction",
         "operationId": "create_transaction_api_v1_transactions_post",
         "security": [
@@ -847,7 +883,9 @@
     },
     "/api/v1/transactions/export": {
       "get": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Export Transactions",
         "description": "CSV (UTF-8 con BOM, para Excel) con los mismos filtros que el listado.",
         "operationId": "export_transactions_api_v1_transactions_export_get",
@@ -983,7 +1021,9 @@
     },
     "/api/v1/transactions/bulk": {
       "post": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Bulk Import",
         "description": "Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes.",
         "operationId": "bulk_import_api_v1_transactions_bulk_post",
@@ -1028,7 +1068,9 @@
     },
     "/api/v1/transactions/{transaction_id}": {
       "get": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Get Transaction",
         "operationId": "get_transaction_api_v1_transactions__transaction_id__get",
         "security": [
@@ -1072,7 +1114,9 @@
         }
       },
       "put": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Update Transaction",
         "operationId": "update_transaction_api_v1_transactions__transaction_id__put",
         "security": [
@@ -1126,7 +1170,9 @@
         }
       },
       "delete": {
-        "tags": ["transactions"],
+        "tags": [
+          "transactions"
+        ],
         "summary": "Delete Transaction",
         "operationId": "delete_transaction_api_v1_transactions__transaction_id__delete",
         "security": [
@@ -1165,7 +1211,9 @@
     },
     "/api/v1/recurring": {
       "get": {
-        "tags": ["recurring"],
+        "tags": [
+          "recurring"
+        ],
         "summary": "List Rules",
         "operationId": "list_rules_api_v1_recurring_get",
         "responses": {
@@ -1191,7 +1239,9 @@
         ]
       },
       "post": {
-        "tags": ["recurring"],
+        "tags": [
+          "recurring"
+        ],
         "summary": "Create Rule",
         "operationId": "create_rule_api_v1_recurring_post",
         "requestBody": {
@@ -1235,7 +1285,9 @@
     },
     "/api/v1/recurring/run": {
       "post": {
-        "tags": ["recurring"],
+        "tags": [
+          "recurring"
+        ],
         "summary": "Run Due",
         "description": "Materializa los movimientos vencidos. `today` permite al cliente usar su fecha local.",
         "operationId": "run_due_api_v1_recurring_run_post",
@@ -1289,7 +1341,9 @@
     },
     "/api/v1/recurring/{rule_id}": {
       "patch": {
-        "tags": ["recurring"],
+        "tags": [
+          "recurring"
+        ],
         "summary": "Update Rule",
         "operationId": "update_rule_api_v1_recurring__rule_id__patch",
         "security": [
@@ -1343,7 +1397,9 @@
         }
       },
       "delete": {
-        "tags": ["recurring"],
+        "tags": [
+          "recurring"
+        ],
         "summary": "Delete Rule",
         "operationId": "delete_rule_api_v1_recurring__rule_id__delete",
         "security": [
@@ -1382,7 +1438,9 @@
     },
     "/api/v1/budgets": {
       "get": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "List Budgets",
         "operationId": "list_budgets_api_v1_budgets_get",
         "security": [
@@ -1437,7 +1495,9 @@
         }
       },
       "post": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "Create Budget",
         "operationId": "create_budget_api_v1_budgets_post",
         "security": [
@@ -1481,7 +1541,9 @@
     },
     "/api/v1/budgets/{budget_id}": {
       "patch": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "Update Budget",
         "operationId": "update_budget_api_v1_budgets__budget_id__patch",
         "security": [
@@ -1535,7 +1597,9 @@
         }
       },
       "delete": {
-        "tags": ["budgets"],
+        "tags": [
+          "budgets"
+        ],
         "summary": "Delete Budget",
         "operationId": "delete_budget_api_v1_budgets__budget_id__delete",
         "security": [
@@ -1574,7 +1638,9 @@
     },
     "/api/v1/goals": {
       "get": {
-        "tags": ["goals"],
+        "tags": [
+          "goals"
+        ],
         "summary": "List Goals",
         "operationId": "list_goals_api_v1_goals_get",
         "responses": {
@@ -1600,7 +1666,9 @@
         ]
       },
       "post": {
-        "tags": ["goals"],
+        "tags": [
+          "goals"
+        ],
         "summary": "Create Goal",
         "operationId": "create_goal_api_v1_goals_post",
         "requestBody": {
@@ -1644,7 +1712,9 @@
     },
     "/api/v1/goals/{goal_id}": {
       "patch": {
-        "tags": ["goals"],
+        "tags": [
+          "goals"
+        ],
         "summary": "Update Goal",
         "operationId": "update_goal_api_v1_goals__goal_id__patch",
         "security": [
@@ -1698,7 +1768,9 @@
         }
       },
       "delete": {
-        "tags": ["goals"],
+        "tags": [
+          "goals"
+        ],
         "summary": "Delete Goal",
         "operationId": "delete_goal_api_v1_goals__goal_id__delete",
         "security": [
@@ -1737,7 +1809,9 @@
     },
     "/api/v1/goals/{goal_id}/contributions": {
       "get": {
-        "tags": ["goals"],
+        "tags": [
+          "goals"
+        ],
         "summary": "List Contributions",
         "operationId": "list_contributions_api_v1_goals__goal_id__contributions_get",
         "security": [
@@ -1785,7 +1859,9 @@
         }
       },
       "post": {
-        "tags": ["goals"],
+        "tags": [
+          "goals"
+        ],
         "summary": "Add Contribution",
         "operationId": "add_contribution_api_v1_goals__goal_id__contributions_post",
         "security": [
@@ -1841,7 +1917,9 @@
     },
     "/api/v1/goals/{goal_id}/contributions/{contribution_id}": {
       "delete": {
-        "tags": ["goals"],
+        "tags": [
+          "goals"
+        ],
         "summary": "Delete Contribution",
         "operationId": "delete_contribution_api_v1_goals__goal_id__contributions__contribution_id__delete",
         "security": [
@@ -1890,8 +1968,11 @@
     },
     "/api/v1/reports/summary": {
       "get": {
-        "tags": ["reports"],
+        "tags": [
+          "reports"
+        ],
         "summary": "Summary",
+        "description": "Resumen del mes en una moneda (por defecto la de la primera cuenta).",
         "operationId": "summary_api_v1_reports_summary_get",
         "security": [
           {
@@ -1907,6 +1988,22 @@
               "type": "string",
               "format": "date",
               "title": "Month"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
             }
           }
         ],
@@ -1936,7 +2033,9 @@
     },
     "/api/v1/life-hours/profile": {
       "get": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Get Profile",
         "operationId": "get_profile_api_v1_life_hours_profile_get",
         "responses": {
@@ -1958,7 +2057,9 @@
         ]
       },
       "put": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Save Profile",
         "operationId": "save_profile_api_v1_life_hours_profile_put",
         "requestBody": {
@@ -2002,7 +2103,9 @@
     },
     "/api/v1/life-hours/convert": {
       "get": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Convert",
         "operationId": "convert_api_v1_life_hours_convert_get",
         "security": [
@@ -2055,7 +2158,9 @@
     },
     "/api/v1/life-hours/summary": {
       "get": {
-        "tags": ["life-hours"],
+        "tags": [
+          "life-hours"
+        ],
         "summary": "Summary",
         "operationId": "summary_api_v1_life_hours_summary_get",
         "security": [
@@ -2101,7 +2206,9 @@
     },
     "/api/v1/currencies": {
       "get": {
-        "tags": ["currencies"],
+        "tags": [
+          "currencies"
+        ],
         "summary": "List Currencies",
         "operationId": "list_currencies_api_v1_currencies_get",
         "responses": {
@@ -2124,7 +2231,9 @@
     },
     "/api/v1/ghost-subscriptions": {
       "get": {
-        "tags": ["ghost-subscriptions"],
+        "tags": [
+          "ghost-subscriptions"
+        ],
         "summary": "Get Report",
         "description": "`today` permite al cliente fijar su fecha local; por defecto, la del servidor.",
         "operationId": "get_report_api_v1_ghost_subscriptions_get",
@@ -2178,7 +2287,9 @@
     },
     "/api/v1/daily-allowance": {
       "get": {
-        "tags": ["daily-allowance"],
+        "tags": [
+          "daily-allowance"
+        ],
         "summary": "Get Daily Allowance",
         "description": "`today` fija la fecha local del cliente; `currency`, por defecto, la de su primera cuenta.",
         "operationId": "get_daily_allowance_api_v1_daily_allowance_get",
@@ -2251,7 +2362,9 @@
     },
     "/health": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "Health",
         "description": "Liveness: el proceso responde (lo usa el healthcheck del contenedor).",
         "operationId": "health_health_get",
@@ -2275,7 +2388,9 @@
     },
     "/health/ready": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "Ready",
         "description": "Readiness: además comprueba que la base de datos responde.",
         "operationId": "ready_health_ready_get",
@@ -2331,7 +2446,12 @@
           }
         },
         "type": "object",
-        "required": ["name", "type", "currency", "initial_balance"],
+        "required": [
+          "name",
+          "type",
+          "currency",
+          "initial_balance"
+        ],
         "title": "AccountCreate"
       },
       "AccountOut": {
@@ -2385,7 +2505,12 @@
       },
       "AccountType": {
         "type": "string",
-        "enum": ["cash", "bank", "card", "savings"],
+        "enum": [
+          "cash",
+          "bank",
+          "card",
+          "savings"
+        ],
         "title": "AccountType"
       },
       "AccountUpdate": {
@@ -2474,17 +2599,30 @@
           }
         },
         "type": "object",
-        "required": ["kind", "name", "currency", "date", "amount"],
+        "required": [
+          "kind",
+          "name",
+          "currency",
+          "date",
+          "amount"
+        ],
         "title": "Alert"
       },
       "AlertKind": {
         "type": "string",
-        "enum": ["price_increase", "duplicate", "trial_converted"],
+        "enum": [
+          "price_increase",
+          "duplicate",
+          "trial_converted"
+        ],
         "title": "AlertKind"
       },
       "Basis": {
         "type": "string",
-        "enum": ["budget", "income"],
+        "enum": [
+          "budget",
+          "income"
+        ],
         "title": "Basis"
       },
       "BudgetCreate": {
@@ -2513,7 +2651,11 @@
           }
         },
         "type": "object",
-        "required": ["category_id", "month", "amount"],
+        "required": [
+          "category_id",
+          "month",
+          "amount"
+        ],
         "title": "BudgetCreate"
       },
       "BudgetOut": {
@@ -2552,7 +2694,15 @@
           }
         },
         "type": "object",
-        "required": ["id", "created_at", "category_id", "month", "amount", "spent", "remaining"],
+        "required": [
+          "id",
+          "created_at",
+          "category_id",
+          "month",
+          "amount",
+          "spent",
+          "remaining"
+        ],
         "title": "BudgetOut"
       },
       "BudgetUpdate": {
@@ -2571,7 +2721,9 @@
           }
         },
         "type": "object",
-        "required": ["amount"],
+        "required": [
+          "amount"
+        ],
         "title": "BudgetUpdate"
       },
       "BulkCreate": {
@@ -2597,7 +2749,10 @@
           }
         },
         "type": "object",
-        "required": ["account_id", "items"],
+        "required": [
+          "account_id",
+          "items"
+        ],
         "title": "BulkCreate"
       },
       "BulkItem": {
@@ -2638,7 +2793,10 @@
           }
         },
         "type": "object",
-        "required": ["occurred_on", "amount"],
+        "required": [
+          "occurred_on",
+          "amount"
+        ],
         "title": "BulkItem"
       },
       "BulkResult": {
@@ -2653,12 +2811,19 @@
           }
         },
         "type": "object",
-        "required": ["created", "skipped"],
+        "required": [
+          "created",
+          "skipped"
+        ],
         "title": "BulkResult"
       },
       "Cadence": {
         "type": "string",
-        "enum": ["weekly", "monthly", "yearly"],
+        "enum": [
+          "weekly",
+          "monthly",
+          "yearly"
+        ],
         "title": "Cadence"
       },
       "CategoryCreate": {
@@ -2674,7 +2839,10 @@
           }
         },
         "type": "object",
-        "required": ["name", "kind"],
+        "required": [
+          "name",
+          "kind"
+        ],
         "title": "CategoryCreate"
       },
       "CategoryHours": {
@@ -2701,12 +2869,19 @@
           }
         },
         "type": "object",
-        "required": ["category_id", "total", "hours"],
+        "required": [
+          "category_id",
+          "total",
+          "hours"
+        ],
         "title": "CategoryHours"
       },
       "CategoryKind": {
         "type": "string",
-        "enum": ["income", "expense"],
+        "enum": [
+          "income",
+          "expense"
+        ],
         "title": "CategoryKind"
       },
       "CategoryOut": {
@@ -2730,7 +2905,12 @@
           }
         },
         "type": "object",
-        "required": ["id", "created_at", "name", "kind"],
+        "required": [
+          "id",
+          "created_at",
+          "name",
+          "kind"
+        ],
         "title": "CategoryOut"
       },
       "CategoryTotal": {
@@ -2753,7 +2933,10 @@
           }
         },
         "type": "object",
-        "required": ["category_id", "total"],
+        "required": [
+          "category_id",
+          "total"
+        ],
         "title": "CategoryTotal"
       },
       "CategoryUpdate": {
@@ -2766,7 +2949,9 @@
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "CategoryUpdate"
       },
       "ChangePasswordIn": {
@@ -2781,7 +2966,10 @@
           }
         },
         "type": "object",
-        "required": ["current_password", "new_password"],
+        "required": [
+          "current_password",
+          "new_password"
+        ],
         "title": "ChangePasswordIn"
       },
       "ContributionCreate": {
@@ -2810,7 +2998,10 @@
           }
         },
         "type": "object",
-        "required": ["amount", "occurred_on"],
+        "required": [
+          "amount",
+          "occurred_on"
+        ],
         "title": "ContributionCreate"
       },
       "ContributionOut": {
@@ -2840,7 +3031,13 @@
           }
         },
         "type": "object",
-        "required": ["id", "goal_id", "amount", "occurred_on", "note"],
+        "required": [
+          "id",
+          "goal_id",
+          "amount",
+          "occurred_on",
+          "note"
+        ],
         "title": "ContributionOut"
       },
       "Conversion": {
@@ -2859,7 +3056,11 @@
           }
         },
         "type": "object",
-        "required": ["amount", "hours", "hourly_rate"],
+        "required": [
+          "amount",
+          "hours",
+          "hourly_rate"
+        ],
         "title": "Conversion"
       },
       "DailyAllowance": {
@@ -2936,7 +3137,11 @@
       },
       "Frequency": {
         "type": "string",
-        "enum": ["weekly", "monthly", "yearly"],
+        "enum": [
+          "weekly",
+          "monthly",
+          "yearly"
+        ],
         "title": "Frequency"
       },
       "GhostReport": {
@@ -2964,7 +3169,11 @@
           }
         },
         "type": "object",
-        "required": ["subscriptions", "alerts", "untracked_monthly"],
+        "required": [
+          "subscriptions",
+          "alerts",
+          "untracked_monthly"
+        ],
         "title": "GhostReport"
       },
       "GoalCreate": {
@@ -3008,7 +3217,11 @@
           }
         },
         "type": "object",
-        "required": ["name", "target_amount", "currency"],
+        "required": [
+          "name",
+          "target_amount",
+          "currency"
+        ],
         "title": "GoalCreate"
       },
       "GoalOut": {
@@ -3146,7 +3359,10 @@
           }
         },
         "type": "object",
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "title": "LoginIn"
       },
       "MonthHours": {
@@ -3177,7 +3393,13 @@
           }
         },
         "type": "object",
-        "required": ["month", "hourly_rate", "total", "total_hours", "by_category"],
+        "required": [
+          "month",
+          "hourly_rate",
+          "total",
+          "total_hours",
+          "by_category"
+        ],
         "title": "MonthHours"
       },
       "MonthTotal": {
@@ -3197,7 +3419,11 @@
           }
         },
         "type": "object",
-        "required": ["month", "income", "expense"],
+        "required": [
+          "month",
+          "income",
+          "expense"
+        ],
         "title": "MonthTotal"
       },
       "MonthlyTotal": {
@@ -3212,7 +3438,10 @@
           }
         },
         "type": "object",
-        "required": ["currency", "total"],
+        "required": [
+          "currency",
+          "total"
+        ],
         "title": "MonthlyTotal"
       },
       "ProfileIn": {
@@ -3244,7 +3473,10 @@
           }
         },
         "type": "object",
-        "required": ["monthly_net_income", "weekly_hours"],
+        "required": [
+          "monthly_net_income",
+          "weekly_hours"
+        ],
         "title": "ProfileIn"
       },
       "ProfileOut": {
@@ -3263,7 +3495,11 @@
           }
         },
         "type": "object",
-        "required": ["monthly_net_income", "weekly_hours", "hourly_rate"],
+        "required": [
+          "monthly_net_income",
+          "weekly_hours",
+          "hourly_rate"
+        ],
         "title": "ProfileOut"
       },
       "ProfileUpdate": {
@@ -3276,7 +3512,9 @@
           }
         },
         "type": "object",
-        "required": ["full_name"],
+        "required": [
+          "full_name"
+        ],
         "title": "ProfileUpdate"
       },
       "RecurringCreate": {
@@ -3353,7 +3591,13 @@
           }
         },
         "type": "object",
-        "required": ["type", "account_id", "amount", "frequency", "start_date"],
+        "required": [
+          "type",
+          "account_id",
+          "amount",
+          "frequency",
+          "start_date"
+        ],
         "title": "RecurringCreate"
       },
       "RecurringOut": {
@@ -3514,7 +3758,9 @@
           }
         },
         "type": "object",
-        "required": ["refresh_token"],
+        "required": [
+          "refresh_token"
+        ],
         "title": "RefreshIn"
       },
       "RegisterIn": {
@@ -3536,7 +3782,11 @@
           }
         },
         "type": "object",
-        "required": ["email", "password", "full_name"],
+        "required": [
+          "email",
+          "password",
+          "full_name"
+        ],
         "title": "RegisterIn"
       },
       "RunResult": {
@@ -3547,12 +3797,19 @@
           }
         },
         "type": "object",
-        "required": ["created"],
+        "required": [
+          "created"
+        ],
         "title": "RunResult"
       },
       "Status": {
         "type": "string",
-        "enum": ["ok", "tight", "over", "no_data"],
+        "enum": [
+          "ok",
+          "tight",
+          "over",
+          "no_data"
+        ],
         "title": "Status"
       },
       "Subscription": {
@@ -3621,6 +3878,24 @@
             "format": "date",
             "title": "Month"
           },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "currencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Currencies"
+          },
           "income": {
             "type": "string",
             "title": "Income"
@@ -3649,7 +3924,16 @@
           }
         },
         "type": "object",
-        "required": ["month", "income", "expense", "net", "expense_by_category", "trend"],
+        "required": [
+          "month",
+          "currency",
+          "currencies",
+          "income",
+          "expense",
+          "net",
+          "expense_by_category",
+          "trend"
+        ],
         "title": "Summary"
       },
       "TokenPair": {
@@ -3669,7 +3953,10 @@
           }
         },
         "type": "object",
-        "required": ["access_token", "refresh_token"],
+        "required": [
+          "access_token",
+          "refresh_token"
+        ],
         "title": "TokenPair"
       },
       "TransactionCreate": {
@@ -3731,7 +4018,12 @@
           }
         },
         "type": "object",
-        "required": ["type", "account_id", "amount", "occurred_on"],
+        "required": [
+          "type",
+          "account_id",
+          "amount",
+          "occurred_on"
+        ],
         "title": "TransactionCreate"
       },
       "TransactionOut": {
@@ -3829,12 +4121,21 @@
           }
         },
         "type": "object",
-        "required": ["items", "total", "limit", "offset"],
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
         "title": "TransactionPage"
       },
       "TransactionType": {
         "type": "string",
-        "enum": ["income", "expense", "transfer"],
+        "enum": [
+          "income",
+          "expense",
+          "transfer"
+        ],
         "title": "TransactionType"
       },
       "UserOut": {
@@ -3855,7 +4156,11 @@
           }
         },
         "type": "object",
-        "required": ["id", "email", "full_name"],
+        "required": [
+          "id",
+          "email",
+          "full_name"
+        ],
         "title": "UserOut"
       },
       "ValidationError": {
@@ -3891,7 +4196,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       }
     },

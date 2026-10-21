@@ -10,6 +10,7 @@ import {
   BalanceCard,
   BudgetBar,
   Delta,
+  Donut,
   Segmented,
   Sparkline,
   TabBar,
@@ -144,6 +145,39 @@ describe('componentes Cristal', () => {
 })
 
 const here = dirname(fileURLToPath(import.meta.url))
+
+describe('Donut', () => {
+  it('reparte 100 unidades de circunferencia según los valores', () => {
+    const { container } = render(
+      <Donut
+        label="d"
+        data={[
+          { key: 'a', value: 75 },
+          { key: 'b', value: 25 },
+        ]}
+      />,
+    )
+    const segments = Array.from(container.querySelectorAll('.cr-donut-seg'))
+    const lengths = segments.map((c) => Number(c.getAttribute('stroke-dasharray')!.split(' ')[0]))
+    expect(lengths[0]).toBeCloseTo(74.4, 1) // 75 % menos un pequeño hueco entre segmentos
+    expect(lengths[1]).toBeCloseTo(24.4, 1)
+    expect(screen.getByRole('img', { name: 'd' })).toBeInTheDocument()
+  })
+  it('sin datos dibuja solo el aro de fondo y las categorías extra se atenúan', () => {
+    const { container, rerender } = render(<Donut label="d" data={[]} />)
+    expect(container.querySelectorAll('.cr-donut-seg')).toHaveLength(0)
+    rerender(
+      <Donut
+        label="d"
+        data={Array.from({ length: 6 }, (_, i) => ({ key: String(i), value: 1 }))}
+      />,
+    )
+    const opacities = Array.from(container.querySelectorAll('.cr-donut-seg')).map((c) =>
+      c.getAttribute('stroke-opacity'),
+    )
+    expect(opacities).toEqual(['1', '1', '1', '1', '0.55', '0.55'])
+  })
+})
 
 describe('tokens compartidos (web y Android)', () => {
   const tokens = JSON.parse(readFileSync(resolve(here, '../../../design/tokens.json'), 'utf8'))
