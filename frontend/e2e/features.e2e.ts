@@ -361,6 +361,7 @@ test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorr
   }, tokens)
 
   await page.goto('/')
+  // por defecto, la moneda de la primera cuenta: no se mezclan los 40 USD con los pesos
   const group = page.getByRole('group', { name: 'Moneda' })
   await expect(group).toBeVisible()
   await expect(group.getByRole('button', { name: 'COP' })).toHaveAttribute('aria-pressed', 'true')
@@ -368,10 +369,32 @@ test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorr
   await expect(
     page.getByRole('img', { name: /Distribución del gasto: Comida 75 %, Ocio 25 %/ }),
   ).toBeVisible()
+  // sin guía de primeros pasos: ya hay cuentas, categorías y movimientos
   await expect(page.getByRole('list', { name: 'Primeros pasos' })).toHaveCount(0)
 
   await group.getByRole('button', { name: 'USD' }).click()
   await expect(group.getByRole('button', { name: 'USD' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText('Sin gastos este mes.')).toBeVisible()
-  await expect(page.getByText(/US\$\s*290/)).toBeVisible()
+  await expect(page.getByText(/US\$\s*290/)).toBeVisible() // 250 + 40, solo cuentas en USD
+})
+
+test('sin conexión: aviso visible y la app se recupera al volver', async ({
+  page,
+  context,
+  request,
+}) => {
+  const stamp = Date.now()
+  const c = { email: `off-${stamp}@example.com`, password: `Clave-${stamp}-o` }
+  await request.post('/api/v1/auth/register', { data: { ...c, full_name: 'Persona Offline' } })
+  const tokens = await (await request.post('/api/v1/auth/login', { data: c })).json()
+  await page.addInitScript((t) => {
+    localStorage.setItem('access_token', t.access_token)
+    localStorage.setItem('refresh_token', t.refresh_token)
+  }, tokens)
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Resumen' })).toBeVisible()
+  await context.setOffline(true)
+  await expect(page.getByText(/Sin conexión/)).toBeVisible()
+  await context.setOffline(false)
+  await expect(page.getByText(/Sin conexión/)).toHaveCount(0)
 })

@@ -9,6 +9,7 @@ import {
   Skeleton,
   TabBar,
   TopNav,
+  useOnline,
   useTheme,
   type NavItem,
 } from '../design'
@@ -37,6 +38,7 @@ const MOBILE_NAV: NavItem[] = [
 export function Layout() {
   const { user, loading, logout } = useAuth()
   const theme = useTheme()
+  const online = useOnline()
   useRunDueRecurring(!!user)
   if (loading)
     return (
@@ -74,6 +76,12 @@ export function Layout() {
             Salir
           </Button>
         </Glass>
+        {!online && (
+          <p className="cr-offline" role="status">
+            Sin conexión: puedes ver lo ya cargado, pero los cambios no se guardarán hasta volver a
+            conectarte.
+          </p>
+        )}
         <main className="cr-main">
           <Suspense fallback={<Skeleton lines={3} height={96} />}>
             <Outlet />

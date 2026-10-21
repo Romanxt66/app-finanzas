@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
@@ -26,6 +26,19 @@ describe('Layout', () => {
     mockApi({})
     renderApp(app, { authed: false })
     expect(await screen.findByText('Pantalla login')).toBeInTheDocument()
+  })
+
+  it('avisa cuando no hay conexión y lo retira al volver', async () => {
+    mockApi({ 'GET /auth/me': user })
+    renderApp(app)
+    await screen.findByText('Contenido')
+    expect(screen.queryByText(/Sin conexión/)).not.toBeInTheDocument()
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    act(() => void window.dispatchEvent(new Event('offline')))
+    expect(await screen.findByText(/Sin conexión/)).toBeInTheDocument()
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true)
+    act(() => void window.dispatchEvent(new Event('online')))
+    await waitFor(() => expect(screen.queryByText(/Sin conexión/)).not.toBeInTheDocument())
   })
 
   it('muestra navegación y nombre del usuario, y cierra sesión', async () => {
