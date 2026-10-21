@@ -23,6 +23,7 @@ import {
   TransactionList,
   TransactionRow,
 } from '../design'
+import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { formatDate, todayISO } from '../lib/format'
 
 const PAGE_SIZE = 20
@@ -160,6 +161,7 @@ function TransactionForm({ editing, onDone }: { editing: Transaction | null; onD
 }
 
 export function TransactionsPage() {
+  const lifeNote = useLifeHoursNote()
   const [filters, setFilters] = useState({
     search: '',
     type: '',
@@ -288,6 +290,7 @@ export function TransactionsPage() {
                   formatDate(t.occurred_on),
                   target ? `${account?.name} → ${target}` : account?.name,
                   category,
+                  t.type === 'expense' ? lifeNote(Number(t.amount), account?.currency) : undefined,
                 ]
                   .filter(Boolean)
                   .join(' · ')}

@@ -443,6 +443,115 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/life-hours/profile': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Profile */
+    get: operations['get_profile_api_v1_life_hours_profile_get']
+    /** Save Profile */
+    put: operations['save_profile_api_v1_life_hours_profile_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/life-hours/convert': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Convert */
+    get: operations['convert_api_v1_life_hours_convert_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/life-hours/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Summary */
+    get: operations['summary_api_v1_life_hours_summary_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/currencies': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Currencies */
+    get: operations['list_currencies_api_v1_currencies_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/ghost-subscriptions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Report
+     * @description `today` permite al cliente fijar su fecha local; por defecto, la del servidor.
+     */
+    get: operations['get_report_api_v1_ghost_subscriptions_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/daily-allowance': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Get Daily Allowance
+     * @description `today` fija la fecha local del cliente; `currency`, por defecto, la de su primera cuenta.
+     */
+    get: operations['get_daily_allowance_api_v1_daily_allowance_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -534,6 +643,35 @@ export interface components {
       /** Archived */
       archived?: boolean | null
     }
+    /** Alert */
+    Alert: {
+      kind: components['schemas']['AlertKind']
+      /** Name */
+      name: string
+      /** Currency */
+      currency: string
+      /**
+       * Date
+       * Format: date
+       */
+      date: string
+      /** Amount */
+      amount: string
+      /** Previous Amount */
+      previous_amount?: string | null
+      /** Change Percent */
+      change_percent?: string | null
+    }
+    /**
+     * AlertKind
+     * @enum {string}
+     */
+    AlertKind: 'price_increase' | 'duplicate' | 'trial_converted'
+    /**
+     * Basis
+     * @enum {string}
+     */
+    Basis: 'budget' | 'income'
     /** BudgetCreate */
     BudgetCreate: {
       /**
@@ -622,11 +760,25 @@ export interface components {
       /** Skipped */
       skipped: number
     }
+    /**
+     * Cadence
+     * @enum {string}
+     */
+    Cadence: 'weekly' | 'monthly' | 'yearly'
     /** CategoryCreate */
     CategoryCreate: {
       /** Name */
       name: string
       kind: components['schemas']['CategoryKind']
+    }
+    /** CategoryHours */
+    CategoryHours: {
+      /** Category Id */
+      category_id: string | null
+      /** Total */
+      total: string
+      /** Hours */
+      hours: string
     }
     /**
      * CategoryKind
@@ -705,11 +857,59 @@ export interface components {
       /** Note */
       note: string
     }
+    /** Conversion */
+    Conversion: {
+      /** Amount */
+      amount: string
+      /** Hours */
+      hours: string
+      /** Hourly Rate */
+      hourly_rate: string
+    }
+    /** DailyAllowance */
+    DailyAllowance: {
+      /**
+       * Day
+       * Format: date
+       */
+      day: string
+      /** Currency */
+      currency: string
+      basis: components['schemas']['Basis']
+      /** Month Total */
+      month_total: string
+      /** Spent Before Today */
+      spent_before_today: string
+      /** Spent Today */
+      spent_today: string
+      /** Pending Committed */
+      pending_committed: string
+      /** Days Remaining */
+      days_remaining: number
+      /** Average Per Day */
+      average_per_day: string
+      /** Allowance Today */
+      allowance_today: string
+      /** Left Today */
+      left_today: string
+      /** Pattern Used */
+      pattern_used: boolean
+      status: components['schemas']['Status']
+    }
     /**
      * Frequency
      * @enum {string}
      */
     Frequency: 'weekly' | 'monthly' | 'yearly'
+    /** GhostReport */
+    GhostReport: {
+      /** Subscriptions */
+      subscriptions: components['schemas']['Subscription'][]
+      /** Alerts */
+      alerts: components['schemas']['Alert'][]
+      /** Untracked Monthly */
+      untracked_monthly: components['schemas']['MonthlyTotal'][]
+    }
     /** GoalCreate */
     GoalCreate: {
       /** Name */
@@ -772,6 +972,22 @@ export interface components {
       /** Password */
       password: string
     }
+    /** MonthHours */
+    MonthHours: {
+      /**
+       * Month
+       * Format: date
+       */
+      month: string
+      /** Hourly Rate */
+      hourly_rate: string
+      /** Total */
+      total: string
+      /** Total Hours */
+      total_hours: string
+      /** By Category */
+      by_category: components['schemas']['CategoryHours'][]
+    }
     /** MonthTotal */
     MonthTotal: {
       /**
@@ -783,6 +999,29 @@ export interface components {
       income: string
       /** Expense */
       expense: string
+    }
+    /** MonthlyTotal */
+    MonthlyTotal: {
+      /** Currency */
+      currency: string
+      /** Total */
+      total: string
+    }
+    /** ProfileIn */
+    ProfileIn: {
+      /** Monthly Net Income */
+      monthly_net_income: number | string
+      /** Weekly Hours */
+      weekly_hours: number | string
+    }
+    /** ProfileOut */
+    ProfileOut: {
+      /** Monthly Net Income */
+      monthly_net_income: string
+      /** Weekly Hours */
+      weekly_hours: string
+      /** Hourly Rate */
+      hourly_rate: string
     }
     /** ProfileUpdate */
     ProfileUpdate: {
@@ -886,6 +1125,39 @@ export interface components {
     RunResult: {
       /** Created */
       created: number
+    }
+    /**
+     * Status
+     * @enum {string}
+     */
+    Status: 'ok' | 'tight' | 'over' | 'no_data'
+    /** Subscription */
+    Subscription: {
+      /** Name */
+      name: string
+      /** Currency */
+      currency: string
+      cadence: components['schemas']['Cadence']
+      /** Typical Amount */
+      typical_amount: string
+      /** Last Amount */
+      last_amount: string
+      /**
+       * Last Date
+       * Format: date
+       */
+      last_date: string
+      /**
+       * Next Expected
+       * Format: date
+       */
+      next_expected: string
+      /** Occurrences */
+      occurrences: number
+      /** Monthly Cost */
+      monthly_cost: string
+      /** Tracked */
+      tracked: boolean
     }
     /** Summary */
     Summary: {
@@ -2248,6 +2520,204 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['Summary']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_profile_api_v1_life_hours_profile_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileOut']
+        }
+      }
+    }
+  }
+  save_profile_api_v1_life_hours_profile_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfileIn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProfileOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  convert_api_v1_life_hours_convert_get: {
+    parameters: {
+      query: {
+        amount: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Conversion']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  summary_api_v1_life_hours_summary_get: {
+    parameters: {
+      query: {
+        month: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MonthHours']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_currencies_api_v1_currencies_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': string[]
+        }
+      }
+    }
+  }
+  get_report_api_v1_ghost_subscriptions_get: {
+    parameters: {
+      query?: {
+        today?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GhostReport']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_daily_allowance_api_v1_daily_allowance_get: {
+    parameters: {
+      query?: {
+        today?: string | null
+        currency?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DailyAllowance']
         }
       }
       /** @description Validation Error */

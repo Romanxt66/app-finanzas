@@ -54,6 +54,64 @@
   }
 }
 
+@keyframes cr-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cr-menu-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cr-float-a {
+  from {
+    transform: rotate(-4deg) translateY(0);
+  }
+  to {
+    transform: rotate(-3deg) translateY(-8px);
+  }
+}
+@keyframes cr-float-b {
+  from {
+    transform: rotate(3deg) translateY(0);
+  }
+  to {
+    transform: rotate(2deg) translateY(7px);
+  }
+}
+@keyframes cr-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes cr-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-8vmax, 10vmax, 0) scale(1.15);
+  }
+}
+@keyframes cr-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(10vmax, -8vmax, 0) scale(0.95);
+  }
+}
+
 /* Cada pantalla entra con sus módulos escalonados */
 .cr-main > * {
   animation: cr-rise 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -166,7 +224,7 @@
 .cr-toast svg {
   width: 18px;
   height: 18px;
-  color: var(--mint);
+  color: var(--brand);
   flex: none;
 }
 @media (min-width: 900px) {
@@ -223,8 +281,25 @@
   .cr-fill,
   .cr-toast,
   .cr-overlay,
-  .cr-dialog {
+  .cr-dialog,
+  .cr-menu,
+  .cr-menu-item,
+  .cr-backdrop::before,
+  .cr-backdrop::after,
+  .cr-login-card,
+  .cr-login-hero > *,
+  .cr-hero-card,
+  .cr-ph,
+  .cr-hero-spark {
     animation: none !important;
+  }
+  .cr-hero-spark {
+    stroke-dashoffset: 0;
+  }
+  .cr-select-chevron,
+  .cr-menu-item,
+  .cr-btn-primary {
+    transition: none;
   }
   .cr-skeleton {
     animation: none;

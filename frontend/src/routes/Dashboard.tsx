@@ -10,6 +10,10 @@ import {
   TransactionList,
   TransactionRow,
 } from '../design'
+import { DailyAllowanceCard } from '../features/DailyAllowanceCard'
+import { GhostTeaser } from '../features/GhostTeaser'
+import { LifeHoursCard } from '../features/LifeHoursCard'
+import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { formatDate, formatMoney, monthLabel, monthStart } from '../lib/format'
 import { useDisplayCurrency } from '../lib/useCurrency'
 
@@ -44,6 +48,7 @@ export function DashboardPage() {
   const [month, setMonth] = useState(monthStart())
   const [hidden, toggleHidden] = useHiddenBalance()
   const currency = useDisplayCurrency()
+  const lifeNote = useLifeHoursNote()
   const { data: accounts = [] } = useAccounts()
   const { data: allAccounts = [] } = useAccounts(true)
   const { data: categories = [] } = useCategories()
@@ -100,6 +105,8 @@ export function DashboardPage() {
         onToggleHidden={toggleHidden}
       />
 
+      <DailyAllowanceCard />
+
       <div className="cr-grid-kpi">
         <StatTile
           label="Ingresos"
@@ -107,7 +114,7 @@ export function DashboardPage() {
           currency={currency}
           delta={change(income, prev && Number(prev.income))}
           icon="salary"
-          tone="mint"
+          tone="brand"
         />
         <StatTile
           label="Gastos"
@@ -183,6 +190,11 @@ export function DashboardPage() {
         </Card>
       </div>
 
+      <div className="cr-grid-cols">
+        <LifeHoursCard month={month} />
+        <GhostTeaser />
+      </div>
+
       {upcoming.length > 0 && (
         <section aria-labelledby="proximos">
           <div className="cr-card-title">
@@ -228,7 +240,14 @@ export function DashboardPage() {
                     t.type
                   ]
                 }
-                detail={formatDate(t.occurred_on)}
+                detail={[
+                  formatDate(t.occurred_on),
+                  t.type === 'expense'
+                    ? lifeNote(Number(t.amount), currencyOf.get(t.account_id))
+                    : undefined,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
                 amount={Number(t.amount)}
                 currency={currencyOf.get(t.account_id)}
               />

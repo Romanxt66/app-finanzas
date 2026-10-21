@@ -69,7 +69,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   // Cuentas
   await goTo(page, 'Cuentas')
   await page.getByLabel('Nombre').fill('Cuenta principal')
-  await page.getByLabel('Moneda').fill('eur')
+  await page.getByLabel('Moneda').selectOption('EUR')
   await page.getByLabel('Saldo inicial').fill('1000')
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Cuenta creada' })).toBeVisible()
@@ -78,7 +78,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   )
   await page.getByLabel('Nombre').fill('Ahorro')
   await page.getByLabel('Tipo').selectOption('savings')
-  await page.getByLabel('Moneda').fill('eur')
+  await page.getByLabel('Moneda').selectOption('EUR')
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: 'Ahorro' })).toBeVisible()
 

@@ -37,7 +37,7 @@ test('metas: crear, aportar, retirar de más, lograr y eliminar', async ({ page 
   await open(page, '/goals', 'Metas')
   await page.getByLabel('Nombre').fill('Viaje')
   await page.getByLabel('Monto objetivo').fill('1000')
-  await page.getByLabel('Moneda').fill('cop')
+  await page.getByLabel('Moneda').selectOption('COP')
   await page.getByRole('button', { name: 'Crear meta' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Meta creada' })).toBeVisible()
   const card = page.getByRole('listitem').filter({ hasText: 'Viaje' })
@@ -73,7 +73,7 @@ test('cuentas: renombrar, no eliminar con movimientos, eliminar vacía y exporta
   await open(page, '/accounts', 'Cuentas')
   for (const name of ['Principal', 'Vacía']) {
     await page.getByLabel('Nombre').fill(name)
-    await page.getByLabel('Moneda').fill('cop')
+    await page.getByLabel('Moneda').selectOption('COP')
     await page.getByRole('button', { name: 'Crear cuenta' }).click()
     await expect(page.getByRole('listitem').filter({ hasText: name })).toBeVisible()
   }

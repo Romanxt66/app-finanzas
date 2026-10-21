@@ -22,13 +22,14 @@ import {
   ConfirmDialog,
   FormDialog,
 } from '../design'
+import { CurrencySelect } from '../features/CurrencySelect'
 import { RenameForm } from '../features/RenameForm'
 import { formatMoney } from '../lib/format'
 
 const schema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
   type: z.enum(['cash', 'bank', 'card', 'savings']),
-  currency: z.string().regex(/^[A-Za-z]{3}$/, 'Código de 3 letras (ISO 4217)'),
+  currency: z.string().min(1, 'Selecciona una moneda'),
   initial_balance: z.string().regex(/^-?\d+(\.\d{1,2})?$/, 'Número con hasta 2 decimales'),
 })
 
@@ -43,7 +44,7 @@ export function AccountsPage() {
   const [pendingDelete, setPendingDelete] = useState<Account | null>(null)
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { type: 'bank' as const, initial_balance: '0' },
+    defaultValues: { type: 'bank' as const, currency: '', initial_balance: '0' },
   })
 
   return (
@@ -63,13 +64,7 @@ export function AccountsPage() {
                 </option>
               ))}
             </Select>
-            <Input
-              label="Moneda"
-              maxLength={3}
-              placeholder="ISO 4217"
-              error={formState.errors.currency?.message}
-              {...register('currency')}
-            />
+            <CurrencySelect error={formState.errors.currency?.message} {...register('currency')} />
             <Input
               label="Saldo inicial"
               inputMode="decimal"
@@ -100,7 +95,7 @@ export function AccountsPage() {
           {accounts.map((a) => (
             <li key={a.id} className={`cr-row-split${a.archived ? ' is-archived' : ''}`}>
               <div className="cr-row" style={{ flexWrap: 'nowrap' }}>
-                <span className="cr-chip cr-chip-mint">
+                <span className="cr-chip cr-chip-brand">
                   <Icon name="wallet" />
                 </span>
                 <div>
