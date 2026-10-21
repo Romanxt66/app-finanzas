@@ -38,9 +38,15 @@ npm run dev
 
 Los tipos de la API se generan desde el backend: `npm run gen:api` (ejecutar tras cambiar schemas o endpoints y commitear `src/api/openapi.json` y `schema.d.ts`).
 
-```bash
-npm test && npm run typecheck && npm run lint
-```
+## Tests
+
+| Capa | Comando | Qué cubre |
+|---|---|---|
+| Backend | `cd backend && uv run pytest --cov=app` | seguridad/JWT, endpoints, reglas de negocio, aislamiento entre usuarios, migraciones vs modelos, restricciones de BD |
+| Frontend (unitarios y componentes) | `cd frontend && npm test` (`npm run test:coverage`) | cliente HTTP con refresh de token, formularios, validaciones, páginas con API simulada |
+| E2E (navegador real) | `cd frontend && npx playwright install chromium && npm run e2e` | flujo completo con backend real y BD SQLite desechable |
+
+Calidad estática: `npm run typecheck && npm run lint` (frontend) y `uv run ruff check . && uv run mypy app` (backend).
 
 ## Notas
 
