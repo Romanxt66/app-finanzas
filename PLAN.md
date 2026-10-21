@@ -50,7 +50,6 @@ app-finanzas/
 ├── TASKS.md                 # reparto de tareas por sesión/rama (fase siguiente)
 ├── README.md
 ├── .env.example
-├── docker-compose.yml       # servicios de desarrollo (BD según §6)
 ├── .github/workflows/       # CI: lint + tests backend y frontend
 ├── backend/
 │   ├── pyproject.toml
@@ -61,8 +60,7 @@ app-finanzas/
 │   │   ├── db/              # engine, sesión, base
 │   │   ├── models/          # SQLAlchemy
 │   │   ├── schemas/         # Pydantic
-│   │   ├── repositories/    # acceso a datos
-│   │   ├── services/        # lógica de negocio
+│   │   ├── services/        # lógica de negocio y acceso a datos
 │   │   └── api/v1/          # routers
 │   └── tests/
 └── frontend/
@@ -91,11 +89,10 @@ app-finanzas/
 - React Router, TanStack Query (estado de servidor), React Hook Form + Zod
 - UI: Tailwind CSS + componentes accesibles (shadcn/ui o similar)
 - Gráficos: Recharts (o similar)
-- Tooling: ESLint, Prettier, Vitest + Testing Library; Playwright para E2E básico
+- Tooling: oxlint, Prettier, Vitest + Testing Library (TypeScript 5.9: `openapi-typescript` aún no soporta TS 6)
 - Tipos de API generados con `openapi-typescript`
 
 **DevOps**
-- Docker + docker-compose para desarrollo
 - GitHub Actions: lint, type-check y tests en cada PR
 
 ## 6. Base de datos (PENDIENTE — la entrega el usuario)
@@ -104,7 +101,7 @@ app-finanzas/
 - Se conecta únicamente vía `DATABASE_URL` en `.env` (nunca en git).
 - Todo el acceso a datos pasa por SQLAlchemy + Alembic, de modo que cambiar de motor no rompa el código. Recomendación por defecto si el usuario no tiene preferencia: **PostgreSQL**.
 - Si la BD ya tiene esquema existente: primero se hace ingeniería inversa/inspección y se decide si se adopta tal cual (modelos mapeados + migración baseline) o se migra. **No se modifica una BD existente sin confirmación del usuario.**
-- Hasta recibirla: desarrollar contra un contenedor local en docker-compose y tests contra BD efímera.
+- Hasta recibirla: los tests usan SQLite en memoria. Al recibir la BD hay que instalar su driver async (p. ej. `asyncpg`) y correr `alembic upgrade head`.
 
 ## 7. Alcance funcional (propuesta inicial, a validar con el usuario)
 
@@ -138,13 +135,13 @@ app-finanzas/
 | Fase | Contenido | Estado |
 |---|---|---|
 | 0 | Plan (este documento) | ✅ |
-| 1 | División de tareas por sesión/rama → `TASKS.md` | ⏳ siguiente |
-| 2 | Repo GitHub + scaffolding backend/frontend + CI + docker-compose | |
+| 1 | División de tareas por sesión/rama → `TASKS.md` | ⏳ pendiente (Desktop añadirá funciones) |
+| 2 | Repo GitHub + scaffolding backend/frontend + CI | ✅ |
 | 3 | Reconciliar contexto previo de Desktop (`docs/contexto-previo.md`) | |
 | 4 | Conectar la BD real del usuario + migración baseline | |
-| 5 | Auth y base del modelo de datos | |
-| 6 | Cuentas, categorías, transacciones (API + UI) | |
-| 7 | Presupuestos y dashboard | |
+| 5 | Auth y base del modelo de datos | ✅ |
+| 6 | Cuentas, categorías, transacciones (API + UI) | ✅ |
+| 7 | Presupuestos y dashboard | ✅ (MVP inicial) |
 | 8 | Pulido, E2E, documentación, despliegue | |
 
 ## 10. Instrucciones para la sesión Desktop
@@ -155,3 +152,7 @@ app-finanzas/
 4. Si necesitas cambiar algo compartido (contrato de API, esquema, este plan), propónlo en un PR pequeño y avisa al usuario.
 5. Aporta primero el contexto de sesiones anteriores en `docs/contexto-previo.md`.
 6. Ante cualquier duda de alcance o de la BD, pregunta al usuario en lugar de asumir.
+
+## 11. Estado actual
+
+Repo: https://github.com/Romanxt66/app-finanzas (público). MVP inicial construido por la sesión CLI: backend (auth JWT, cuentas, categorías, transacciones, presupuestos, resumen) y frontend (login/registro, resumen, transacciones, cuentas, categorías, presupuestos). La sesión Desktop añadirá funciones sobre esta base.
