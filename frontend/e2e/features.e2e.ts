@@ -244,8 +244,6 @@ test('recurrentes: los vencidos se registran solos al abrir la app', async ({ pa
 })
 
 test('importar CSV del banco: vista previa, importación y re-importación sin duplicar', async ({
-
-test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorro', async ({
   page,
   request,
 }) => {
@@ -256,7 +254,57 @@ test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorr
   await request.post('/api/v1/accounts', {
     data: { name: 'Banco', type: 'bank', currency: 'COP', initial_balance: '0' },
     headers: { Authorization: `Bearer ${tokens.access_token}` },
+  })
+  await page.addInitScript((t) => {
+    localStorage.setItem('access_token', t.access_token)
+    localStorage.setItem('refresh_token', t.refresh_token)
+  }, tokens)
 
+  const csv =
+    'Fecha;Descripción;Monto\n05/03/2026;Supermercado;-186.400,50\n06/03/2026;Nómina;4.850.000\n31/02/2026;Fecha mala;5\n'
+  const upload = () =>
+    page.getByLabel('Archivo CSV del banco').setInputFiles({
+      name: 'extracto.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csv, 'utf8'),
+    })
+
+  await open(page, '/import', 'Importar movimientos')
+  await page.getByLabel('Cuenta de destino').selectOption({ label: 'Banco (COP)' })
+  await upload()
+  await expect(page.getByText('2 filas válidas')).toBeVisible()
+  await expect(page.getByText('1 con errores (se omiten)')).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Filas con errores' })).toContainText(
+    'Fila 4: Fecha no válida',
+  )
+  await page.getByRole('button', { name: 'Importar 2 movimientos' }).click()
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Se importaron 2 movimientos' }).first(),
+  ).toBeVisible()
+
+  await open(page, '/transactions', 'Movimientos')
+  await expect(page.getByText('2 resultados')).toBeVisible()
+  await expect(page.getByText('Supermercado')).toBeVisible()
+  await open(page, '/accounts', 'Cuentas')
+  await expect(page.getByRole('listitem').filter({ hasText: 'Banco' })).toContainText(
+    /4\D?663\D?600/,
+  )
+
+  // el mismo archivo otra vez: todo se detecta como existente
+  await open(page, '/import', 'Importar movimientos')
+  await page.getByLabel('Cuenta de destino').selectOption({ label: 'Banco (COP)' })
+  await upload()
+  await page.getByRole('button', { name: 'Importar 2 movimientos' }).click()
+  await expect(page.getByText(/Se importaron 0 movimientos \(2 ya existían/)).toBeVisible()
+  await open(page, '/transactions', 'Movimientos')
+  await expect(page.getByText('2 resultados')).toBeVisible()
+})
+
+test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorro', async ({
+  page,
+  request,
+}) => {
+  const stamp = Date.now()
   const c = { email: `mon-${stamp}@example.com`, password: `Clave-${stamp}-m` }
   await request.post('/api/v1/auth/register', { data: { ...c, full_name: 'Persona Monedas' } })
   const tokens = await (await request.post('/api/v1/auth/login', { data: c })).json()
@@ -312,47 +360,7 @@ test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorr
     localStorage.setItem('refresh_token', t.refresh_token)
   }, tokens)
 
-  const csv =
-    'Fecha;Descripción;Monto\n05/03/2026;Supermercado;-186.400,50\n06/03/2026;Nómina;4.850.000\n31/02/2026;Fecha mala;5\n'
-  const upload = () =>
-    page.getByLabel('Archivo CSV del banco').setInputFiles({
-      name: 'extracto.csv',
-      mimeType: 'text/csv',
-      buffer: Buffer.from(csv, 'utf8'),
-    })
-
-  await open(page, '/import', 'Importar movimientos')
-  await page.getByLabel('Cuenta de destino').selectOption({ label: 'Banco (COP)' })
-  await upload()
-  await expect(page.getByText('2 filas válidas')).toBeVisible()
-  await expect(page.getByText('1 con errores (se omiten)')).toBeVisible()
-  await expect(page.getByRole('list', { name: 'Filas con errores' })).toContainText(
-    'Fila 4: Fecha no válida',
-  )
-  await page.getByRole('button', { name: 'Importar 2 movimientos' }).click()
-  await expect(
-    page.getByRole('status').filter({ hasText: 'Se importaron 2 movimientos' }).first(),
-  ).toBeVisible()
-
-  await open(page, '/transactions', 'Movimientos')
-  await expect(page.getByText('2 resultados')).toBeVisible()
-  await expect(page.getByText('Supermercado')).toBeVisible()
-  await open(page, '/accounts', 'Cuentas')
-  await expect(page.getByRole('listitem').filter({ hasText: 'Banco' })).toContainText(
-    /4\D?663\D?600/,
-  )
-
-  // el mismo archivo otra vez: todo se detecta como existente
-  await open(page, '/import', 'Importar movimientos')
-  await page.getByLabel('Cuenta de destino').selectOption({ label: 'Banco (COP)' })
-  await upload()
-  await page.getByRole('button', { name: 'Importar 2 movimientos' }).click()
-  await expect(page.getByText(/Se importaron 0 movimientos \(2 ya existían/)).toBeVisible()
-  await open(page, '/transactions', 'Movimientos')
-  await expect(page.getByText('2 resultados')).toBeVisible()
-
   await page.goto('/')
-  // por defecto, la moneda de la primera cuenta: no se mezclan los 40 USD con los pesos
   const group = page.getByRole('group', { name: 'Moneda' })
   await expect(group).toBeVisible()
   await expect(group.getByRole('button', { name: 'COP' })).toHaveAttribute('aria-pressed', 'true')
@@ -360,11 +368,10 @@ test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorr
   await expect(
     page.getByRole('img', { name: /Distribución del gasto: Comida 75 %, Ocio 25 %/ }),
   ).toBeVisible()
-  // sin guía de primeros pasos: ya hay cuentas, categorías y movimientos
   await expect(page.getByRole('list', { name: 'Primeros pasos' })).toHaveCount(0)
 
   await group.getByRole('button', { name: 'USD' }).click()
   await expect(group.getByRole('button', { name: 'USD' })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText('Sin gastos este mes.')).toBeVisible()
-  await expect(page.getByText(/US\$\s*290/)).toBeVisible() // 250 + 40, solo cuentas en USD
+  await expect(page.getByText(/US\$\s*290/)).toBeVisible()
 })
