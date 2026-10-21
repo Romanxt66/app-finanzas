@@ -82,3 +82,8 @@ def register_error_handlers(app: FastAPI) -> None:
             _body("validation_error", str(details[0]["msg"]), details),
             status_code=422,
         )
+
+
+class TooManyRequestsError(AppError):
+    status_code = 429
+    code = "too_many_requests"

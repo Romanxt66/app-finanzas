@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
 from app.api.deps import CurrentUser, SessionDep
 from app.schemas.account import AccountCreate, AccountOut, AccountUpdate
@@ -31,3 +31,9 @@ async def update_account(
     account_id: uuid.UUID, data: AccountUpdate, user: CurrentUser, session: SessionDep
 ) -> AccountOut:
     return await accounts.update_account(session, user.id, account_id, data)
+
+
+@router.delete("/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(account_id: uuid.UUID, user: CurrentUser, session: SessionDep) -> Response:
+    await accounts.delete_account(session, user.id, account_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
