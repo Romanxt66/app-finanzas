@@ -100,14 +100,20 @@ export function ImportPage() {
     if (!account) return
     let created = 0
     let skipped = 0
-    for (let i = 0; i < parsed.items.length; i += 500) {
-      const res = await bulk.mutateAsync({
-        account_id: account.id,
-        items: parsed.items.slice(i, i + 500),
-        skip_duplicates: true,
-      })
-      created += res.created
-      skipped += res.skipped
+    try {
+      for (let i = 0; i < parsed.items.length; i += 500) {
+        const res = await bulk.mutateAsync({
+          account_id: account.id,
+          items: parsed.items.slice(i, i + 500),
+          skip_duplicates: true,
+        })
+        created += res.created
+        skipped += res.skipped
+      }
+    } catch {
+      // El mensaje del servidor ya se muestra con <ErrorText error={bulk.error} />
+      if (created > 0) setResult({ created, skipped }) // tandas anteriores sí se guardaron
+      return
     }
     setResult({ created, skipped })
     setText(null)
