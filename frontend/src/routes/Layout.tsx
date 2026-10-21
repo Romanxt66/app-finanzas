@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router-dom'
-import { Backdrop, Button, Glass, Icon, TabBar, TopNav, type NavItem } from '../design'
+import { Backdrop, Button, Glass, Icon, TabBar, TopNav, useTheme, type NavItem } from '../design'
 import { useAuth } from '../features/auth'
 
 const NAV: NavItem[] = [
@@ -12,6 +12,7 @@ const NAV: NavItem[] = [
 
 export function Layout() {
   const { user, loading, logout } = useAuth()
+  const theme = useTheme()
   if (loading)
     return (
       <Backdrop>
@@ -32,6 +33,13 @@ export function Layout() {
           <TopNav items={NAV} />
           <span className="cr-spacer" />
           <span className="label cr-muted cr-user">{user.full_name}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={theme.choice === 'dark' ? 'moon' : 'sun'}
+            aria-label={`Tema: ${{ system: 'automático', light: 'claro', dark: 'oscuro' }[theme.choice]}. Cambiar`}
+            onClick={theme.cycle}
+          />
           <Button variant="ghost" size="sm" icon="logout" onClick={logout}>
             Salir
           </Button>

@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { ToastProvider } from './design'
 import { AuthProvider } from './features/auth'
 import { AccountsPage } from './routes/Accounts'
 import { LoginPage, RegisterPage } from './routes/AuthPages'
@@ -16,21 +17,23 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route element={<Layout />}>
-              <Route index element={<DashboardPage />} />
-              <Route path="transactions" element={<TransactionsPage />} />
-              <Route path="accounts" element={<AccountsPage />} />
-              <Route path="categories" element={<CategoriesPage />} />
-              <Route path="budgets" element={<BudgetsPage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route element={<Layout />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="transactions" element={<TransactionsPage />} />
+                <Route path="accounts" element={<AccountsPage />} />
+                <Route path="categories" element={<CategoriesPage />} />
+                <Route path="budgets" element={<BudgetsPage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

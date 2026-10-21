@@ -13,10 +13,12 @@ import {
 import {
   Button,
   Card,
+  ConfirmDialog,
   Empty,
   ErrorText,
   Input,
   Select,
+  Skeleton,
   TransactionList,
   TransactionRow,
 } from '../design'
@@ -174,6 +176,7 @@ export function TransactionsPage() {
     offset: page * PAGE_SIZE,
   })
   const remove = useDeleteTransaction()
+  const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null)
 
   const accountById = new Map(accounts.map((a) => [a.id, a]))
   const categoryById = new Map(categories.map((c) => [c.id, c.name]))
@@ -235,7 +238,7 @@ export function TransactionsPage() {
         </div>
       </Card>
       {isLoading ? (
-        <Empty>Cargando…</Empty>
+        <Skeleton lines={4} />
       ) : !data?.items.length ? (
         <Card>
           <Empty>No hay transacciones.</Empty>
@@ -276,7 +279,7 @@ export function TransactionsPage() {
                       size="sm"
                       icon="trash"
                       aria-label="Eliminar"
-                      onClick={() => remove.mutate(t.id)}
+                      onClick={() => setPendingDelete(t)}
                     />
                   </>
                 }
@@ -285,6 +288,17 @@ export function TransactionsPage() {
           })}
         </TransactionList>
       )}
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title="¿Eliminar este movimiento?"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete) remove.mutate(pendingDelete.id)
+          setPendingDelete(null)
+        }}
+      >
+        Se ajustará el saldo de la cuenta. Esta acción no se puede deshacer.
+      </ConfirmDialog>
       <ErrorText error={remove.error} />
       <div className="cr-pagination">
         <span className="label cr-muted">{data?.total ?? 0} resultados</span>

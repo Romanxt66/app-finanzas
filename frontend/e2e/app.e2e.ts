@@ -72,6 +72,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   await page.getByLabel('Moneda').fill('eur')
   await page.getByLabel('Saldo inicial').fill('1000')
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Cuenta creada' })).toBeVisible()
   await expect(page.getByRole('listitem').filter({ hasText: 'Cuenta principal' })).toContainText(
     /1\D?000\D00/,
   )
@@ -157,6 +158,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
     .filter({ hasText: 'Supermercado' })
     .getByRole('button', { name: 'Eliminar' })
     .click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Eliminar' }).click()
   await expect(page.getByRole('alert')).toContainText('transacciones asociadas')
 })
 

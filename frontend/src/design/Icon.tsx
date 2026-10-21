@@ -22,6 +22,11 @@ const PATHS = {
   trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
   archive: 'M3 5h18v4H3zM5 9v10h14V9M10 13h4',
   restore: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5',
+  check: 'M5 12.5l4.5 4.5L19 7.5',
+  sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z',
+  download: 'M12 4v11M7 10l5 5 5-5M4 20h16',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.3-4.3',
 } as const
 
 export type IconName = keyof typeof PATHS
