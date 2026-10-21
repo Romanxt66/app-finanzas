@@ -1892,6 +1892,7 @@
       "get": {
         "tags": ["reports"],
         "summary": "Summary",
+        "description": "Resumen del mes en una moneda (por defecto la de la primera cuenta).",
         "operationId": "summary_api_v1_reports_summary_get",
         "security": [
           {
@@ -1907,6 +1908,22 @@
               "type": "string",
               "format": "date",
               "title": "Month"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Currency"
             }
           }
         ],
@@ -2935,6 +2952,24 @@
             "format": "date",
             "title": "Month"
           },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "currencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Currencies"
+          },
           "income": {
             "type": "string",
             "title": "Income"
@@ -2963,7 +2998,16 @@
           }
         },
         "type": "object",
-        "required": ["month", "income", "expense", "net", "expense_by_category", "trend"],
+        "required": [
+          "month",
+          "currency",
+          "currencies",
+          "income",
+          "expense",
+          "net",
+          "expense_by_category",
+          "trend"
+        ],
         "title": "Summary"
       },
       "TokenPair": {

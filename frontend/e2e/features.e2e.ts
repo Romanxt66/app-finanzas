@@ -34,6 +34,10 @@ test.describe.configure({ mode: 'serial' })
 
 test('metas: crear, aportar, retirar de más, lograr y eliminar', async ({ page }) => {
   await register(page)
+  // usuario nuevo: la guía de primeros pasos aparece con los 3 pasos pendientes
+  const steps = page.getByRole('list', { name: 'Primeros pasos' })
+  await expect(steps.getByRole('link')).toHaveCount(3)
+  await expect(steps.getByText('(pendiente)')).toHaveCount(3)
   await open(page, '/goals', 'Metas')
   await page.getByLabel('Nombre').fill('Viaje')
   await page.getByLabel('Monto objetivo').fill('1000')
@@ -240,6 +244,8 @@ test('recurrentes: los vencidos se registran solos al abrir la app', async ({ pa
 })
 
 test('importar CSV del banco: vista previa, importación y re-importación sin duplicar', async ({
+
+test('resumen por moneda: el selector separa cuentas, la dona y la tasa de ahorro', async ({
   page,
   request,
 }) => {
@@ -250,6 +256,56 @@ test('importar CSV del banco: vista previa, importación y re-importación sin d
   await request.post('/api/v1/accounts', {
     data: { name: 'Banco', type: 'bank', currency: 'COP', initial_balance: '0' },
     headers: { Authorization: `Bearer ${tokens.access_token}` },
+
+  const c = { email: `mon-${stamp}@example.com`, password: `Clave-${stamp}-m` }
+  await request.post('/api/v1/auth/register', { data: { ...c, full_name: 'Persona Monedas' } })
+  const tokens = await (await request.post('/api/v1/auth/login', { data: c })).json()
+  const headers = { Authorization: `Bearer ${tokens.access_token}` }
+  const post = async (path: string, data: unknown) =>
+    (await request.post(`/api/v1${path}`, { data, headers })).json()
+  const cop = await post('/accounts', {
+    name: 'Pesos',
+    type: 'bank',
+    currency: 'COP',
+    initial_balance: '1000000',
+  })
+  const usd = await post('/accounts', {
+    name: 'Dólares',
+    type: 'bank',
+    currency: 'USD',
+    initial_balance: '250',
+  })
+  const food = await post('/categories', { name: 'Comida', kind: 'expense' })
+  const fun = await post('/categories', { name: 'Ocio', kind: 'expense' })
+  const pay = await post('/categories', { name: 'Sueldo', kind: 'income' })
+  const today = new Date().toISOString().slice(0, 10)
+  await post('/transactions', {
+    type: 'income',
+    account_id: cop.id,
+    category_id: pay.id,
+    amount: '2000000',
+    occurred_on: today,
+  })
+  await post('/transactions', {
+    type: 'expense',
+    account_id: cop.id,
+    category_id: food.id,
+    amount: '300000',
+    occurred_on: today,
+  })
+  await post('/transactions', {
+    type: 'expense',
+    account_id: cop.id,
+    category_id: fun.id,
+    amount: '100000',
+    occurred_on: today,
+  })
+  await post('/transactions', {
+    type: 'income',
+    account_id: usd.id,
+    category_id: pay.id,
+    amount: '40',
+    occurred_on: today,
   })
   await page.addInitScript((t) => {
     localStorage.setItem('access_token', t.access_token)
@@ -294,4 +350,21 @@ test('importar CSV del banco: vista previa, importación y re-importación sin d
   await expect(page.getByText(/Se importaron 0 movimientos \(2 ya existían/)).toBeVisible()
   await open(page, '/transactions', 'Movimientos')
   await expect(page.getByText('2 resultados')).toBeVisible()
+
+  await page.goto('/')
+  // por defecto, la moneda de la primera cuenta: no se mezclan los 40 USD con los pesos
+  const group = page.getByRole('group', { name: 'Moneda' })
+  await expect(group).toBeVisible()
+  await expect(group.getByRole('button', { name: 'COP' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('Ahorraste el 80 % de tus ingresos')).toBeVisible()
+  await expect(
+    page.getByRole('img', { name: /Distribución del gasto: Comida 75 %, Ocio 25 %/ }),
+  ).toBeVisible()
+  // sin guía de primeros pasos: ya hay cuentas, categorías y movimientos
+  await expect(page.getByRole('list', { name: 'Primeros pasos' })).toHaveCount(0)
+
+  await group.getByRole('button', { name: 'USD' }).click()
+  await expect(group.getByRole('button', { name: 'USD' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText('Sin gastos este mes.')).toBeVisible()
+  await expect(page.getByText(/US\$\s*290/)).toBeVisible() // 250 + 40, solo cuentas en USD
 })

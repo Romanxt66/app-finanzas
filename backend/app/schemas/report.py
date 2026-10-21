@@ -19,6 +19,9 @@ class MonthTotal(BaseModel):
 
 class Summary(BaseModel):
     month: date
+    # Moneda de las cifras (las cuentas en otras monedas no se mezclan) y monedas disponibles
+    currency: str | None
+    currencies: list[str]
     income: Money
     expense: Money
     net: Money
