@@ -291,3 +291,61 @@ async def test_summary_separates_currencies(client: AsyncClient, auth: H) -> Non
 async def test_summary_without_accounts_has_no_currency(client: AsyncClient, auth: H) -> None:
     s = (await client.get("/api/v1/reports/summary?month=2026-03-01", headers=auth)).json()
     assert s["currency"] is None and s["currencies"] == [] and Decimal(s["net"]) == 0
+
+
+# ---- copiar presupuestos ----------------------------------------------------
+async def test_copy_budgets_between_months(client: AsyncClient, auth: H) -> None:
+    food = await _mk(client, auth, "categories", {"name": "Comida", "kind": "expense"})
+    fun = await _mk(client, auth, "categories", {"name": "Ocio", "kind": "expense"})
+    await _mk(
+        client, auth, "budgets", {"category_id": food["id"], "month": "2026-03-01", "amount": "200"}
+    )
+    await _mk(
+        client, auth, "budgets", {"category_id": fun["id"], "month": "2026-03-01", "amount": "50"}
+    )
+    # abril ya tiene Comida con otro monto: se respeta
+    await _mk(
+        client, auth, "budgets", {"category_id": food["id"], "month": "2026-04-01", "amount": "999"}
+    )
+    res = await client.post(
+        "/api/v1/budgets/copy",
+        headers=auth,
+        json={"from_month": "2026-03-15", "to_month": "2026-04-20"},
+    )
+    assert res.status_code == 200 and res.json() == {"created": 1, "skipped": 1}
+    april = {
+        b["category_id"]: b["amount"]
+        for b in (await client.get("/api/v1/budgets?month=2026-04-01", headers=auth)).json()
+    }
+    assert april == {food["id"]: "999.00", fun["id"]: "50.00"}
+    again = await client.post(
+        "/api/v1/budgets/copy",
+        headers=auth,
+        json={"from_month": "2026-03-01", "to_month": "2026-04-01"},
+    )
+    assert again.json() == {"created": 0, "skipped": 2}  # idempotente
+
+
+async def test_copy_budgets_validation_and_privacy(client: AsyncClient, auth: H) -> None:
+    url = "/api/v1/budgets/copy"
+    empty = await client.post(
+        url, headers=auth, json={"from_month": "2026-03-01", "to_month": "2026-04-01"}
+    )
+    assert empty.status_code == 400 and "origen" in empty.json()["error"]["message"]
+    same = await client.post(
+        url, headers=auth, json={"from_month": "2026-03-10", "to_month": "2026-03-20"}
+    )
+    assert same.status_code == 422 and "distintos" in same.json()["error"]["message"]
+    food = await _mk(client, auth, "categories", {"name": "Comida", "kind": "expense"})
+    await _mk(
+        client, auth, "budgets", {"category_id": food["id"], "month": "2026-03-01", "amount": "5"}
+    )
+    other = await register_and_login(client, "b@example.com")
+    assert (
+        await client.post(
+            url, headers=other, json={"from_month": "2026-03-01", "to_month": "2026-04-01"}
+        )
+    ).status_code == 400
+    assert (
+        await client.post(url, json={"from_month": "2026-03-01", "to_month": "2026-04-01"})
+    ).status_code == 401

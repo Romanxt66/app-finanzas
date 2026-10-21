@@ -4,7 +4,13 @@ from datetime import date
 from fastapi import APIRouter, Response, status
 
 from app.api.deps import CurrentUser, SessionDep
-from app.schemas.budget import BudgetCreate, BudgetOut, BudgetUpdate
+from app.schemas.budget import (
+    BudgetCopy,
+    BudgetCopyResult,
+    BudgetCreate,
+    BudgetOut,
+    BudgetUpdate,
+)
 from app.services import budgets
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
@@ -20,6 +26,14 @@ async def list_budgets(
 @router.post("", response_model=BudgetOut, status_code=status.HTTP_201_CREATED)
 async def create_budget(data: BudgetCreate, user: CurrentUser, session: SessionDep) -> BudgetOut:
     return await budgets.create_budget(session, user.id, data)
+
+
+@router.post("/copy", response_model=BudgetCopyResult)
+async def copy_budgets(
+    data: BudgetCopy, user: CurrentUser, session: SessionDep
+) -> BudgetCopyResult:
+    """Copia los presupuestos de `from_month` a `to_month` (no pisa los existentes)."""
+    return await budgets.copy_budgets(session, user.id, data)
 
 
 @router.patch("/{budget_id}", response_model=BudgetOut)

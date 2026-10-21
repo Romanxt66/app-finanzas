@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError, ConflictError, NotFoundError
 from app.models import Budget, CategoryKind, Transaction, TransactionType
-from app.schemas.budget import BudgetCreate, BudgetOut
+from app.schemas.budget import BudgetCopy, BudgetCopyResult, BudgetCreate, BudgetOut
 from app.services import categories
 
 
@@ -114,3 +114,34 @@ async def delete_budget(session: AsyncSession, user_id: uuid.UUID, budget_id: uu
     budget = await _get_owned(session, user_id, budget_id)
     await session.delete(budget)
     await session.commit()
+
+
+async def copy_budgets(
+    session: AsyncSession, user_id: uuid.UUID, data: BudgetCopy
+) -> BudgetCopyResult:
+    """Copia los presupuestos de un mes a otro, respetando los que ya existen."""
+    source = (
+        await session.scalars(
+            select(Budget).where(Budget.user_id == user_id, Budget.month == data.from_month)
+        )
+    ).all()
+    if not source:
+        raise AppError("No hay presupuestos en el mes de origen")
+    existing = set(
+        await session.scalars(
+            select(Budget.category_id).where(
+                Budget.user_id == user_id, Budget.month == data.to_month
+            )
+        )
+    )
+    created = skipped = 0
+    for b in source:
+        if b.category_id in existing:
+            skipped += 1
+            continue
+        session.add(
+            Budget(user_id=user_id, category_id=b.category_id, month=data.to_month, amount=b.amount)
+        )
+        created += 1
+    await session.commit()
+    return BudgetCopyResult(created=created, skipped=skipped)
