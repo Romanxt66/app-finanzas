@@ -8,7 +8,7 @@ async function signUp(page: Page) {
   await page.goto('/register')
   await page.getByLabel('Nombre').fill(creds.name)
   await page.getByLabel('Correo').fill(creds.email)
-  await page.getByLabel('Contraseña').fill(creds.password)
+  await page.getByLabel('Contraseña', { exact: true }).fill(creds.password)
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByText(creds.name)).toBeVisible()
 }
@@ -26,10 +26,36 @@ test('rutas protegidas redirigen a login', async ({ page }) => {
   await expect(page).toHaveURL(/\/login$/)
 })
 
+test('registro: cada contraseña inválida explica el motivo', async ({ page }) => {
+  await page.goto('/register')
+  await page.getByLabel('Nombre').fill('Persona')
+  await page.getByLabel('Correo').fill(`debil-${run}@example.com`)
+  const cases: [string, RegExp][] = [
+    ['corta1', /al menos 8 caracteres/],
+    ['soloLetrasAqui', /al menos un número/],
+    ['1234567890', /al menos una letra/],
+  ]
+  for (const [password, reason] of cases) {
+    await page.getByLabel('Contraseña', { exact: true }).fill(password)
+    await page.getByRole('button', { name: 'Crear cuenta' }).click()
+    await expect(page.getByText(reason).first()).toBeVisible()
+  }
+  await expect(page).toHaveURL(/\/register$/)
+})
+
+test('si el servidor no responde, la app lo dice (no "Error inesperado")', async ({ page }) => {
+  await page.route('**/api/v1/auth/login', (route) => route.abort('connectionrefused'))
+  await page.goto('/login')
+  await page.getByLabel('Correo').fill('a@example.com')
+  await page.getByLabel('Contraseña', { exact: true }).fill('clave-segura-1')
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await expect(page.getByRole('alert')).toContainText('No se pudo conectar con el servidor')
+})
+
 test('login con credenciales incorrectas muestra error', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('Correo').fill('nadie@example.com')
-  await page.getByLabel('Contraseña').fill('incorrecta1')
+  await page.getByLabel('Contraseña', { exact: true }).fill('incorrecta1')
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page.getByRole('alert')).toHaveText('Credenciales incorrectas')
 })
@@ -137,7 +163,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
 test('la sesión persiste al recargar y se cierra con Salir', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('Correo').fill(creds.email)
-  await page.getByLabel('Contraseña').fill(creds.password)
+  await page.getByLabel('Contraseña', { exact: true }).fill(creds.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page.getByText(creds.name)).toBeVisible()
   await page.reload()

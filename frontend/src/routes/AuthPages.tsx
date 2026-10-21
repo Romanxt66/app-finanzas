@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
 import { Backdrop, Button, ErrorText, Glass, Icon, Input } from '../design'
 import { useAuth } from '../features/auth'
+import { passwordProblem, PASSWORD_RULES } from '../lib/password'
 
 const loginSchema = z.object({
   email: z.email('Correo inválido'),
@@ -12,8 +13,28 @@ const loginSchema = z.object({
 })
 const registerSchema = loginSchema.extend({
   full_name: z.string().min(1, 'Requerido').max(120),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password: z.string().superRefine((value, ctx) => {
+    const problem = passwordProblem(value)
+    if (problem) ctx.addIssue({ code: 'custom', message: problem })
+  }),
 })
+
+/** Lista de requisitos que se marcan a medida que se escribe. */
+function PasswordRules({ value }: { value: string }) {
+  return (
+    <ul className="cr-rules" aria-label="Requisitos de la contraseña">
+      {PASSWORD_RULES.map((r) => {
+        const ok = r.ok(value)
+        return (
+          <li key={r.id} data-ok={ok && value.length > 0}>
+            <span aria-hidden="true">{ok && value.length > 0 ? '✓' : '○'}</span> {r.label}
+            <span className="cr-sr">{ok && value.length > 0 ? ' (cumplido)' : ' (pendiente)'}</span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
 
 function Shell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -75,7 +96,10 @@ export function LoginPage() {
 export function RegisterPage() {
   const { user, register: signUp } = useAuth()
   const [error, setError] = useState<unknown>(null)
-  const { register, handleSubmit, formState } = useForm({ resolver: zodResolver(registerSchema) })
+  const { register, handleSubmit, formState, control } = useForm({
+    resolver: zodResolver(registerSchema),
+  })
+  const password = useWatch({ control, name: 'password', defaultValue: '' })
   if (user) return <Navigate to="/" replace />
   return (
     <Shell title="Crear cuenta">
@@ -100,6 +124,7 @@ export function RegisterPage() {
           error={formState.errors.password?.message}
           {...register('password')}
         />
+        <PasswordRules value={password ?? ''} />
         <ErrorText error={error} />
         <Button type="submit" variant="primary" disabled={formState.isSubmitting}>
           Crear cuenta
