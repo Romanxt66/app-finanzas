@@ -10,6 +10,7 @@ import {
   useTransactions,
   type Transaction,
 } from '../api/hooks'
+import { downloadFile } from '../api/client'
 import {
   Button,
   Card,
@@ -176,6 +177,8 @@ export function TransactionsPage() {
     offset: page * PAGE_SIZE,
   })
   const remove = useDeleteTransaction()
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState<unknown>(null)
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null)
 
   const accountById = new Map(accounts.map((a) => [a.id, a]))
@@ -191,12 +194,37 @@ export function TransactionsPage() {
     <>
       <div className="cr-page-head">
         <h1 className="title">Movimientos</h1>
-        {!form && (
-          <Button variant="primary" icon="plus" onClick={() => setForm({ editing: null })}>
-            Nueva
+        <div className="cr-row">
+          <Button
+            variant="ghost"
+            icon="download"
+            disabled={exporting}
+            onClick={async () => {
+              setExporting(true)
+              setExportError(null)
+              try {
+                await downloadFile(
+                  '/transactions/export',
+                  Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
+                  'movimientos.csv',
+                )
+              } catch (e) {
+                setExportError(e)
+              } finally {
+                setExporting(false)
+              }
+            }}
+          >
+            Exportar CSV
           </Button>
-        )}
+          {!form && (
+            <Button variant="primary" icon="plus" onClick={() => setForm({ editing: null })}>
+              Nueva
+            </Button>
+          )}
+        </div>
       </div>
+      <ErrorText error={exportError} />
       {form && (
         <TransactionForm
           key={form.editing?.id ?? 'new'}

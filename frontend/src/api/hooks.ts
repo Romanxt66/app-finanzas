@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useToast } from '../design/Toast'
+import { useToast } from '../design/toastContext'
 import { api, type Schemas } from './client'
 
 export type Account = Schemas['AccountOut']
@@ -8,6 +8,8 @@ export type Transaction = Schemas['TransactionOut']
 export type Budget = Schemas['BudgetOut']
 export type Summary = Schemas['Summary']
 export type TransactionInput = Schemas['TransactionCreate']
+export type Goal = Schemas['GoalOut']
+export type Contribution = Schemas['ContributionOut']
 
 export interface TransactionFilters {
   account_id?: string
@@ -26,6 +28,7 @@ export const keys = {
   transactions: ['transactions'] as const,
   budgets: ['budgets'] as const,
   summary: ['summary'] as const,
+  goals: ['goals'] as const,
 }
 
 /** Una transacción cambia saldos, presupuestos y reportes: se invalida todo lo derivado. */
@@ -164,3 +167,103 @@ export const useSummary = (month: string) =>
     queryKey: [...keys.summary, month],
     queryFn: () => api<Summary>('/reports/summary', { query: { month } }),
   })
+
+export function useDeleteAccount() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.accounts)
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/accounts/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Cuenta eliminada')
+      return invalidate()
+    },
+  })
+}
+
+export function useRenameCategory() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.categories, keys.budgets, keys.summary)
+  return useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      api<Category>(`/categories/${id}`, { method: 'PATCH', body: { name } }),
+    onSuccess: () => {
+      toast.success('Categoría renombrada')
+      return invalidate()
+    },
+  })
+}
+
+export function useUpdateBudget() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.budgets)
+  return useMutation({
+    mutationFn: ({ id, amount }: { id: string; amount: string }) =>
+      api<Budget>(`/budgets/${id}`, { method: 'PATCH', body: { amount } }),
+    onSuccess: () => {
+      toast.success('Presupuesto actualizado')
+      return invalidate()
+    },
+  })
+}
+
+export const useGoals = () =>
+  useQuery({ queryKey: keys.goals, queryFn: () => api<Goal[]>('/goals') })
+
+export function useCreateGoal() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.goals)
+  return useMutation({
+    mutationFn: (body: Schemas['GoalCreate']) => api<Goal>('/goals', { method: 'POST', body }),
+    onSuccess: () => {
+      toast.success('Meta creada')
+      return invalidate()
+    },
+  })
+}
+
+export function useDeleteGoal() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.goals)
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/goals/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Meta eliminada')
+      return invalidate()
+    },
+  })
+}
+
+export function useContribute() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.goals)
+  return useMutation({
+    mutationFn: ({ goalId, ...body }: { goalId: string } & Schemas['ContributionCreate']) =>
+      api<Contribution>(`/goals/${goalId}/contributions`, { method: 'POST', body }),
+    onSuccess: (_data, vars) => {
+      toast.success(Number(vars.amount) < 0 ? 'Retiro registrado' : 'Aporte registrado')
+      return invalidate()
+    },
+  })
+}
+
+export function useUpdateProfile() {
+  const toast = useToast()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (full_name: string) =>
+      api<Schemas['UserOut']>('/auth/me', { method: 'PATCH', body: { full_name } }),
+    onSuccess: () => {
+      toast.success('Perfil actualizado')
+      return qc.invalidateQueries({ queryKey: ['me'] })
+    },
+  })
+}
+
+export function useChangePassword() {
+  const toast = useToast()
+  return useMutation({
+    mutationFn: (body: Schemas['ChangePasswordIn']) =>
+      api<void>('/auth/change-password', { method: 'POST', body }),
+    onSuccess: () => toast.success('Contraseña cambiada'),
+  })
+}

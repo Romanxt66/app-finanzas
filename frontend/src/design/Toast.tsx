@@ -1,26 +1,12 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Glass } from './components'
 import { Icon } from './Icon'
+import { ToastContext } from './toastContext'
 
 interface ToastItem {
   id: number
   message: string
 }
-
-interface ToastApi {
-  success: (message: string) => void
-}
-
-// Sin proveedor (tests, vistas aisladas) los avisos simplemente no se muestran.
-const ToastContext = createContext<ToastApi>({ success: () => {} })
 
 const DURATION_MS = 3800
 
@@ -49,5 +35,3 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     </ToastContext.Provider>
   )
 }
-
-export const useToast = () => useContext(ToastContext)

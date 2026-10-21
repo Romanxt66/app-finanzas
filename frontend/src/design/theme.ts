@@ -28,6 +28,15 @@ const NEXT: Record<ThemeChoice, ThemeChoice> = { system: 'light', light: 'dark',
 export function useTheme() {
   const [choice, setChoice] = useState<ThemeChoice>(read)
   useEffect(() => applyTheme(choice), [choice])
+  const set = useCallback((next: ThemeChoice) => {
+    try {
+      if (next === 'system') localStorage.removeItem(KEY)
+      else localStorage.setItem(KEY, next)
+    } catch {
+      /* preferencia opcional */
+    }
+    setChoice(next)
+  }, [])
   const cycle = useCallback(() => {
     setChoice((c) => {
       const next = NEXT[c]
@@ -40,5 +49,5 @@ export function useTheme() {
       return next
     })
   }, [])
-  return { choice, cycle }
+  return { choice, cycle, set }
 }

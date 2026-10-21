@@ -2,7 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useBudgets, useCategories, useCreateBudget, useDeleteBudget } from '../api/hooks'
+import {
+  useBudgets,
+  useCategories,
+  useCreateBudget,
+  useDeleteBudget,
+  useUpdateBudget,
+} from '../api/hooks'
 import {
   BudgetBar,
   Button,
@@ -13,7 +19,9 @@ import {
   Input,
   Select,
   Skeleton,
+  FormDialog,
 } from '../design'
+import { RenameForm } from '../features/RenameForm'
 import { monthStart } from '../lib/format'
 import { useDisplayCurrency } from '../lib/useCurrency'
 
@@ -29,6 +37,8 @@ export function BudgetsPage() {
   const { data: categories = [] } = useCategories()
   const create = useCreateBudget()
   const remove = useDeleteBudget()
+  const update = useUpdateBudget()
+  const [editing, setEditing] = useState<{ id: string; name: string; amount: string } | null>(null)
   const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
   const { register, handleSubmit, reset, formState } = useForm({ resolver: zodResolver(schema) })
   const names = new Map(categories.map((c) => [c.id, c.name]))
@@ -99,21 +109,64 @@ export function BudgetsPage() {
                 limit={Number(b.amount)}
                 currency={currency}
                 actions={
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() =>
-                      setPending({ id: b.id, name: names.get(b.category_id) ?? 'este presupuesto' })
-                    }
-                  >
-                    Eliminar
-                  </Button>
+                  <span className="cr-actions-inline">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon="edit"
+                      aria-label={`Editar ${names.get(b.category_id) ?? 'presupuesto'}`}
+                      onClick={() =>
+                        setEditing({
+                          id: b.id,
+                          name: names.get(b.category_id) ?? 'presupuesto',
+                          amount: String(Number(b.amount)),
+                        })
+                      }
+                    />
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() =>
+                        setPending({
+                          id: b.id,
+                          name: names.get(b.category_id) ?? 'este presupuesto',
+                        })
+                      }
+                    >
+                      Eliminar
+                    </Button>
+                  </span>
                 }
               />
             </li>
           ))}
         </ul>
       )}
+      <FormDialog
+        open={!!editing}
+        title={`Editar presupuesto de ${editing?.name}`}
+        onClose={() => setEditing(null)}
+      >
+        {editing && (
+          <RenameForm
+            key={editing.id}
+            initial={editing.amount}
+            label="Monto"
+            inputMode="decimal"
+            validate={(v) =>
+              /^\d+(\.\d{1,2})?$/.test(v) && Number(v) > 0
+                ? null
+                : 'Monto positivo con hasta 2 decimales'
+            }
+            pending={update.isPending}
+            error={update.error}
+            onCancel={() => setEditing(null)}
+            onSubmit={(amount) =>
+              update.mutate({ id: editing.id, amount }, { onSuccess: () => setEditing(null) })
+            }
+          />
+        )}
+      </FormDialog>
       <ConfirmDialog
         open={!!pending}
         title={`¿Eliminar el presupuesto de ${pending?.name}?`}

@@ -752,3 +752,68 @@ select.cr-input option {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.cr-goal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.cr-goal-done {
+  border-color: var(--mint);
+}
+.cr-goal-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cr-more {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+}
+.cr-more a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--ink);
+  text-decoration: none;
+}
+.cr-more li + li {
+  border-top: 1px solid var(--hairline);
+}
+.cr-more a:hover {
+  background: var(--glass);
+}
+.cr-more a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* Filas con varias acciones: en pantallas estrechas pasan a otra línea en lugar de desbordar */
+.cr-row-split {
+  flex-wrap: wrap;
+}
+.cr-row-split > * {
+  min-width: 0;
+}
+a.cr-user {
+  text-decoration: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+a.cr-user:hover {
+  color: var(--ink);
+  background: var(--glass);
+}
+a.cr-user:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

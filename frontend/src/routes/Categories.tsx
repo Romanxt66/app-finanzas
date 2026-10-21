@@ -2,8 +2,24 @@ import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useCategories, useCreateCategory, useDeleteCategory } from '../api/hooks'
-import { Button, Card, ConfirmDialog, Empty, ErrorText, Input, Select, Skeleton } from '../design'
+import {
+  useCategories,
+  useCreateCategory,
+  useDeleteCategory,
+  useRenameCategory,
+} from '../api/hooks'
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  Empty,
+  ErrorText,
+  Input,
+  Select,
+  Skeleton,
+  FormDialog,
+} from '../design'
+import { RenameForm } from '../features/RenameForm'
 
 const schema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
@@ -16,6 +32,8 @@ export function CategoriesPage() {
   const { data: categories, isLoading } = useCategories()
   const create = useCreateCategory()
   const remove = useDeleteCategory()
+  const rename = useRenameCategory()
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null)
   const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(schema),
@@ -66,13 +84,22 @@ export function CategoriesPage() {
                         style={{ padding: 'var(--space-2) 0' }}
                       >
                         <span className="body">{c.name}</span>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => setPending({ id: c.id, name: c.name })}
-                        >
-                          Eliminar
-                        </Button>
+                        <span className="cr-actions-inline">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon="edit"
+                            aria-label={`Renombrar ${c.name}`}
+                            onClick={() => setRenaming({ id: c.id, name: c.name })}
+                          />
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setPending({ id: c.id, name: c.name })}
+                          >
+                            Eliminar
+                          </Button>
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -82,6 +109,21 @@ export function CategoriesPage() {
           })}
         </div>
       )}
+      <FormDialog open={!!renaming} title="Renombrar categoría" onClose={() => setRenaming(null)}>
+        {renaming && (
+          <RenameForm
+            key={renaming.id}
+            initial={renaming.name}
+            label="Nombre"
+            pending={rename.isPending}
+            error={rename.error}
+            onCancel={() => setRenaming(null)}
+            onSubmit={(name) =>
+              rename.mutate({ id: renaming.id, name }, { onSuccess: () => setRenaming(null) })
+            }
+          />
+        )}
+      </FormDialog>
       <ConfirmDialog
         open={!!pending}
         title={`¿Eliminar la categoría "${pending?.name}"?`}
