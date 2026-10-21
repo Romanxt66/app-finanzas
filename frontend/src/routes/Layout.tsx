@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { Link, Navigate, Outlet } from 'react-router-dom'
+import { useRunDueRecurring } from '../api/hooks'
 import {
   Backdrop,
   Button,
@@ -19,6 +20,7 @@ const DESKTOP_NAV: NavItem[] = [
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
   { to: '/budgets', label: 'Presupuestos', icon: 'target' },
   { to: '/goals', label: 'Metas', icon: 'chart' },
+  { to: '/recurring', label: 'Recurrentes', icon: 'swap' },
   { to: '/categories', label: 'Categorías', icon: 'tag' },
 ]
 
@@ -34,6 +36,7 @@ const MOBILE_NAV: NavItem[] = [
 export function Layout() {
   const { user, loading, logout } = useAuth()
   const theme = useTheme()
+  useRunDueRecurring(!!user)
   if (loading)
     return (
       <Backdrop>
@@ -53,8 +56,9 @@ export function Layout() {
           </span>
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
-          <Link to="/profile" className="label cr-muted cr-user">
-            {user.full_name}
+          <Link to="/profile" className="label cr-muted cr-user" title="Perfil">
+            <Icon name="user" />
+            <span className="cr-user-name">{user.full_name}</span>
           </Link>
           <Button
             variant="ghost"

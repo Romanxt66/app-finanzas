@@ -15,6 +15,7 @@ const CategoriesPage = lazyPage(() => import('./routes/Categories'), 'Categories
 const DashboardPage = lazyPage(() => import('./routes/Dashboard'), 'DashboardPage')
 const GoalsPage = lazyPage(() => import('./routes/Goals'), 'GoalsPage')
 const MorePage = lazyPage(() => import('./routes/More'), 'MorePage')
+const RecurringPage = lazyPage(() => import('./routes/Recurring'), 'RecurringPage')
 const ProfilePage = lazyPage(() => import('./routes/Profile'), 'ProfilePage')
 const TransactionsPage = lazyPage(() => import('./routes/Transactions'), 'TransactionsPage')
 
@@ -38,6 +39,7 @@ export default function App() {
                 <Route path="categories" element={<CategoriesPage />} />
                 <Route path="budgets" element={<BudgetsPage />} />
                 <Route path="goals" element={<GoalsPage />} />
+                <Route path="recurring" element={<RecurringPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="more" element={<MorePage />} />
               </Route>

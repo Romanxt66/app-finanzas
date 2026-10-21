@@ -334,9 +334,9 @@ export function TopNav({ items }: { items: NavItem[] }) {
   return (
     <nav className="cr-nav" aria-label="Principal">
       {items.map((t) => (
-        <NavLink key={t.to} to={t.to} end={t.end}>
+        <NavLink key={t.to} to={t.to} end={t.end} title={t.label}>
           <Icon name={t.icon} />
-          {t.label}
+          <span className="cr-nav-label">{t.label}</span>
         </NavLink>
       ))}
     </nav>

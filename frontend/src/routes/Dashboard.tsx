@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { useAccounts, useCategories, useSummary, useTransactions } from '../api/hooks'
+import { useAccounts, useCategories, useRecurring, useSummary, useTransactions } from '../api/hooks'
 import {
   BalanceCard,
   Card,
@@ -49,6 +49,11 @@ export function DashboardPage() {
   const { data: categories = [] } = useCategories()
   const { data: summary } = useSummary(month)
   const { data: recent } = useTransactions({ limit: 5, offset: 0 })
+  const { data: rules } = useRecurring()
+  const upcoming = (rules ?? [])
+    .filter((r) => r.active)
+    .sort((a, b) => a.next_date.localeCompare(b.next_date))
+    .slice(0, 3)
   const names = new Map(categories.map((c) => [c.id, c.name]))
   const currencyOf = new Map(allAccounts.map((a) => [a.id, a.currency]))
   const total = accounts.reduce((acc, a) => acc + Number(a.balance), 0)
@@ -177,6 +182,28 @@ export function DashboardPage() {
           )}
         </Card>
       </div>
+
+      {upcoming.length > 0 && (
+        <section aria-labelledby="proximos">
+          <div className="cr-card-title">
+            <h2 id="proximos" className="heading">
+              Próximos recurrentes
+            </h2>
+          </div>
+          <TransactionList label="Próximos recurrentes">
+            {upcoming.map((r) => (
+              <TransactionRow
+                key={r.id}
+                kind={r.type}
+                title={r.description || (r.category_id && names.get(r.category_id)) || 'Recurrente'}
+                detail={`${formatDate(r.next_date)} · ${{ weekly: 'cada semana', monthly: 'cada mes', yearly: 'cada año' }[r.frequency]}`}
+                amount={Number(r.amount)}
+                currency={currencyOf.get(r.account_id)}
+              />
+            ))}
+          </TransactionList>
+        </section>
+      )}
 
       <section aria-labelledby="recientes">
         <div className="cr-card-title">
