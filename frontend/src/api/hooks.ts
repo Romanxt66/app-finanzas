@@ -1,0 +1,133 @@
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api, type Schemas } from './client'
+
+export type Account = Schemas['AccountOut']
+export type Category = Schemas['CategoryOut']
+export type Transaction = Schemas['TransactionOut']
+export type Budget = Schemas['BudgetOut']
+export type Summary = Schemas['Summary']
+export type TransactionInput = Schemas['TransactionCreate']
+
+export interface TransactionFilters {
+  account_id?: string
+  category_id?: string
+  type?: string
+  date_from?: string
+  date_to?: string
+  search?: string
+  limit: number
+  offset: number
+}
+
+export const keys = {
+  accounts: ['accounts'] as const,
+  categories: ['categories'] as const,
+  transactions: ['transactions'] as const,
+  budgets: ['budgets'] as const,
+  summary: ['summary'] as const,
+}
+
+/** Una transacción cambia saldos, presupuestos y reportes: se invalida todo lo derivado. */
+function useInvalidate(...groups: (readonly string[])[]) {
+  const qc = useQueryClient()
+  return () => Promise.all(groups.map((queryKey) => qc.invalidateQueries({ queryKey })))
+}
+
+export const useAccounts = (includeArchived = false) =>
+  useQuery({
+    queryKey: [...keys.accounts, includeArchived],
+    queryFn: () => api<Account[]>('/accounts', { query: { include_archived: includeArchived } }),
+  })
+
+export function useCreateAccount() {
+  const invalidate = useInvalidate(keys.accounts)
+  return useMutation({
+    mutationFn: (body: Schemas['AccountCreate']) =>
+      api<Account>('/accounts', { method: 'POST', body }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateAccount() {
+  const invalidate = useInvalidate(keys.accounts)
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & Schemas['AccountUpdate']) =>
+      api<Account>(`/accounts/${id}`, { method: 'PATCH', body }),
+    onSuccess: invalidate,
+  })
+}
+
+export const useCategories = () =>
+  useQuery({ queryKey: keys.categories, queryFn: () => api<Category[]>('/categories') })
+
+export function useCreateCategory() {
+  const invalidate = useInvalidate(keys.categories)
+  return useMutation({
+    mutationFn: (body: Schemas['CategoryCreate']) =>
+      api<Category>('/categories', { method: 'POST', body }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteCategory() {
+  const invalidate = useInvalidate(keys.categories)
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/categories/${id}`, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  })
+}
+
+export const useTransactions = (filters: TransactionFilters) =>
+  useQuery({
+    queryKey: [...keys.transactions, filters],
+    queryFn: () => api<Schemas['TransactionPage']>('/transactions', { query: { ...filters } }),
+    placeholderData: keepPreviousData,
+  })
+
+export function useSaveTransaction() {
+  const invalidate = useInvalidate(keys.transactions, keys.accounts, keys.budgets, keys.summary)
+  return useMutation({
+    mutationFn: ({ id, body }: { id?: string; body: TransactionInput }) =>
+      id
+        ? api<Transaction>(`/transactions/${id}`, { method: 'PUT', body })
+        : api<Transaction>('/transactions', { method: 'POST', body }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteTransaction() {
+  const invalidate = useInvalidate(keys.transactions, keys.accounts, keys.budgets, keys.summary)
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/transactions/${id}`, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  })
+}
+
+export const useBudgets = (month: string) =>
+  useQuery({
+    queryKey: [...keys.budgets, month],
+    queryFn: () => api<Budget[]>('/budgets', { query: { month } }),
+  })
+
+export function useCreateBudget() {
+  const invalidate = useInvalidate(keys.budgets)
+  return useMutation({
+    mutationFn: (body: Schemas['BudgetCreate']) =>
+      api<Budget>('/budgets', { method: 'POST', body }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteBudget() {
+  const invalidate = useInvalidate(keys.budgets)
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/budgets/${id}`, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  })
+}
+
+export const useSummary = (month: string) =>
+  useQuery({
+    queryKey: [...keys.summary, month],
+    queryFn: () => api<Summary>('/reports/summary', { query: { month } }),
+  })
