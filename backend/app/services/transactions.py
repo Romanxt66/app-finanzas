@@ -10,7 +10,7 @@ from app.schemas.transaction import TransactionCreate
 from app.services import accounts, categories
 
 
-async def _validate(session: AsyncSession, user_id: uuid.UUID, data: TransactionCreate) -> None:
+async def validate(session: AsyncSession, user_id: uuid.UUID, data: TransactionCreate) -> None:
     source = await accounts.get_owned(session, user_id, data.account_id)
     if data.transfer_account_id is not None:
         target = await accounts.get_owned(session, user_id, data.transfer_account_id)
@@ -95,7 +95,7 @@ async def list_transactions(
 async def create_transaction(
     session: AsyncSession, user_id: uuid.UUID, data: TransactionCreate
 ) -> Transaction:
-    await _validate(session, user_id, data)
+    await validate(session, user_id, data)
     tx = Transaction(user_id=user_id, **data.model_dump())
     session.add(tx)
     await session.commit()
@@ -107,7 +107,7 @@ async def update_transaction(
     session: AsyncSession, user_id: uuid.UUID, transaction_id: uuid.UUID, data: TransactionCreate
 ) -> Transaction:
     tx = await get_owned(session, user_id, transaction_id)
-    await _validate(session, user_id, data)
+    await validate(session, user_id, data)
     for field, value in data.model_dump().items():
         setattr(tx, field, value)
     await session.commit()
