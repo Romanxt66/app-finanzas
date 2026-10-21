@@ -1,0 +1,244 @@
+/* Movimiento de Cristal: sutil, rápido (≤450 ms) y desactivable. Nada parpadea ni rebota. */
+@keyframes cr-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cr-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes cr-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes cr-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes cr-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes cr-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Cada pantalla entra con sus módulos escalonados */
+.cr-main > * {
+  animation: cr-rise 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.cr-main > :nth-child(2) {
+  animation-delay: 50ms;
+}
+.cr-main > :nth-child(3) {
+  animation-delay: 100ms;
+}
+.cr-main > :nth-child(4) {
+  animation-delay: 150ms;
+}
+.cr-main > :nth-child(5) {
+  animation-delay: 200ms;
+}
+.cr-main > :nth-child(n + 6) {
+  animation-delay: 250ms;
+}
+
+/* Filas de listas */
+.cr-txn,
+.cr-row-split {
+  animation: cr-fade 0.35s ease both;
+}
+.cr-txn:nth-child(2),
+.cr-row-split:nth-child(2) {
+  animation-delay: 40ms;
+}
+.cr-txn:nth-child(3),
+.cr-row-split:nth-child(3) {
+  animation-delay: 80ms;
+}
+.cr-txn:nth-child(4),
+.cr-row-split:nth-child(4) {
+  animation-delay: 120ms;
+}
+.cr-txn:nth-child(n + 5),
+.cr-row-split:nth-child(n + 5) {
+  animation-delay: 160ms;
+}
+
+/* Barras de progreso: crecen desde cero */
+.cr-fill {
+  transform-origin: left center;
+  animation: cr-grow 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s both;
+}
+
+/* Interacción: elevación suave del vidrio al pasar el cursor (solo punteros finos) */
+@media (hover: hover) {
+  .cr-stat,
+  .cr-budget,
+  .cr-balance {
+    transition:
+      transform 0.2s ease,
+      background 0.2s ease;
+  }
+  .cr-stat:hover,
+  .cr-budget:hover {
+    transform: translateY(-2px);
+    background: var(--glass-strong);
+  }
+}
+.cr-tab {
+  transition:
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+.cr-tab svg {
+  transition: transform 0.2s ease;
+}
+.cr-tab[aria-current='page'] svg {
+  transform: translateY(-2px) scale(1.08);
+}
+.cr-tab:active {
+  transform: scale(0.95);
+}
+.cr-nav a {
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Avisos (toasts) */
+.cr-toasts {
+  position: fixed;
+  z-index: 60;
+  left: 0;
+  right: 0;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  pointer-events: none;
+  padding: 0 var(--space-4);
+}
+.cr-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 420px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-pill);
+  font: 600 14px/20px var(--font-sans);
+  color: var(--ink);
+  animation: cr-toast-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.cr-toast svg {
+  width: 18px;
+  height: 18px;
+  color: var(--mint);
+  flex: none;
+}
+@media (min-width: 900px) {
+  .cr-toasts {
+    bottom: var(--space-5);
+  }
+}
+
+/* Diálogo de confirmación */
+.cr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(5, 8, 12, 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: cr-fade 0.2s ease both;
+}
+.cr-dialog {
+  width: min(100%, 400px);
+  animation: cr-pop 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.cr-dialog p {
+  margin: var(--space-2) 0 var(--space-5);
+}
+.cr-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* Esqueletos de carga */
+.cr-skeleton {
+  display: block;
+  border-radius: var(--radius-md);
+  min-height: 20px;
+  background: linear-gradient(100deg, var(--glass) 30%, var(--glass-strong) 50%, var(--glass) 70%);
+  background-size: 200% 100%;
+  animation: cr-shimmer 1.4s linear infinite;
+}
+.cr-skeleton-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-main > *,
+  .cr-txn,
+  .cr-row-split,
+  .cr-fill,
+  .cr-toast,
+  .cr-overlay,
+  .cr-dialog {
+    animation: none !important;
+  }
+  .cr-skeleton {
+    animation: none;
+  }
+  .cr-stat,
+  .cr-budget,
+  .cr-balance,
+  .cr-tab,
+  .cr-tab svg {
+    transition: none;
+  }
+  .cr-stat:hover,
+  .cr-budget:hover,
+  .cr-tab[aria-current='page'] svg {
+    transform: none;
+  }
+}

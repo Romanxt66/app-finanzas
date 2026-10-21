@@ -11,6 +11,7 @@ import {
 import { NavLink } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
 import { Icon, type IconName } from './Icon'
+import { useCountUp } from './useCountUp'
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ')
 
@@ -47,16 +48,13 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: IconName
 }
 
-export function Button({
-  variant = 'glass',
-  size,
-  icon,
-  className,
-  children,
-  ...rest
-}: ButtonProps) {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { variant = 'glass', size, icon, className, children, ...rest },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       type="button"
       className={cx(
         'cr-btn',
@@ -71,7 +69,7 @@ export function Button({
       {children}
     </button>
   )
-}
+})
 
 export function Badge({
   tone = 'neutral',
@@ -168,7 +166,7 @@ export function BalanceCard(props: {
         )}
       </div>
       <div className="amount-xl cr-balance-value">
-        {props.hidden ? '••••••' : formatMoney(props.value, props.currency)}
+        {props.hidden ? '••••••' : <AnimatedMoney value={props.value} currency={props.currency} />}
       </div>
       <div className="cr-balance-foot">
         {props.note ? <span className="caption cr-muted">{props.note}</span> : <span />}
@@ -197,7 +195,9 @@ export function StatTile(props: {
       </div>
       <div>
         <div className="label cr-muted">{props.label}</div>
-        <div className="amount">{formatMoney(props.value, props.currency)}</div>
+        <div className="amount">
+          <AnimatedMoney value={props.value} currency={props.currency} />
+        </div>
       </div>
     </Glass>
   )
@@ -425,4 +425,20 @@ export function ErrorText({ error }: { error: unknown }) {
 
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="cr-empty">{children}</p>
+}
+
+export function Skeleton({ lines = 3, height = 56 }: { lines?: number; height?: number }) {
+  return (
+    <div className="cr-skeleton-stack" role="status">
+      <span className="cr-sr">Cargando…</span>
+      {Array.from({ length: lines }, (_, i) => (
+        <span key={i} className="cr-skeleton" style={{ height }} aria-hidden="true" />
+      ))}
+    </div>
+  )
+}
+
+/** Cifra que cuenta hasta su valor al aparecer o cambiar. */
+export function AnimatedMoney({ value, currency }: { value: number; currency?: string }) {
+  return <>{formatMoney(useCountUp(value), currency)}</>
 }

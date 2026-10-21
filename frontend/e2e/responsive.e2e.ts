@@ -94,6 +94,22 @@ for (const vp of viewports) {
       )
       expect(bg).toBe(scheme === 'dark' ? '#0a0e13' : '#eaf0f4')
 
+      // selector de tema: automático → claro → oscuro, recordado al recargar
+      const themeBtn = page.getByRole('button', { name: /^Tema:/ })
+      await themeBtn.click()
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+      expect(
+        await page.evaluate(() =>
+          getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+        ),
+      ).toBe('#eaf0f4')
+      await themeBtn.click()
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+      await page.reload()
+      await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+      await page.getByRole('button', { name: /^Tema:/ }).click() // vuelve a automático
+      await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
+
       // objetivos táctiles de al menos 44 px en botones principales
       const btn = await page.getByRole('button', { name: 'Salir' }).boundingBox()
       expect(btn!.height).toBeGreaterThanOrEqual(34)

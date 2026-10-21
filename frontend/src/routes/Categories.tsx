@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useCategories, useCreateCategory, useDeleteCategory } from '../api/hooks'
-import { Button, Card, Empty, ErrorText, Input, Select } from '../design'
+import { Button, Card, ConfirmDialog, Empty, ErrorText, Input, Select, Skeleton } from '../design'
 
 const schema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
@@ -15,6 +16,7 @@ export function CategoriesPage() {
   const { data: categories, isLoading } = useCategories()
   const create = useCreateCategory()
   const remove = useDeleteCategory()
+  const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { kind: 'expense' as const },
@@ -46,7 +48,7 @@ export function CategoriesPage() {
         </form>
       </Card>
       {isLoading ? (
-        <Empty>Cargando…</Empty>
+        <Skeleton lines={3} />
       ) : (
         <div className="cr-grid-cols">
           {(['expense', 'income'] as const).map((kind) => {
@@ -64,7 +66,11 @@ export function CategoriesPage() {
                         style={{ padding: 'var(--space-2) 0' }}
                       >
                         <span className="body">{c.name}</span>
-                        <Button variant="danger" size="sm" onClick={() => remove.mutate(c.id)}>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setPending({ id: c.id, name: c.name })}
+                        >
                           Eliminar
                         </Button>
                       </li>
@@ -76,6 +82,17 @@ export function CategoriesPage() {
           })}
         </div>
       )}
+      <ConfirmDialog
+        open={!!pending}
+        title={`¿Eliminar la categoría "${pending?.name}"?`}
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          if (pending) remove.mutate(pending.id)
+          setPending(null)
+        }}
+      >
+        Solo se puede eliminar si no tiene movimientos asociados.
+      </ConfirmDialog>
       <ErrorText error={remove.error} />
     </>
   )

@@ -3,7 +3,17 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useBudgets, useCategories, useCreateBudget, useDeleteBudget } from '../api/hooks'
-import { BudgetBar, Button, Card, Empty, ErrorText, Input, Select } from '../design'
+import {
+  BudgetBar,
+  Button,
+  Card,
+  ConfirmDialog,
+  Empty,
+  ErrorText,
+  Input,
+  Select,
+  Skeleton,
+} from '../design'
 import { monthStart } from '../lib/format'
 import { useDisplayCurrency } from '../lib/useCurrency'
 
@@ -19,6 +29,7 @@ export function BudgetsPage() {
   const { data: categories = [] } = useCategories()
   const create = useCreateBudget()
   const remove = useDeleteBudget()
+  const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
   const { register, handleSubmit, reset, formState } = useForm({ resolver: zodResolver(schema) })
   const names = new Map(categories.map((c) => [c.id, c.name]))
 
@@ -73,7 +84,7 @@ export function BudgetsPage() {
         </form>
       </Card>
       {isLoading ? (
-        <Empty>Cargando…</Empty>
+        <Skeleton lines={2} />
       ) : !budgets?.length ? (
         <Card>
           <Empty>No hay presupuestos para este mes.</Empty>
@@ -88,7 +99,13 @@ export function BudgetsPage() {
                 limit={Number(b.amount)}
                 currency={currency}
                 actions={
-                  <Button variant="danger" size="sm" onClick={() => remove.mutate(b.id)}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() =>
+                      setPending({ id: b.id, name: names.get(b.category_id) ?? 'este presupuesto' })
+                    }
+                  >
                     Eliminar
                   </Button>
                 }
@@ -97,6 +114,15 @@ export function BudgetsPage() {
           ))}
         </ul>
       )}
+      <ConfirmDialog
+        open={!!pending}
+        title={`¿Eliminar el presupuesto de ${pending?.name}?`}
+        onCancel={() => setPending(null)}
+        onConfirm={() => {
+          if (pending) remove.mutate(pending.id)
+          setPending(null)
+        }}
+      />
     </>
   )
 }

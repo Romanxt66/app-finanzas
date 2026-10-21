@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useAccounts, useCreateAccount, useUpdateAccount } from '../api/hooks'
-import { Button, Card, Empty, ErrorText, Glass, Icon, Input, Select } from '../design'
+import { Button, Card, Empty, ErrorText, Glass, Icon, Input, Select, Skeleton } from '../design'
 import { formatMoney } from '../lib/format'
 
 const schema = z.object({
@@ -63,7 +63,7 @@ export function AccountsPage() {
         </form>
       </Card>
       {isLoading ? (
-        <Empty>Cargando…</Empty>
+        <Skeleton lines={3} />
       ) : !accounts?.length ? (
         <Card>
           <Empty>Aún no tienes cuentas.</Empty>

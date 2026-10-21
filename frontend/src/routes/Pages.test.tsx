@@ -119,6 +119,11 @@ describe('CategoriesPage', () => {
     expect(within(expenses).getByText('Comida')).toBeInTheDocument()
     expect(within(expenses).queryByText('Sueldo')).not.toBeInTheDocument()
     await userEvent.click(within(expenses).getByRole('button', { name: 'Eliminar' }))
+    // pide confirmación antes de borrar
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(false)
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('Comida')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'DELETE')).toBe(true))
   })
 
@@ -269,6 +274,8 @@ describe('TransactionsPage', () => {
       expect(calls.find((c) => c.method === 'PUT')?.body).toMatchObject({ amount: '20' }),
     )
     await userEvent.click(await screen.findByRole('button', { name: 'Eliminar' }))
+    const dialog = await screen.findByRole('alertdialog')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'DELETE')).toBe(true))
   })
 })

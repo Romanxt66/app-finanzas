@@ -1,4 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useToast } from '../design/Toast'
 import { api, type Schemas } from './client'
 
 export type Account = Schemas['AccountOut']
@@ -40,20 +41,28 @@ export const useAccounts = (includeArchived = false) =>
   })
 
 export function useCreateAccount() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.accounts)
   return useMutation({
     mutationFn: (body: Schemas['AccountCreate']) =>
       api<Account>('/accounts', { method: 'POST', body }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Cuenta creada')
+      return invalidate()
+    },
   })
 }
 
 export function useUpdateAccount() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.accounts)
   return useMutation({
     mutationFn: ({ id, ...body }: { id: string } & Schemas['AccountUpdate']) =>
       api<Account>(`/accounts/${id}`, { method: 'PATCH', body }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Cuenta actualizada')
+      return invalidate()
+    },
   })
 }
 
@@ -61,19 +70,27 @@ export const useCategories = () =>
   useQuery({ queryKey: keys.categories, queryFn: () => api<Category[]>('/categories') })
 
 export function useCreateCategory() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.categories)
   return useMutation({
     mutationFn: (body: Schemas['CategoryCreate']) =>
       api<Category>('/categories', { method: 'POST', body }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Categoría creada')
+      return invalidate()
+    },
   })
 }
 
 export function useDeleteCategory() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.categories)
   return useMutation({
     mutationFn: (id: string) => api<void>(`/categories/${id}`, { method: 'DELETE' }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Categoría eliminada')
+      return invalidate()
+    },
   })
 }
 
@@ -85,21 +102,29 @@ export const useTransactions = (filters: TransactionFilters) =>
   })
 
 export function useSaveTransaction() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.transactions, keys.accounts, keys.budgets, keys.summary)
   return useMutation({
     mutationFn: ({ id, body }: { id?: string; body: TransactionInput }) =>
       id
         ? api<Transaction>(`/transactions/${id}`, { method: 'PUT', body })
         : api<Transaction>('/transactions', { method: 'POST', body }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Movimiento guardado')
+      return invalidate()
+    },
   })
 }
 
 export function useDeleteTransaction() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.transactions, keys.accounts, keys.budgets, keys.summary)
   return useMutation({
     mutationFn: (id: string) => api<void>(`/transactions/${id}`, { method: 'DELETE' }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Movimiento eliminado')
+      return invalidate()
+    },
   })
 }
 
@@ -110,19 +135,27 @@ export const useBudgets = (month: string) =>
   })
 
 export function useCreateBudget() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.budgets)
   return useMutation({
     mutationFn: (body: Schemas['BudgetCreate']) =>
       api<Budget>('/budgets', { method: 'POST', body }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Presupuesto creado')
+      return invalidate()
+    },
   })
 }
 
 export function useDeleteBudget() {
+  const toast = useToast()
   const invalidate = useInvalidate(keys.budgets)
   return useMutation({
     mutationFn: (id: string) => api<void>(`/budgets/${id}`, { method: 'DELETE' }),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      toast.success('Presupuesto eliminado')
+      return invalidate()
+    },
   })
 }
 
