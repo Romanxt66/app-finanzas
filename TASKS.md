@@ -45,6 +45,10 @@ Las funciones **leen** datos del núcleo y no deben modificar sus tablas ni sus 
 - `main` solo contiene `PLAN.md` y `.gitignore`. Aún no hay scaffolding de backend/frontend (Fase 2), así que la implementación espera a que Desktop lo suba, o se acuerda con el usuario quién lo crea.
 - Sin motor de base de datos definido (`PLAN.md` §6): desarrollar contra el contenedor local de docker-compose.
 
+## Deuda conocida
+
+- **Totales con varias monedas**: cada cuenta tiene su moneda (selector con las más conocidas), pero dashboard, presupuestos y balance total suman importes sin convertir y usan la moneda de la primera cuenta. Decisión del usuario: dejarlo por ahora. Resolverlo requiere moneda base o tasas de cambio de una fuente externa.
+
 ## Preguntas abiertas
 
 - ¿Quién crea el scaffolding de la Fase 2?
