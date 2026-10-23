@@ -31,7 +31,7 @@ Notas: «Mantener sesión iniciada» guarda los tokens en `localStorage` (si no,
 - [ ] Reportes por moneda (hoy el resumen asume la moneda de la primera cuenta).
 - [ ] Gráfico de dona por categoría y "tasa de ahorro" en el resumen.
 - [ ] Onboarding guiado cuando no hay cuentas.
-- [ ] App Android (Capacitor sobre la web, o Compose leyendo `design/tokens.json`).
+- [ ] App Android (Capacitor sobre la web, Compose o el cliente Flutter de `flutter_app/`).
 - [ ] Despliegue automático (webhook de GitHub → Coolify) y copias de seguridad externas.
 - [ ] Seguridad de la BD: pasar Lab/Prácticas/Polla a usuarios propios, cerrar el 5433, TLS (ver conversación de auditoría).
 

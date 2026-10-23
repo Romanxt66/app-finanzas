@@ -95,6 +95,9 @@ jobs:
           flutter-version: 3.47.5
           cache: true
       - run: flutter pub get
+      - run: dart run tool/gen_tokens.dart
+      - name: Tokens de Flutter al día con design/tokens.json
+        run: git diff --exit-code -- lib/ui/tokens.g.dart
       - run: flutter analyze
       - run: flutter test
       - run: flutter build web --release --no-web-resources-cdn
