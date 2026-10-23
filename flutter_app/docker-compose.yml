@@ -1,0 +1,22 @@
+# Despliegue (Coolify) — Alvea 2: frontend Flutter web servido por nginx.
+# Reutiliza el backend existente (servicio "alvea-api" del compose de la raíz): nginx reenvía
+# /api al backend por la red compartida "coolify", así que no hay CORS ni cambios en la API.
+# Sin credenciales aquí: el frontend no necesita ninguna variable secreta.
+#
+# Nombre de servicio único (alvea2-web): la red "coolify" es compartida con otras apps.
+services:
+  alvea2-web:
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      API_UPSTREAM: ${API_UPSTREAM:-http://alvea-api:8000}
+    networks:
+      - default
+      - coolify # alcanzar alvea-api
+    expose:
+      - '80'
+
+networks:
+  coolify:
+    external: true
