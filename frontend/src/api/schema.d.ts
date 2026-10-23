@@ -168,6 +168,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/categories/suggestions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Suggestions */
+    get: operations['suggestions_api_v1_categories_suggestions_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/categories/{category_id}': {
     parameters: {
       query?: never
@@ -803,6 +820,13 @@ export interface components {
       /** Name */
       name: string
       kind: components['schemas']['CategoryKind']
+    }
+    /** CategorySuggestions */
+    CategorySuggestions: {
+      /** Expense */
+      expense: string[]
+      /** Income */
+      income: string[]
     }
     /** CategoryTotal */
     CategoryTotal: {
@@ -1717,6 +1741,26 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  suggestions_api_v1_categories_suggestions_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CategorySuggestions']
         }
       }
     }

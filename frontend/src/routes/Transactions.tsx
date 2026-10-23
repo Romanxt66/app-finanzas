@@ -23,6 +23,7 @@ import {
   TransactionList,
   TransactionRow,
 } from '../design'
+import { CategorySelect } from '../features/CategorySelect'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { formatDate, todayISO } from '../lib/format'
 
@@ -48,7 +49,6 @@ type FormValues = z.infer<typeof schema>
 
 function TransactionForm({ editing, onDone }: { editing: Transaction | null; onDone: () => void }) {
   const { data: accounts = [] } = useAccounts()
-  const { data: categories = [] } = useCategories()
   const save = useSaveTransaction()
   const { register, handleSubmit, control, formState } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -117,16 +117,7 @@ function TransactionForm({ editing, onDone }: { editing: Transaction | null; onD
               ))}
             </Select>
           ) : (
-            <Select label="Categoría" {...register('category_id')}>
-              <option value="">Sin categoría</option>
-              {categories
-                .filter((c) => c.kind === type)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-            </Select>
+            <CategorySelect kind={type} {...register('category_id')} />
           )}
           <Input
             label="Monto"

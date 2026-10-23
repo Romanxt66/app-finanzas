@@ -550,6 +550,25 @@
         ]
       }
     },
+    "/api/v1/categories/suggestions": {
+      "get": {
+        "tags": ["categories"],
+        "summary": "Suggestions",
+        "operationId": "suggestions_api_v1_categories_suggestions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorySuggestions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/categories/{category_id}": {
       "patch": {
         "tags": ["categories"],
@@ -2749,6 +2768,27 @@
         "type": "object",
         "required": ["id", "created_at", "name", "kind"],
         "title": "CategoryOut"
+      },
+      "CategorySuggestions": {
+        "properties": {
+          "expense": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Expense"
+          },
+          "income": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Income"
+          }
+        },
+        "type": "object",
+        "required": ["expense", "income"],
+        "title": "CategorySuggestions"
       },
       "CategoryTotal": {
         "properties": {

@@ -16,3 +16,8 @@ class CategoryUpdate(BaseModel):
 class CategoryOut(Entity):
     name: str
     kind: CategoryKind
+
+
+class CategorySuggestions(BaseModel):
+    expense: list[str]
+    income: list[str]
