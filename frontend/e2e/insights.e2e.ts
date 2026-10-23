@@ -117,7 +117,8 @@ test('selector de moneda: se puede desplazar el menú hasta la última moneda', 
   await menu.hover()
   await page.mouse.wheel(0, 3000)
   await expect(menu).toBeVisible() // desplazarse dentro del menú no lo cierra
-  expect(await menu.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+  // el desplazamiento con la rueda es animado: se espera a que avance
+  await expect.poll(() => menu.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
   await menu.getByRole('option').last().click()
   await expect(menu).toBeHidden()
   await expect(moneda).toHaveValue(codes[codes.length - 1])
