@@ -84,6 +84,7 @@ export const Select = forwardRef<
   const id = useId()
   const listId = `${id}-list`
   const field = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLUListElement>(null)
   const native = useRef<HTMLSelectElement | null>(null)
   const typed = useRef({ text: '', at: 0 })
   const [open, setOpen] = useState(false)
@@ -127,7 +128,11 @@ export const Select = forwardRef<
   useLayoutEffect(() => {
     if (!open) return
     measure()
-    const close = () => setOpen(false)
+    // El menú tiene su propio scroll: solo cierra el de la página (o el de otro contenedor)
+    const close = (event: Event) => {
+      if (event.target instanceof Node && menuRef.current?.contains(event.target)) return
+      setOpen(false)
+    }
     window.addEventListener('resize', measure)
     window.addEventListener('scroll', close, true)
     return () => {
@@ -217,10 +222,13 @@ export const Select = forwardRef<
     open && placement
       ? createPortal(
           <ul
+            ref={menuRef}
             id={listId}
             role="listbox"
             aria-label={label}
             className={cx('cr cr-menu', placement.up && 'cr-menu-up')}
+            // Sin esto, arrastrar la barra de desplazamiento quita el foco del campo y cierra el menú
+            onMouseDown={(e) => e.preventDefault()}
             style={{
               left: placement.left,
               width: placement.width,

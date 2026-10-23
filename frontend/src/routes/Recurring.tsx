@@ -24,6 +24,7 @@ import {
   Skeleton,
   TransactionRow,
 } from '../design'
+import { CategorySelect } from '../features/CategorySelect'
 import { formatDate, todayISO } from '../lib/format'
 
 const FREQUENCY_LABELS = {
@@ -131,16 +132,7 @@ export function RecurringPage() {
                   ))}
               </Select>
             ) : (
-              <Select label="Categoría" {...register('category_id')}>
-                <option value="">Sin categoría</option>
-                {categories
-                  .filter((c) => c.kind === type)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-              </Select>
+              <CategorySelect kind={type} {...register('category_id')} />
             )}
             <Input
               label="Monto"

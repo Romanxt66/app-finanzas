@@ -106,6 +106,70 @@ test('selector de moneda: menú de cristal con teclado', async ({ page }) => {
   await expect(menu).toBeHidden()
 })
 
+test('selector de moneda: se puede desplazar el menú hasta la última moneda', async ({ page }) => {
+  await seed(page)
+  const codes: string[] = await (await page.request.get('/api/v1/currencies')).json()
+  await page.goto('/accounts')
+  const moneda = page.getByLabel('Moneda')
+  await moneda.click()
+  const menu = page.getByRole('listbox', { name: 'Moneda' })
+  await expect(menu).toBeVisible()
+  await menu.hover()
+  await page.mouse.wheel(0, 3000)
+  await expect(menu).toBeVisible() // desplazarse dentro del menú no lo cierra
+  // el desplazamiento con la rueda es animado: se espera a que avance
+  await expect.poll(() => menu.evaluate((el) => el.scrollTop)).toBeGreaterThan(0)
+  await menu.getByRole('option').last().click()
+  await expect(menu).toBeHidden()
+  await expect(moneda).toHaveValue(codes[codes.length - 1])
+})
+
+test('categorías: sugeridas con un clic y crear una propia desde el formulario', async ({
+  page,
+  request,
+}) => {
+  const c = { email: `cat-${run}@example.com`, password: `Clave-${run}-c` }
+  await request.post('/api/v1/auth/register', { data: { ...c, full_name: 'Persona Categorías' } })
+  const tokens = await (await request.post('/api/v1/auth/login', { data: c })).json()
+  const headers = { Authorization: `Bearer ${tokens.access_token}` }
+  await request.post('/api/v1/accounts', {
+    data: { name: 'Principal', type: 'bank', currency: 'EUR', initial_balance: '0' },
+    headers,
+  })
+  const suggestions = await (await request.get('/api/v1/categories/suggestions')).json()
+  await page.addInitScript((t) => {
+    localStorage.setItem('access_token', t.access_token)
+    localStorage.setItem('refresh_token', t.refresh_token)
+  }, tokens)
+
+  await page.goto('/transactions')
+  await page.getByRole('button', { name: 'Nueva' }).click()
+  const categoria = page.getByLabel('Categoría')
+  const chosen = () => categoria.locator('option:checked')
+
+  // Sin categorías propias: aparecen las sugeridas del tipo gasto y la opción de crear
+  await categoria.click()
+  const menu = page.getByRole('listbox', { name: 'Categoría' })
+  await expect(menu.getByRole('option')).toHaveCount(suggestions.expense.length + 2)
+  await menu.getByRole('option', { name: `${suggestions.expense[0]} · sugerida` }).click()
+  await expect(chosen()).toHaveText(suggestions.expense[0])
+
+  // Una categoría nueva escrita por el usuario
+  await categoria.click()
+  await menu.getByRole('option', { name: /Nueva categoría/ }).click()
+  const dialog = page.getByRole('dialog', { name: 'Nueva categoría' })
+  await dialog.getByLabel('Nombre de la categoría').fill(`Propia ${run}`)
+  await dialog.getByRole('button', { name: 'Crear' }).click()
+  await expect(dialog).toBeHidden()
+  await expect(chosen()).toHaveText(`Propia ${run}`)
+  // el formulario de la pantalla no se envió al crear la categoría
+  await expect(page.getByRole('heading', { name: 'Nueva transacción' })).toBeVisible()
+  const saved = await (await request.get('/api/v1/categories', { headers })).json()
+  expect(saved.map((x: { name: string }) => x.name).sort()).toEqual(
+    [suggestions.expense[0], `Propia ${run}`].sort(),
+  )
+})
+
 test('login: mantener sesión decide dónde se guardan los tokens', async ({ page, request }) => {
   const c = { email: `rem-${run}@example.com`, password: `Clave-${run}-r` }
   await request.post('/api/v1/auth/register', { data: { ...c, full_name: 'Persona Sesión' } })

@@ -3,8 +3,14 @@ import uuid
 from fastapi import APIRouter, Response, status
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.category_suggestions import SUGGESTED_CATEGORIES
 from app.models import Category
-from app.schemas.category import CategoryCreate, CategoryOut, CategoryUpdate
+from app.schemas.category import (
+    CategoryCreate,
+    CategoryOut,
+    CategorySuggestions,
+    CategoryUpdate,
+)
 from app.services import categories
 
 router = APIRouter(prefix="/categories", tags=["categories"])
@@ -13,6 +19,13 @@ router = APIRouter(prefix="/categories", tags=["categories"])
 @router.get("", response_model=list[CategoryOut])
 async def list_categories(user: CurrentUser, session: SessionDep) -> list[Category]:
     return await categories.list_categories(session, user.id)
+
+
+@router.get("/suggestions", response_model=CategorySuggestions)
+async def suggestions() -> CategorySuggestions:
+    return CategorySuggestions(
+        expense=list(SUGGESTED_CATEGORIES["expense"]), income=list(SUGGESTED_CATEGORIES["income"])
+    )
 
 
 @router.post("", response_model=CategoryOut, status_code=status.HTTP_201_CREATED)

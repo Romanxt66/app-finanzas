@@ -17,10 +17,10 @@ import {
   Empty,
   ErrorText,
   Input,
-  Select,
   Skeleton,
   FormDialog,
 } from '../design'
+import { CategorySelect } from '../features/CategorySelect'
 import { RenameForm } from '../features/RenameForm'
 import { monthStart } from '../lib/format'
 import { useDisplayCurrency } from '../lib/useCurrency'
@@ -64,20 +64,13 @@ export function BudgetsPage() {
           )}
         >
           <div className="cr-form-grid">
-            <Select
+            <CategorySelect
+              kind="expense"
               label="Categoría de gasto"
+              emptyLabel="Selecciona…"
               error={formState.errors.category_id?.message}
               {...register('category_id')}
-            >
-              <option value="">Selecciona…</option>
-              {categories
-                .filter((c) => c.kind === 'expense')
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-            </Select>
+            />
             <Input
               label="Monto"
               inputMode="decimal"

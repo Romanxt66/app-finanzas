@@ -90,6 +90,14 @@ export const useCurrencies = () =>
 export const useCategories = () =>
   useQuery({ queryKey: keys.categories, queryFn: () => api<Category[]>('/categories') })
 
+/** Categorías que se pueden crear con un clic (la lista la define el servidor). */
+export const useCategorySuggestions = () =>
+  useQuery({
+    queryKey: ['category-suggestions'] as const,
+    queryFn: () => api<Schemas['CategorySuggestions']>('/categories/suggestions'),
+    staleTime: Infinity,
+  })
+
 export function useCreateCategory() {
   const toast = useToast()
   const invalidate = useInvalidate(keys.categories)
