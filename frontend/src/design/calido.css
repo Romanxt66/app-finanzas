@@ -1,0 +1,215 @@
+/* Cristal cálido — capa visual de la web React sobre cristal.css (valores de tokens.calido.json).
+   Vidrio esmerilado beige sobre una sala difuminada, píldoras de carbón y resaltes amarillos.
+   Solo presentación: no toca estructura ni lógica. */
+
+/* Variables propias de esta capa, por tema (mismos selectores que tokens.css) */
+:root {
+  --frame: rgba(255, 248, 235, 0.04);
+  --topbar-bg: rgba(255, 248, 235, 0.06);
+  --room:
+    radial-gradient(380px 460px at 2% 40%, rgba(120, 140, 90, 0.22), transparent 70%),
+    radial-gradient(340px 420px at 98% 44%, rgba(120, 140, 90, 0.2), transparent 72%),
+    radial-gradient(300px 280px at 64% 22%, rgba(236, 211, 63, 0.14), transparent 70%),
+    radial-gradient(760px 240px at 50% 92%, rgba(255, 240, 215, 0.1), transparent 70%),
+    linear-gradient(180deg, #1a1613 0%, #151210 60%, #110e0c 100%);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --frame: rgba(255, 255, 255, 0.2);
+    --topbar-bg: rgba(255, 255, 255, 0.34);
+    --room:
+      radial-gradient(420px 520px at 2% 40%, rgba(96, 118, 70, 0.55), transparent 70%),
+      radial-gradient(360px 440px at 98% 44%, rgba(150, 170, 104, 0.5), transparent 72%),
+      radial-gradient(320px 300px at 64% 22%, rgba(240, 200, 110, 0.6), transparent 70%),
+      radial-gradient(900px 280px at 50% 90%, rgba(248, 242, 230, 0.95), transparent 70%),
+      radial-gradient(640px 260px at 26% 98%, rgba(176, 140, 98, 0.55), transparent 70%),
+      linear-gradient(180deg, #cdbfa9 0%, #e0d7c6 55%, #d6cab6 100%);
+  }
+}
+:root[data-theme='light'] {
+  --frame: rgba(255, 255, 255, 0.2);
+  --topbar-bg: rgba(255, 255, 255, 0.34);
+  --room:
+    radial-gradient(420px 520px at 2% 40%, rgba(96, 118, 70, 0.55), transparent 70%),
+    radial-gradient(360px 440px at 98% 44%, rgba(150, 170, 104, 0.5), transparent 72%),
+    radial-gradient(320px 300px at 64% 22%, rgba(240, 200, 110, 0.6), transparent 70%),
+    radial-gradient(900px 280px at 50% 90%, rgba(248, 242, 230, 0.95), transparent 70%),
+    radial-gradient(640px 260px at 26% 98%, rgba(176, 140, 98, 0.55), transparent 70%),
+    linear-gradient(180deg, #cdbfa9 0%, #e0d7c6 55%, #d6cab6 100%);
+}
+
+/* Fondo: la sala difuminada que el vidrio esmerila */
+.cr-backdrop {
+  background: var(--room);
+  background-attachment: fixed;
+}
+.cr-backdrop::before,
+.cr-backdrop::after {
+  opacity: 0.4;
+}
+
+/* Vidrio esmerilado */
+.cr-glass {
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(135%);
+  backdrop-filter: blur(var(--blur-md)) saturate(135%);
+}
+
+/* Marco de vidrio que envuelve la pantalla en escritorio */
+@media (min-width: 900px) {
+  /* el margen vive en el fondo (no en el marco) para no añadir scroll a la página */
+  .cr-backdrop {
+    box-sizing: border-box;
+    padding: 24px 0;
+  }
+  .cr-shell {
+    width: min(1320px, calc(100% - 48px));
+    min-height: calc(100dvh - 48px);
+    margin: 0 auto;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    background: var(--frame);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      var(--shadow-glass);
+  }
+  .cr-topbar {
+    margin: 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: var(--space-3) var(--space-5);
+  }
+  .cr-main {
+    padding-top: var(--space-4);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .cr-shell {
+    background: var(--surface-solid);
+  }
+}
+
+/* Barra superior: marca en píldora, navegación en cápsula y acciones en círculos */
+.cr-topbar {
+  background: var(--topbar-bg);
+  border-color: transparent;
+  border-bottom: 1px solid var(--hairline);
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(135%);
+  backdrop-filter: blur(var(--blur-md)) saturate(135%);
+}
+.cr-brand,
+.cr-brand:has(.cr-brand-mark) {
+  height: 40px;
+  padding: 0 var(--space-4) 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  color: var(--ink);
+  font-weight: 700;
+}
+.cr-brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+}
+.cr-nav {
+  flex: 0 1 auto;
+  margin-left: auto;
+  padding: 4px;
+  gap: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+}
+.cr-nav a {
+  height: 34px;
+  font-size: 13px;
+}
+.cr-nav a:hover {
+  background: var(--brand-soft);
+}
+.cr-nav a[aria-current='page'] {
+  background: var(--brand-fill);
+  color: var(--on-brand);
+  box-shadow: none;
+}
+.cr-spacer {
+  flex: 0 0 var(--space-1);
+}
+a.cr-user {
+  height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  color: var(--ink);
+}
+.cr-topbar .cr-btn-ghost {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  color: var(--ink);
+}
+.cr-topbar .cr-btn-ghost:hover:not(:disabled) {
+  background: var(--brand-soft);
+}
+
+/* Acciones y etiquetas: píldoras */
+.cr-btn,
+.cr-badge {
+  border-radius: var(--radius-pill);
+}
+.cr-badge {
+  height: 24px;
+  padding: 0 10px;
+}
+.cr-btn-primary {
+  background: linear-gradient(135deg, var(--brand-fill), var(--brand-fill-2));
+}
+.cr-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.18);
+}
+
+/* Control segmentado y pestaña inferior */
+.cr-seg button[aria-pressed='true'] {
+  background: var(--brand-fill);
+  color: var(--on-brand);
+  box-shadow: none;
+}
+.cr-tab[aria-current='page']::after {
+  background: var(--brand-fill);
+  box-shadow: none;
+}
+
+/* Gráficos: carbón/amarillo y tono arena para el segundo valor */
+.cr-bar-out {
+  fill: var(--ink-faint);
+}
+
+/* Tarjeta de saldo: carbón sólido con resalte amarillo */
+.cr-balance {
+  background: var(--card-dark);
+  border-color: rgba(255, 248, 235, 0.1);
+  color: var(--ink-on-dark);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.cr-balance .cr-muted,
+.cr-balance .overline {
+  color: var(--card-dark-ink-muted);
+}
+.cr-balance .cr-btn-ghost {
+  background: rgba(255, 248, 235, 0.1);
+  border-color: transparent;
+  color: var(--ink-on-dark);
+}
+.cr-balance-spark {
+  color: var(--accent-yellow);
+}
+
+/* Títulos de pantalla: más grandes y ligeros */
+.cr .title {
+  font: 500 26px/32px var(--font-sans);
+  letter-spacing: -0.015em;
+}
+a.cr-user {
+  white-space: nowrap;
+}

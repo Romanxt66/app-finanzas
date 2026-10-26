@@ -153,7 +153,7 @@ export function BalanceCard(props: {
   return (
     <Glass strong className="cr-balance">
       <div className="cr-balance-top">
-        <span className="label cr-muted">{props.label}</span>
+        <span className="overline">{props.label}</span>
         {props.onToggleHidden && (
           <Button
             variant="ghost"
@@ -195,7 +195,7 @@ export function StatTile(props: {
         {props.delta != null && <Delta value={props.delta} invert={props.invertDelta} />}
       </div>
       <div>
-        <div className="label cr-muted">{props.label}</div>
+        <div className="overline">{props.label}</div>
         <div className="amount">
           <AnimatedMoney value={props.value} currency={props.currency} />
         </div>

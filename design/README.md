@@ -15,3 +15,8 @@
 Reglas del sistema (resumen): módulo = una idea; la cifra manda (`amount-xl`/`amount`, números tabulares);
 `brand` (violeta) es marca y acción, `amber` avisos/metas, `positive`/`negative` solo para dinero con signo o flecha;
 vidrio solo sobre `cr-backdrop`; objetivos táctiles de 44 px; foco visible de 2 px.
+
+**Web React: capa «cálida».** `tokens.calido.json` sustituye por nombre los tokens de `tokens.json` solo para la web React
+(`build-tokens.mjs` los mezcla al generar `tokens.css`): vidrio beige sobre una sala difuminada, acción en carbón (amarilla
+en oscuro) y resaltes amarillos. Los estilos de componentes están en `frontend/src/design/calido.css` (solo presentación).
+`tokens.json` y la app Flutter no cambian.

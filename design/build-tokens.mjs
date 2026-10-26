@@ -6,6 +6,15 @@ import { fileURLToPath } from 'node:url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)))
 const tokens = JSON.parse(readFileSync(resolve(root, 'tokens.json'), 'utf8'))
+
+// Capa cálida solo para la web React: sustituye por nombre (o añade) tokens de tokens.json.
+// Flutter no la lee: sigue con tokens.json tal cual.
+const overlay = JSON.parse(readFileSync(resolve(root, 'tokens.calido.json'), 'utf8'))
+for (const family of ['color', 'spacing', 'radius', 'shadow', 'blur']) {
+  const byName = new Map((tokens[family]?.tokens ?? []).map((t) => [t.name, t]))
+  for (const t of overlay[family]?.tokens ?? []) byName.set(t.name, t)
+  tokens[family] = { ...tokens[family], tokens: [...byName.values()] }
+}
 const out = resolve(root, '../frontend/src/design/tokens.css')
 
 const [first, ...others] = tokens.color.themes.map((t) => t.id)
