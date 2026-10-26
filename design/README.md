@@ -14,5 +14,10 @@
 - Cambiar un token = editar `tokens.json` y regenerar; ambas plataformas quedan alineadas.
 
 Reglas del sistema (resumen): módulo = una idea; la cifra manda (`amount-xl`/`amount`, números tabulares);
-`brand` (violeta) es marca y acción, `amber` avisos/metas, `positive`/`negative` solo para dinero con signo o flecha;
+`brand` (fucsia) es marca y acción, `amber` avisos/metas, `positive`/`negative` solo para dinero con signo o flecha;
 vidrio solo sobre `cr-backdrop`; objetivos táctiles de 44 px; foco visible de 2 px.
+
+**Versión fucsia (oct. 2026):** paleta, radios (10/14/20 px), desenfoques (32/44 px) y el estilo `overline` (11 px, mayúsculas,
+tracking 0.08em) vienen del sistema "Alvea" diseñado en Claude. Fondo casi negro `#020103`, acción `brand-fill` `#a21caf`
+(texto blanco 6.3:1), acento `brand` `#f0abfc` (oscuro) / `#a21cae` (claro). Se añadieron `chart-1…5` para gráficos.
+Fuente tipográfica: solo Manrope (incluida, sin CDN); no se usa Inter por la CSP.

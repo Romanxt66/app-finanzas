@@ -27,6 +27,11 @@ class CrPalette {
     required this.negative,
     required this.negativeSoft,
     required this.focus,
+    required this.chart1,
+    required this.chart2,
+    required this.chart3,
+    required this.chart4,
+    required this.chart5,
     required this.shadowGlass,
     required this.shadowBrand,
     required this.shadowLift,
@@ -55,78 +60,93 @@ class CrPalette {
   final Color negative;
   final Color negativeSoft;
   final Color focus;
+  final Color chart1;
+  final Color chart2;
+  final Color chart3;
+  final Color chart4;
+  final Color chart5;
   final BoxShadow shadowGlass;
   final BoxShadow shadowBrand;
   final BoxShadow shadowLift;
 }
 
 const crPaletteDark = CrPalette(
-  bg: Color(0xFF07080D),
-  bgGlowBrand: Color.fromRGBO(124, 58, 237, 0.46),
-  bgGlowAlt: Color.fromRGBO(192, 38, 211, 0.28),
-  glass: Color.fromRGBO(255, 255, 255, 0.06),
-  glassStrong: Color.fromRGBO(255, 255, 255, 0.11),
-  glassBorder: Color.fromRGBO(255, 255, 255, 0.12),
-  glassHighlight: Color.fromRGBO(255, 255, 255, 0.18),
-  hairline: Color.fromRGBO(255, 255, 255, 0.08),
-  surfaceSolid: Color(0xFF14121D),
-  ink: Color(0xFFF1F5F8),
-  inkMuted: Color(0xFF9AA7B4),
-  inkFaint: Color(0xFF6B7886),
-  brand: Color(0xFFA78BFA),
-  brandSoft: Color.fromRGBO(139, 92, 246, 0.24),
+  bg: Color(0xFF020103),
+  bgGlowBrand: Color.fromRGBO(162, 28, 175, 0.4),
+  bgGlowAlt: Color.fromRGBO(109, 40, 217, 0.3),
+  glass: Color.fromRGBO(15, 10, 20, 0.6),
+  glassStrong: Color.fromRGBO(6, 4, 8, 0.88),
+  glassBorder: Color.fromRGBO(255, 255, 255, 0.07),
+  glassHighlight: Color.fromRGBO(255, 255, 255, 0.08),
+  hairline: Color.fromRGBO(255, 255, 255, 0.07),
+  surfaceSolid: Color(0xFF0C0810),
+  ink: Color(0xFFF4F2FA),
+  inkMuted: Color(0xFFA7A1BA),
+  inkFaint: Color(0xFF857F99),
+  brand: Color(0xFFF0ABFC),
+  brandSoft: Color.fromRGBO(162, 28, 175, 0.28),
   onBrand: Color(0xFFFFFFFF),
-  brandFill: Color(0xFF7C3AED),
-  brandFill2: Color(0xFF6D28D9),
+  brandFill: Color(0xFFA21CAF),
+  brandFill2: Color(0xFF86198F),
   amber: Color(0xFFFBBF24),
   amberSoft: Color.fromRGBO(251, 191, 36, 0.16),
-  positive: Color(0xFF6EE7B7),
-  positiveSoft: Color.fromRGBO(110, 231, 183, 0.16),
-  negative: Color(0xFFFDA4AF),
-  negativeSoft: Color.fromRGBO(253, 164, 175, 0.14),
-  focus: Color(0xFFA78BFA),
-  shadowGlass: BoxShadow(offset: Offset(0, 12), blurRadius: 40, color: Color.fromRGBO(0, 0, 0, 0.45)),
-  shadowBrand: BoxShadow(offset: Offset(0, 10), blurRadius: 30, color: Color.fromRGBO(124, 58, 237, 0.5)),
+  positive: Color(0xFF34D399),
+  positiveSoft: Color.fromRGBO(52, 211, 153, 0.16),
+  negative: Color(0xFFF87171),
+  negativeSoft: Color.fromRGBO(248, 113, 113, 0.16),
+  focus: Color(0xFFE879F9),
+  chart1: Color(0xFFA21CAF),
+  chart2: Color(0xFF2DD4BF),
+  chart3: Color(0xFFFBBF24),
+  chart4: Color(0xFFA78BFA),
+  chart5: Color(0xFF6A6383),
+  shadowGlass: BoxShadow(offset: Offset(0, 8), blurRadius: 32, color: Color.fromRGBO(0, 0, 0, 0.35)),
+  shadowBrand: BoxShadow(offset: Offset(0, 8), blurRadius: 24, color: Color.fromRGBO(162, 28, 175, 0.4)),
   shadowLift: BoxShadow(offset: Offset(0, 20), blurRadius: 60, color: Color.fromRGBO(0, 0, 0, 0.55)),
 );
 
 const crPaletteLight = CrPalette(
-  bg: Color(0xFFEDE9F6),
-  bgGlowBrand: Color.fromRGBO(124, 58, 237, 0.3),
-  bgGlowAlt: Color.fromRGBO(217, 70, 239, 0.22),
-  glass: Color.fromRGBO(255, 255, 255, 0.55),
+  bg: Color(0xFFF7F2F9),
+  bgGlowBrand: Color.fromRGBO(192, 38, 211, 0.25),
+  bgGlowAlt: Color.fromRGBO(139, 92, 246, 0.24),
+  glass: Color.fromRGBO(255, 255, 255, 0.65),
   glassStrong: Color.fromRGBO(255, 255, 255, 0.78),
-  glassBorder: Color.fromRGBO(255, 255, 255, 0.85),
-  glassHighlight: Color.fromRGBO(255, 255, 255, 1.0),
-  hairline: Color.fromRGBO(14, 22, 32, 0.08),
+  glassBorder: Color.fromRGBO(231, 214, 238, 0.8),
+  glassHighlight: Color.fromRGBO(255, 255, 255, 0.95),
+  hairline: Color.fromRGBO(22, 19, 31, 0.08),
   surfaceSolid: Color(0xFFFFFFFF),
-  ink: Color(0xFF0E1620),
-  inkMuted: Color(0xFF4C5A68),
-  inkFaint: Color(0xFF6F7C89),
-  brand: Color(0xFF6D28D9),
-  brandSoft: Color.fromRGBO(109, 40, 217, 0.12),
+  ink: Color(0xFF16131F),
+  inkMuted: Color(0xFF5B5570),
+  inkFaint: Color(0xFF6E6884),
+  brand: Color(0xFFA21CAE),
+  brandSoft: Color.fromRGBO(162, 28, 175, 0.12),
   onBrand: Color(0xFFFFFFFF),
-  brandFill: Color(0xFF6D28D9),
-  brandFill2: Color(0xFF5B21B6),
+  brandFill: Color(0xFF86198F),
+  brandFill2: Color(0xFF701A75),
   amber: Color(0xFFB45309),
   amberSoft: Color.fromRGBO(180, 83, 9, 0.12),
   positive: Color(0xFF047857),
   positiveSoft: Color.fromRGBO(4, 120, 87, 0.12),
-  negative: Color(0xFFBE123C),
-  negativeSoft: Color.fromRGBO(190, 18, 60, 0.1),
-  focus: Color(0xFF6D28D9),
-  shadowGlass: BoxShadow(offset: Offset(0, 12), blurRadius: 36, color: Color.fromRGBO(30, 50, 70, 0.14)),
-  shadowBrand: BoxShadow(offset: Offset(0, 10), blurRadius: 28, color: Color.fromRGBO(109, 40, 217, 0.38)),
+  negative: Color(0xFFB91C1C),
+  negativeSoft: Color.fromRGBO(185, 28, 28, 0.1),
+  focus: Color(0xFFC026D3),
+  chart1: Color(0xFF86198F),
+  chart2: Color(0xFF0F766E),
+  chart3: Color(0xFFB45309),
+  chart4: Color(0xFF7C3AED),
+  chart5: Color(0xFF8F89A3),
+  shadowGlass: BoxShadow(offset: Offset(0, 8), blurRadius: 28, color: Color.fromRGBO(107, 33, 168, 0.08)),
+  shadowBrand: BoxShadow(offset: Offset(0, 8), blurRadius: 20, color: Color.fromRGBO(134, 25, 143, 0.25)),
   shadowLift: BoxShadow(offset: Offset(0, 20), blurRadius: 56, color: Color.fromRGBO(30, 50, 70, 0.2)),
 );
 
-const double radiusSm = 12.0;
-const double radiusMd = 18.0;
-const double radiusLg = 28.0;
+const double radiusSm = 10.0;
+const double radiusMd = 14.0;
+const double radiusLg = 20.0;
 const double radiusPill = 999.0;
 
-const double blurMd = 24.0;
-const double blurLg = 40.0;
+const double blurMd = 32.0;
+const double blurLg = 44.0;
 
 const double space1 = 4.0;
 const double space2 = 8.0;

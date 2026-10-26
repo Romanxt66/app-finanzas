@@ -59,7 +59,7 @@ class _CrButtonState extends State<CrButton> {
       CrButtonVariant.danger => hover ? c.negativeSoft : null,
       CrButtonVariant.primary => null,
     };
-    final shape = BorderRadius.circular(radiusPill);
+    final shape = BorderRadius.circular(radiusSm);
     var gradient = v == CrButtonVariant.primary
         ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [c.brandFill, c.brandFill2])
         : null;

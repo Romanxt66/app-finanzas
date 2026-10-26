@@ -163,11 +163,11 @@ class CrBadge extends StatelessWidget {
       _ => (c.glassStrong, c.inkMuted, c.glassBorder),
     };
     return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(radiusPill),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: border),
       ),
       child: Row(
@@ -335,7 +335,7 @@ class BalanceCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: CrText.label(c.inkMuted)),
+              Text(label.toUpperCase(), style: CrText.overline(c.inkFaint)),
               if (onToggleHidden != null)
                 CrButton(
                   variant: CrButtonVariant.ghost,
@@ -406,7 +406,7 @@ class StatTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: space3),
-          Text(label, style: CrText.label(c.inkMuted)),
+          Text(label.toUpperCase(), style: CrText.overline(c.inkFaint)),
           AnimatedMoney(value: value, currency: currency, style: CrText.amount(c.ink)),
           if (note != null) Text(note!, style: CrText.caption(c.inkMuted)),
         ],

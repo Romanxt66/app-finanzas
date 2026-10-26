@@ -49,6 +49,7 @@ class CrText {
   static TextStyle heading(Color c) => _s(16, 22, FontWeight.w600, c);
   static TextStyle body(Color c) => _s(15, 22, FontWeight.w500, c);
   static TextStyle label(Color c) => _s(13, 18, FontWeight.w500, c);
+  static TextStyle overline(Color c) => _s(11, 16, FontWeight.w600, c, 0.08);
   static TextStyle caption(Color c) => _s(12, 16, FontWeight.w600, c, 0.02);
 }
 
