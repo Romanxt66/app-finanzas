@@ -10,50 +10,222 @@ import 'icons.dart';
 import 'motion.dart';
 import 'theme.dart';
 
-/// Encabezado de pantalla: título a la izquierda y controles a la derecha (`.cr-page-head`).
-class PageHead extends StatelessWidget {
-  const PageHead(this.title, {super.key, this.actions = const []});
-  final String title;
-  final List<Widget> actions;
+/// Separa un texto con la palabra destacada entre asteriscos: «Tu dinero, *claro*.» →
+/// [('Tu dinero, ', false), ('claro', true), ('.', false)].
+List<(String, bool)> parseAccent(String text) {
+  final parts = <(String, bool)>[];
+  final re = RegExp(r'\*([^*]+)\*');
+  var last = 0;
+  for (final m in re.allMatches(text)) {
+    if (m.start > last) parts.add((text.substring(last, m.start), false));
+    parts.add((m.group(1)!, true));
+    last = m.end;
+  }
+  if (last < text.length) parts.add((text.substring(last), false));
+  return parts;
+}
+
+/// Texto plano de un titular con marcas de acento (para lectores de pantalla).
+String plainAccent(String text) => text.replaceAll('*', '');
+
+/// Titular grande: sans apretada con la palabra destacada en serif cursiva.
+class CrHeadline extends StatelessWidget {
+  const CrHeadline(this.text, {super.key, this.size = 40, this.color, this.accentColor, this.maxLines});
+  final String text;
+  final double size;
+  final Color? color;
+  final Color? accentColor;
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    return Wrap(
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: space3,
-      runSpacing: space3,
-      children: [
-        // Margen de 0,67em del h1 de la web
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 13.4),
-          child: Semantics(header: true, child: Text(title, style: CrText.title(c.ink))),
+    final ink = color ?? c.ink;
+    return Semantics(
+      header: true,
+      label: plainAccent(text),
+      excludeSemantics: true,
+      child: Text.rich(
+        TextSpan(
+          children: [
+            for (final (part, accent) in parseAccent(text))
+              TextSpan(text: part, style: accent ? CrText.serif(accentColor ?? ink, size: size) : null),
+          ],
         ),
-        ...actions,
+        maxLines: maxLines,
+        style: CrText.display(ink, size: size),
+      ),
+    );
+  }
+}
+
+/// Etiqueta de estado en píldora: punto de color y texto monoespaciado («● open beta»).
+class CrTag extends StatelessWidget {
+  const CrTag(this.text, {super.key, this.dotColor, this.pulse = false});
+  final String text;
+  final Color? dotColor;
+  final bool pulse;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final dot = dotColor ?? c.neon;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 5, 12, 5),
+      decoration: BoxDecoration(
+        color: c.panel.withValues(alpha: c.isDark ? 0.6 : 0.75),
+        borderRadius: BorderRadius.circular(radiusPill),
+        border: Border.all(color: c.glassBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          pulse ? _PulseDot(color: dot) : _Dot(color: dot),
+          const SizedBox(width: space2),
+          Flexible(
+            child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: CrText.mono(c.inkMuted, size: 12)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  const _Dot({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 6,
+    height: 6,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      boxShadow: [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6)],
+    ),
+  );
+}
+
+/// Punto que «late» suavemente (estado en vivo).
+class _PulseDot extends StatefulWidget {
+  const _PulseDot({required this.color});
+  final Color color;
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (context.reduceMotion) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 6,
+    height: 6,
+    child: AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) => Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          Transform.scale(
+            scale: 1 + 1.6 * _c.value,
+            child: Container(
+              decoration: BoxDecoration(color: widget.color.withValues(alpha: 0.45 * (1 - _c.value)), shape: BoxShape.circle),
+            ),
+          ),
+          _Dot(color: widget.color),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Encabezado de pantalla: etiqueta «● sección», titular grande y controles a la derecha.
+class PageHead extends StatelessWidget {
+  const PageHead(this.title, {super.key, this.actions = const [], this.headline, this.lead});
+  final String title;
+  final List<Widget> actions;
+
+  /// Titular con la palabra destacada entre asteriscos; si falta, se usa [title].
+  final String? headline;
+
+  /// Frase corta bajo el titular (opcional).
+  final String? lead;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final wide = context.isWide;
+    final size = wide ? 46.0 : 32.0;
+    final heading = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CrTag(title.toLowerCase()),
+        const SizedBox(height: space4),
+        CrHeadline(headline ?? '$title.', size: size),
+        if (lead != null) ...[
+          const SizedBox(height: space3),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Text(lead!, style: CrText.body(c.inkMuted)),
+          ),
+        ],
       ],
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: space3, bottom: space3),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        spacing: space4,
+        runSpacing: space4,
+        children: [heading, ...actions],
+      ),
     );
   }
 }
 
 /// Tarjeta de vidrio con título (`Card`).
 class CrCard extends StatelessWidget {
-  const CrCard({super.key, this.title, this.action, required this.child, this.flush = false});
+  const CrCard({super.key, this.title, this.action, required this.child, this.flush = false, this.meta});
   final String? title;
   final Widget? action;
   final Widget child;
   final bool flush;
 
+  /// Texto de sistema a la derecha del título (monoespaciado, p. ej. «6 meses»).
+  final String? meta;
+
   @override
   Widget build(BuildContext context) {
     final c = context.c;
     return Glass(
-      padding: flush ? EdgeInsets.zero : const EdgeInsets.all(space5),
+      lift: true,
+      padding: flush ? EdgeInsets.zero : const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (title != null || action != null)
+          if (title != null || action != null || meta != null)
             Padding(
               padding: flush ? const EdgeInsets.fromLTRB(space4, space4, space4, space3) : const EdgeInsets.only(bottom: space3),
               child: Row(
@@ -61,8 +233,12 @@ class CrCard extends StatelessWidget {
                 children: [
                   if (title != null)
                     Expanded(
-                      child: Semantics(header: true, child: Text(title!, style: CrText.heading(c.ink))),
+                      child: Semantics(
+                        header: true,
+                        child: Text(title!, style: CrText.heading(c.ink).copyWith(fontSize: 17, letterSpacing: -0.2)),
+                      ),
                     ),
+                  if (meta != null) Text(meta!, style: CrText.mono(c.inkFaint, size: 11.5)),
                   ?action,
                 ],
               ),
@@ -86,7 +262,10 @@ class SectionTitle extends StatelessWidget {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Semantics(header: true, child: Text(title, style: CrText.heading(context.c.ink))),
+        Semantics(
+          header: true,
+          child: Text(title, style: CrText.heading(context.c.ink).copyWith(fontSize: 18, letterSpacing: -0.25)),
+        ),
         ?trailing,
       ],
     ),
@@ -160,31 +339,23 @@ class CrBadge extends StatelessWidget {
       Tone.positive => (c.positiveSoft, c.positive, Colors.transparent),
       Tone.negative => (c.negativeSoft, c.negative, Colors.transparent),
       Tone.warning => (c.amberSoft, c.amber, Colors.transparent),
+      Tone.brand => (c.neon, c.onNeon, Colors.transparent),
       _ => (c.glassStrong, c.inkMuted, c.glassBorder),
     };
     return Container(
       height: 22,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 9),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(radiusPill),
         border: Border.all(color: border),
+        boxShadow: tone == Tone.brand ? [BoxShadow(color: c.neonGlow, blurRadius: 12)] : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[CrIcon(icon!, size: 12, color: fg), const SizedBox(width: space1)],
-          Text(
-            text,
-            style: TextStyle(
-              fontFamily: fontFamily,
-              fontFamilyFallback: fontFallback,
-              fontSize: 12,
-              height: 1,
-              fontWeight: FontWeight.w600,
-              color: fg,
-            ),
-          ),
+          Text(text, style: CrText.mono(fg, size: 11.5, weight: FontWeight.w500).copyWith(height: 1)),
         ],
       ),
     );
@@ -227,8 +398,12 @@ class CrChip extends StatelessWidget {
     return Container(
       width: 40,
       height: 40,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(radiusSm)),
-      child: Center(child: CrIcon(icon, size: 20, color: fg)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tone == Tone.neutral ? c.glassBorder : Colors.transparent),
+      ),
+      child: Center(child: CrIcon(icon, size: 19, color: fg)),
     );
   }
 }
@@ -258,7 +433,7 @@ class Sparkline extends StatelessWidget {
     return Semantics(
       label: label,
       image: true,
-      child: SizedBox(width: 120, height: 40, child: CustomPaint(painter: _SparkPainter(data, context.c.brand))),
+      child: SizedBox(width: 140, height: 44, child: CustomPaint(painter: _SparkPainter(data, context.c.neon))),
     );
   }
 }
@@ -285,7 +460,23 @@ class _SparkPainter extends CustomPainter {
       ..lineTo(pts.last.dx, size.height)
       ..lineTo(pts.first.dx, size.height)
       ..close();
-    canvas.drawPath(area, Paint()..color = color.withValues(alpha: 0.12));
+    canvas.drawPath(
+      area,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color.withValues(alpha: 0.22), color.withValues(alpha: 0)],
+        ).createShader(Offset.zero & size),
+    );
+    canvas.drawPath(
+      line,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..color = color.withValues(alpha: 0.25)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
     canvas.drawPath(
       line,
       Paint()
@@ -335,7 +526,7 @@ class BalanceCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label.toUpperCase(), style: CrText.overline(c.inkFaint)),
+              Text(label.toLowerCase(), style: CrText.overline(c.inkFaint)),
               if (onToggleHidden != null)
                 CrButton(
                   variant: CrButtonVariant.ghost,
@@ -349,14 +540,14 @@ class BalanceCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: space2, bottom: space3),
             child: hidden
-                ? Text('••••••', style: CrText.amountXl(c.ink))
-                : AnimatedMoney(value: value, currency: currency, style: CrText.amountXl(c.ink)),
+                ? Text('••••••', style: CrText.display(c.ink, size: 44))
+                : AnimatedMoney(value: value, currency: currency, style: CrText.display(c.ink, size: 44)),
           ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (note != null) Flexible(child: Text(note!, style: CrText.caption(c.inkMuted))) else const SizedBox.shrink(),
+              if (note != null) Flexible(child: Text(note!, style: CrText.mono(c.inkMuted, size: 11.5))) else const SizedBox.shrink(),
               if (trend != null) Sparkline(data: trend!, label: trendLabel ?? 'Tendencia'),
             ],
           ),
@@ -406,9 +597,10 @@ class StatTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: space3),
-          Text(label.toUpperCase(), style: CrText.overline(c.inkFaint)),
-          AnimatedMoney(value: value, currency: currency, style: CrText.amount(c.ink)),
-          if (note != null) Text(note!, style: CrText.caption(c.inkMuted)),
+          Text(label.toLowerCase(), style: CrText.overline(c.inkFaint)),
+          const SizedBox(height: space1),
+          AnimatedMoney(value: value, currency: currency, style: CrText.display(c.ink, size: 26)),
+          if (note != null) ...[const SizedBox(height: space1), Text(note!, style: CrText.mono(c.inkMuted, size: 11.5))],
         ],
       ),
     );
@@ -467,7 +659,7 @@ class TransactionRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: CrText.body(c.ink)),
-        if (detail != null) Text(detail!, style: CrText.caption(c.inkMuted)),
+        if (detail != null) Text(detail!, style: CrText.mono(c.inkMuted, size: 11.5)),
       ],
     );
     return FadeIn(
@@ -570,8 +762,8 @@ class BudgetBar extends StatelessWidget {
     final ratio = limit > 0 ? spent / limit : 0.0;
     final over = ratio > 1;
     final warn = ratio >= 0.8 && !over;
-    final track = over ? c.negativeSoft : (warn ? c.amberSoft : c.brandSoft);
-    final fill = over ? c.negative : (warn ? c.amber : c.brand);
+    final track = over ? c.negativeSoft : (warn ? c.amberSoft : c.hairline);
+    final fill = over ? c.negative : (warn ? c.amber : c.neon);
     final note = over ? 'Excedido en ${formatMoney(spent - limit, currency)}' : 'Quedan ${formatMoney(limit - spent, currency)}';
     return Glass(
       radius: radiusMd,
@@ -595,10 +787,9 @@ class BudgetBar extends StatelessWidget {
             label: label,
             value: '${(ratio.clamp(0, 1) * 100).round()} %',
             child: Container(
-              height: 8,
+              height: 6,
               decoration: BoxDecoration(color: track, borderRadius: BorderRadius.circular(radiusPill)),
-              clipBehavior: Clip.antiAlias,
-              child: GrowBar(ratio: ratio, color: fill),
+              child: GrowBar(ratio: ratio, color: fill, height: 6, glow: true),
             ),
           ),
           const SizedBox(height: space2),
@@ -606,7 +797,7 @@ class BudgetBar extends StatelessWidget {
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('${(ratio * 100).round()} % · $note', style: CrText.caption(c.inkMuted)),
+              Text('${(ratio * 100).round()} % · $note', style: CrText.mono(c.inkMuted, size: 11.5)),
               ?actions,
             ],
           ),
@@ -641,7 +832,7 @@ class ProgressCard extends StatelessWidget {
     return Glass(
       radius: radiusMd,
       lift: true,
-      borderColor: achieved ? c.brand : null,
+      borderColor: achieved ? c.neon : null,
       padding: const EdgeInsets.all(space4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -654,9 +845,9 @@ class ProgressCard extends StatelessWidget {
               Flexible(child: Text(label, style: CrText.body(c.ink))),
               const SizedBox(width: space3),
               if (achieved)
-                const CrBadge('Lograda', tone: Tone.positive, icon: 'check')
+                const CrBadge('lograda', tone: Tone.brand, icon: 'check')
               else
-                Text('${(ratio.clamp(0, 1) * 100).round()} %', style: CrText.label(c.inkMuted)),
+                Text('${(ratio.clamp(0, 1) * 100).round()} %', style: CrText.mono(c.inkMuted, size: 12)),
             ],
           ),
           const SizedBox(height: space2),
@@ -672,10 +863,9 @@ class ProgressCard extends StatelessWidget {
             label: label,
             value: '${(ratio.clamp(0, 1) * 100).round()} %',
             child: Container(
-              height: 8,
-              decoration: BoxDecoration(color: c.brandSoft, borderRadius: BorderRadius.circular(radiusPill)),
-              clipBehavior: Clip.antiAlias,
-              child: GrowBar(ratio: ratio, color: c.brand),
+              height: 6,
+              decoration: BoxDecoration(color: c.hairline, borderRadius: BorderRadius.circular(radiusPill)),
+              child: GrowBar(ratio: ratio, color: c.neon, height: 6, glow: true),
             ),
           ),
           if (note != null)
@@ -757,6 +947,9 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
   }
 }
 
+/// Colores de las series de gráficos: neón de marca y los tonos de apoyo de la paleta.
+List<Color> donutColors(CrPalette c) => [c.neon, c.chart2, c.chart3, c.chart4];
+
 /// Dona de participación con segmentos que se dibujan al aparecer.
 class Donut extends StatelessWidget {
   const Donut({super.key, required this.values, required this.label, this.size = 132});
@@ -767,7 +960,7 @@ class Donut extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    final colors = [c.brand, c.amber, c.negative, c.inkMuted];
+    final colors = donutColors(c);
     return Semantics(
       label: label,
       image: true,
@@ -794,22 +987,25 @@ class _DonutPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final stroke = size.width * 5 / 42;
+    final stroke = size.width * 3.2 / 42;
     final r = size.width * 15.9155 / 42;
     final center = size.center(Offset.zero);
     final rect = Rect.fromCircle(center: center, radius: r);
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke;
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round;
     canvas.drawCircle(center, r, paint..color = track);
     final total = values.fold<double>(0, (a, b) => a + b);
     if (total <= 0) return;
     var start = -math.pi / 2;
     for (var i = 0; i < values.length; i++) {
       final pct = values[i] / total;
-      final gap = 0.006;
+      final gap = 0.035;
       final sweep = math.max(pct - gap, 0.0001) * 2 * math.pi * t;
       final color = colors[i % colors.length];
+      // Los segmentos muy cortos van sin remate redondo para no solaparse con el vecino
+      paint.strokeCap = pct < 0.08 ? StrokeCap.butt : StrokeCap.round;
       canvas.drawArc(
         rect,
         start,
@@ -843,7 +1039,7 @@ class Gauge extends StatelessWidget {
       builder: (context, v, _) => SizedBox(
         width: size,
         height: size,
-        child: CustomPaint(painter: _GaugePainter(v, danger ? c.negative : c.brand, danger ? c.negativeSoft : c.brandSoft)),
+        child: CustomPaint(painter: _GaugePainter(v, danger ? c.negative : c.neon, c.hairline)),
       ),
     );
   }
@@ -861,22 +1057,38 @@ class _GaugePainter extends CustomPainter {
     final rect = Rect.fromCircle(center: center, radius: 52 * k);
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 9 * k
+      ..strokeWidth = 6 * k
       ..strokeCap = StrokeCap.round;
     canvas.drawCircle(center, 52 * k, paint..color = soft);
     if (ratio > 0) {
+      final sweep = ratio * 2 * math.pi;
+      // Halo de luz bajo el arco
       canvas.drawArc(
         rect,
         -math.pi / 2,
-        ratio * 2 * math.pi,
+        sweep,
         false,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 9 * k
+          ..strokeWidth = 12 * k
           ..strokeCap = StrokeCap.round
-          ..color = color
-          ..maskFilter = null,
+          ..color = color.withValues(alpha: 0.35)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8 * k),
       );
+      canvas.drawArc(
+        rect,
+        -math.pi / 2,
+        sweep,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6 * k
+          ..strokeCap = StrokeCap.round
+          ..color = color,
+      );
+      // Punto brillante en la punta
+      final end = -math.pi / 2 + sweep;
+      canvas.drawCircle(center + Offset(math.cos(end), math.sin(end)) * 52 * k, 4.5 * k, Paint()..color = Colors.white);
     }
   }
 

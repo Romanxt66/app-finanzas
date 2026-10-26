@@ -26,7 +26,7 @@ class SubscriptionsScreen extends StatelessWidget {
         final tracked = data?.subscriptions.where((s) => s.tracked).toList() ?? const <Subscription>[];
         return PageScaffold(
           children: [
-            PageHead('Suscripciones'),
+            PageHead('Suscripciones', headline: 'Cobros que *no ves venir*.'),
             ErrorText(q.error),
             if (q.loading)
               const Skeleton(lines: 3, height: 72)

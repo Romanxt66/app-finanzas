@@ -13,6 +13,11 @@ Paridad con la web React: mismas pantallas, mismas rutas (`/transactions`, `/bud
 - **Movimiento:** entrada escalonada de módulos (`cr-rise`), filas que aparecen (`cr-fade`), barras que crecen, cifras que
   cuentan hasta su valor, dona y medidor animados, aurora de fondo a la deriva, menús y diálogos con "pop", avisos (toasts),
   esqueletos con brillo y elevación al pasar el puntero. Todo respeta «reducir movimiento».
+- **Estilo «Relay» (solo Flutter):** haz de fibras de luz animado en el fondo (`lib/ui/ribbons.dart`), titulares con la palabra
+  destacada en serif cursiva (`CrHeadline`, marca con `*asteriscos*`), etiquetas y metadatos en monoespaciada (`CrTag`,
+  `CrText.mono`), botones píldora en fucsia neón, barras isométricas en la tendencia, panel en perspectiva en el acceso y entrada
+  de la app con el logo (`lib/ui/intro.dart`). Los acentos neón se derivan de los fucsias de `tokens.json` (`CrAccent`), sin tonos
+  nuevos: la web React no cambia.
 - **Iconos:** los mismos trazos SVG de la web (`lib/ui/icons.dart`). **Tipografía:** Manrope y un respaldo de símbolos van
   incluidos en `assets/fonts` (la app no pide nada a CDNs, requisito de la CSP).
 
@@ -36,4 +41,5 @@ dart run tool/gen_tokens.dart   # tras cambiar design/tokens.json
 Dominio: https://alvea2.softlane.click (puerto 80 del servicio `alvea2-web`).
 La versión de Flutter debe coincidir en `Dockerfile` (`FLUTTER_VERSION`), CI y el entorno local.
 
-Licencias: Manrope (SIL OFL) y un subconjunto de DejaVu Sans para símbolos (licencia libre de Bitstream Vera/DejaVu).
+Licencias: Manrope, Instrument Serif y JetBrains Mono (SIL OFL, textos en `assets/fonts/OFL-*.txt`) y un subconjunto de
+DejaVu Sans para símbolos (licencia libre de Bitstream Vera/DejaVu).

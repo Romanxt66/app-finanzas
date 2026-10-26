@@ -96,7 +96,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         final goals = q.data;
         return PageScaffold(
           children: [
-            PageHead('Metas'),
+            PageHead('Metas', headline: 'Ahorra para lo que *importa*.'),
             CrCard(
               title: 'Nueva meta',
               child: Stack12(

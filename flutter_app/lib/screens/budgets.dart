@@ -77,6 +77,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
           children: [
             PageHead(
               'Presupuestos',
+              headline: 'Gasta con *intención*.',
               actions: [
                 SizedBox(
                   width: 200,

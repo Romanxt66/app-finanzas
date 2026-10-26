@@ -8,6 +8,7 @@ import '../core/format.dart';
 import '../core/models.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
+import '../ui/icons.dart';
 import '../ui/inputs.dart';
 import '../ui/motion.dart';
 import '../ui/page.dart';
@@ -65,6 +66,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   PageHead(
                     'Resumen',
+                    headline: 'Tu dinero, *claro*.',
                     actions: [
                       if (currencies.length > 1)
                         CrSegmented<String>(
@@ -136,7 +138,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   GridCols(
                     children: [
                       CrCard(
-                        title: 'Tendencia (6 meses)',
+                        title: 'Tendencia',
+                        meta: '${trend.length} meses',
                         child: _TrendChart(trend: trend, currency: currency),
                       ),
                       CrCard(
@@ -280,16 +283,26 @@ class _GettingStarted extends StatelessWidget {
       ('/categories', 'Define tus categorías', hasCategories, 'tag'),
       ('/transactions', 'Registra tu primer movimiento', hasTransactions, 'plus'),
     ];
-    return CrCard(
-      title: 'Empieza aquí',
+    final ink = c.onNeon;
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: c.neon,
+        borderRadius: BorderRadius.circular(radiusLg),
+        boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 40, offset: const Offset(0, 10))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Text('empieza aquí', style: CrText.mono(ink.withValues(alpha: 0.7), size: 12)),
+          const SizedBox(height: space2),
+          CrHeadline('Tres pasos y tu mes *se ordena solo*.', size: context.isWide ? 30 : 24, color: ink),
+          const SizedBox(height: space4),
           for (final s in steps) ...[_StepRow(to: s.$1, label: s.$2, done: s.$3, icon: s.$4), const SizedBox(height: space2)],
           const SizedBox(height: space1),
           Text.rich(
             TextSpan(
-              style: CrText.caption(c.inkMuted),
+              style: CrText.caption(ink.withValues(alpha: 0.75)),
               children: [
                 const TextSpan(text: '¿Vienes de otra app? Puedes '),
                 WidgetSpan(
@@ -299,7 +312,10 @@ class _GettingStarted extends StatelessWidget {
                     cursor: SystemMouseCursors.click,
                     child: GestureDetector(
                       onTap: () => context.go('/import'),
-                      child: Text('importar el CSV de tu banco', style: CrText.caption(c.brand)),
+                      child: Text(
+                        'importar el CSV de tu banco',
+                        style: CrText.caption(ink).copyWith(decoration: TextDecoration.underline, decorationColor: ink),
+                      ),
                     ),
                   ),
                 ),
@@ -340,12 +356,34 @@ class _StepRowState extends State<_StepRow> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(space3),
-            decoration: BoxDecoration(color: _hover ? c.glassStrong : c.glass, borderRadius: BorderRadius.circular(radiusMd)),
+            decoration: BoxDecoration(
+              color: Color.lerp(c.onNeon, c.neon, _hover ? 0.12 : 0.0)!.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(radiusPill),
+            ),
             child: Row(
               children: [
-                CrChip(widget.done ? 'check' : widget.icon, tone: widget.done ? Tone.brand : Tone.neutral),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(color: widget.done ? c.neon : Colors.white.withValues(alpha: 0.08), shape: BoxShape.circle),
+                  child: Center(child: CrIcon(widget.done ? 'check' : widget.icon, size: 16, color: widget.done ? c.onNeon : Colors.white)),
+                ),
                 const SizedBox(width: space3),
-                Expanded(child: Text(widget.label, style: CrText.body(widget.done ? c.inkMuted : c.ink))),
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    style: CrText.body(Colors.white.withValues(alpha: widget.done ? 0.55 : 1)).copyWith(
+                      decoration: widget.done ? TextDecoration.lineThrough : null,
+                      decorationColor: Colors.white54,
+                    ),
+                  ),
+                ),
+                AnimatedSlide(
+                  offset: _hover && !context.reduceMotion ? const Offset(0.2, 0) : Offset.zero,
+                  duration: const Duration(milliseconds: 250),
+                  child: const CrIcon('arrow', size: 16, color: Colors.white70),
+                ),
+                const SizedBox(width: space1),
               ],
             ),
           ),
@@ -365,7 +403,7 @@ class _CategoryDonut extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    final colors = [c.brand, c.amber, c.negative, c.inkMuted];
+    final colors = donutColors(c);
     final label =
         'Distribución del gasto: ${rows.take(3).map((r) => '${names.categoryName(r.categoryId)} ${(total > 0 ? r.total / total * 100 : 0).round()} %').join(', ')}';
     final list = Column(
@@ -397,7 +435,7 @@ class _CategoryDonut extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(text: formatMoney(rows[i].total, currency), style: CrText.amountSm(c.ink)),
-                      TextSpan(text: '  ${(total > 0 ? rows[i].total / total * 100 : 0).round()} %', style: CrText.caption(c.inkMuted)),
+                      TextSpan(text: '  ${(total > 0 ? rows[i].total / total * 100 : 0).round()} %', style: CrText.mono(c.inkFaint, size: 11)),
                     ],
                   ),
                 ),
@@ -449,8 +487,29 @@ class _TrendChartState extends State<_TrendChart> {
   Widget build(BuildContext context) {
     final c = context.c;
     final t = widget.trend;
+    Widget legend(Color color, String text) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 6),
+        Text(text, style: CrText.mono(c.inkMuted, size: 11)),
+      ],
+    );
     return Semantics(
       label: 'Tendencia de ingresos y gastos de los últimos meses',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [legend(c.neon, 'ingresos'), const SizedBox(width: space4), legend(c.inkMuted, 'gastos')]),
+          const SizedBox(height: space2),
+          _chart(context, c, t),
+        ],
+      ),
+    );
+  }
+
+  Widget _chart(BuildContext context, CrPalette c, List<({String month, double income, double expense})> t) {
+    return Semantics(
       child: SizedBox(
         height: 240,
         child: LayoutBuilder(
@@ -493,8 +552,8 @@ class _TrendChartState extends State<_TrendChart> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(monthLabel(t[_hover!].month), style: CrText.label(c.ink)),
-                              Text('Ingresos: ${formatMoney(t[_hover!].income, widget.currency)}', style: CrText.caption(c.brand)),
-                              Text('Gastos: ${formatMoney(t[_hover!].expense, widget.currency)}', style: CrText.caption(c.negative)),
+                              Text('ingresos  ${formatMoney(t[_hover!].income, widget.currency)}', style: CrText.mono(c.neon, size: 11.5)),
+                              Text('gastos    ${formatMoney(t[_hover!].expense, widget.currency)}', style: CrText.mono(c.inkMuted, size: 11.5)),
                             ],
                           ),
                         ),
@@ -540,7 +599,7 @@ class _TrendPainter extends CustomPainter {
     final tp = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(fontFamily: fontFamily, fontFamilyFallback: fontFallback, fontSize: 12, color: c.inkMuted),
+        style: CrText.mono(c.inkFaint, size: 11),
       ),
       textDirection: TextDirection.ltr,
       textAlign: align,
@@ -568,24 +627,81 @@ class _TrendPainter extends CustomPainter {
     for (var i = 0; i < t.length; i++) {
       final cx = left + slot * i + slot / 2;
       if (hover == i) {
-        canvas.drawRect(Rect.fromLTWH(left + slot * i, 8, slot, plotH), Paint()..color = c.glass);
-      }
-      final barW = math.min(26.0, slot * 0.36);
-      void bar(double v, Color color, double x) {
-        final h = top > 0 ? plotH * (v / top) * progress : 0.0;
-        if (h <= 0) return;
         canvas.drawRRect(
-          RRect.fromRectAndCorners(
-            Rect.fromLTWH(x, 8 + plotH - h, barW, h),
-            topLeft: const Radius.circular(6),
-            topRight: const Radius.circular(6),
-          ),
-          Paint()..color = color,
+          RRect.fromRectAndRadius(Rect.fromLTWH(left + slot * i + 2, 8, slot - 4, plotH), const Radius.circular(10)),
+          Paint()..color = c.glass,
+        );
+      }
+      final barW = math.min(24.0, slot * 0.30);
+      final depth = barW * 0.55;
+      final lit = hover == i || (hover == null && i == t.length - 1);
+      final baseY = 8 + plotH;
+
+      // Prisma isométrico: cara frontal, lateral y tapa (como las barras del diseño «Relay»)
+      void prism(double v, double x, Color front, Color side, Color cap, {bool glow = false}) {
+        final h = top > 0 ? plotH * (v / top) * progress : 0.0;
+        if (h <= 0.5) return;
+        final dx = depth * 0.9, dy = depth * 0.5;
+        final y = baseY - h;
+        if (glow) {
+          canvas.drawRect(
+            Rect.fromLTWH(x - 4, y - dy, barW + dx + 8, h + dy),
+            Paint()
+              ..color = cap.withValues(alpha: 0.28)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+          );
+        }
+        canvas.drawRect(
+          Rect.fromLTWH(x, y, barW, h),
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [front, front.withValues(alpha: front.a * 0.35)],
+            ).createShader(Rect.fromLTWH(x, y, barW, h)),
+        );
+        canvas.drawPath(
+          Path()
+            ..moveTo(x + barW, y)
+            ..lineTo(x + barW + dx, y - dy)
+            ..lineTo(x + barW + dx, baseY - dy)
+            ..lineTo(x + barW, baseY)
+            ..close(),
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [side, side.withValues(alpha: side.a * 0.3)],
+            ).createShader(Rect.fromLTWH(x + barW, y - dy, dx, h + dy)),
+        );
+        canvas.drawPath(
+          Path()
+            ..moveTo(x, y)
+            ..lineTo(x + dx, y - dy)
+            ..lineTo(x + barW + dx, y - dy)
+            ..lineTo(x + barW, y)
+            ..close(),
+          Paint()..color = cap,
         );
       }
 
-      bar(t[i].income, c.brand, cx - barW - 1);
-      bar(t[i].expense, c.negative, cx + 1);
+      final neon = c.neon;
+      final slate = c.inkMuted;
+      prism(
+        t[i].income,
+        cx - barW - depth * 0.45 - 2,
+        neon.withValues(alpha: lit ? 0.85 : 0.45),
+        Color.lerp(neon, Colors.black, 0.45)!.withValues(alpha: lit ? 0.9 : 0.5),
+        lit ? Color.lerp(neon, Colors.white, 0.35)! : neon.withValues(alpha: 0.7),
+        glow: lit,
+      );
+      prism(
+        t[i].expense,
+        cx + 2,
+        slate.withValues(alpha: lit ? 0.55 : 0.32),
+        Color.lerp(slate, Colors.black, 0.5)!.withValues(alpha: lit ? 0.7 : 0.4),
+        Color.lerp(slate, Colors.white, lit ? 0.55 : 0.3)!.withValues(alpha: lit ? 0.95 : 0.7),
+      );
       _text(canvas, monthLabel(t[i].month), Offset(cx, size.height - bottom / 2 + 4), align: TextAlign.center);
     }
   }

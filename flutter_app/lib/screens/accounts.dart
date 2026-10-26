@@ -88,7 +88,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     final accounts = ref.allAccounts;
     return PageScaffold(
       children: [
-        PageHead('Cuentas'),
+        PageHead('Cuentas', headline: 'Tus cuentas, *de un vistazo*.'),
         CrCard(
           title: 'Nueva cuenta',
           child: Stack12(

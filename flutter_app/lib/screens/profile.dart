@@ -113,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final c = context.c;
     return PageScaffold(
       children: [
-        PageHead('Perfil'),
+        PageHead('Perfil', headline: 'Tu cuenta, *tus reglas*.'),
         CrCard(
           title: 'Datos personales',
           child: Stack12(

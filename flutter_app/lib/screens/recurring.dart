@@ -105,7 +105,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
         final rules = q.data;
         return PageScaffold(
           children: [
-            PageHead('Recurrentes'),
+            PageHead('Recurrentes', headline: 'Lo que se repite, *se registra solo*.'),
             CrCard(
               title: 'Nuevo movimiento recurrente',
               child: Stack12(

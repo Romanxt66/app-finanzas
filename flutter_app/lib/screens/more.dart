@@ -24,7 +24,7 @@ class MoreScreen extends StatelessWidget {
     final c = context.c;
     return PageScaffold(
       children: [
-        PageHead('Más'),
+        PageHead('Más', headline: 'Todo lo *demás*.'),
         Glass(
           radius: radiusMd,
           padding: const EdgeInsets.symmetric(vertical: space1),
