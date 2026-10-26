@@ -1,0 +1,57 @@
+{
+  "name": "Cristal cálido (web React)",
+  "note": "Capa solo para la web React: sustituye por nombre los tokens de tokens.json (beige cálido, carbón y amarillo). Flutter sigue con el fucsia de tokens.json.",
+  "color": {
+    "tokens": [
+      {"name": "bg", "value": {"dark": "#151210", "light": "#d8cdbc"}, "usage": "Fondo de la app, debajo del degradado cálido y del vidrio."},
+      {"name": "bg-glow-brand", "value": {"dark": "rgba(236, 211, 63, 0.16)", "light": "rgba(236, 211, 63, 0.42)"}, "usage": "Luz dorada difusa detrás del vidrio. Solo decorativa."},
+      {"name": "bg-glow-alt", "value": {"dark": "rgba(120, 140, 90, 0.18)", "light": "rgba(142, 164, 104, 0.34)"}, "usage": "Luz verde salvia difusa que da profundidad al desenfoque."},
+      {"name": "glass", "value": {"dark": "rgba(255, 248, 235, 0.07)", "light": "rgba(255, 255, 255, 0.42)"}, "usage": "Relleno de los módulos de vidrio esmerilado."},
+      {"name": "glass-strong", "value": {"dark": "rgba(255, 248, 235, 0.13)", "light": "rgba(255, 255, 255, 0.74)"}, "usage": "Vidrio elevado: tarjetas claras sólidas, hojas modales y hover."},
+      {"name": "glass-border", "value": {"dark": "rgba(255, 248, 235, 0.14)", "light": "rgba(255, 255, 255, 0.62)"}, "usage": "Borde de 1px del canto del cristal."},
+      {"name": "glass-highlight", "value": {"dark": "rgba(255, 248, 235, 0.20)", "light": "rgba(255, 255, 255, 0.92)"}, "usage": "Brillo interior superior (inset 0 1px)."},
+      {"name": "hairline", "value": {"dark": "rgba(255, 248, 235, 0.09)", "light": "rgba(42, 36, 32, 0.10)"}, "usage": "Divisores entre filas dentro de un módulo."},
+      {"name": "surface-solid", "value": {"dark": "#1d1916", "light": "#f4efe7"}, "usage": "Superficie opaca sin backdrop-filter o con «reducir transparencia»."},
+      {"name": "ink", "value": {"dark": "#f4eee4", "light": "#2a2420"}, "usage": "Texto principal y cifras."},
+      {"name": "ink-muted", "value": {"dark": "#b5ab9d", "light": "#5b5147"}, "usage": "Texto secundario. ≥4.5:1 sobre el vidrio."},
+      {"name": "ink-faint", "value": {"dark": "#8f8576", "light": "#5d5449"}, "usage": "Etiquetas overline, iconos inactivos y metadatos. ≥4.5:1 sobre el vidrio."},
+      {"name": "brand", "value": {"dark": "#ecd33f", "light": "#2a2420"}, "usage": "Acento de texto, enlaces, pestaña activa y progreso: carbón en claro, amarillo en oscuro."},
+      {"name": "brand-soft", "value": {"dark": "rgba(236, 211, 63, 0.20)", "light": "rgba(236, 211, 63, 0.46)"}, "usage": "Resaltado amarillo: chips de marca, pista de progreso, etiquetas."},
+      {"name": "on-brand", "value": {"dark": "#1f1a14", "light": "#ffffff"}, "usage": "Texto e iconos sobre brand-fill."},
+      {"name": "brand-fill", "value": {"dark": "#ecd33f", "light": "#2f2825"}, "usage": "Acción primaria: píldora de carbón (claro) o amarilla (oscuro)."},
+      {"name": "brand-fill-2", "value": {"dark": "#d9c02c", "light": "#231d1a"}, "usage": "Final del degradado de la acción primaria."},
+      {"name": "amber", "value": {"dark": "#f0b84a", "light": "#6b5200"}, "usage": "Metas y avisos de presupuesto. Texto ≥4.5:1 sobre amber-soft."},
+      {"name": "amber-soft", "value": {"dark": "rgba(240, 184, 74, 0.18)", "light": "rgba(236, 211, 63, 0.52)"}, "usage": "Fondo de etiquetas de aviso (amarillo)."},
+      {"name": "positive", "value": {"dark": "#7fd4a6", "light": "#17603c"}, "usage": "Ingresos y variaciones al alza."},
+      {"name": "positive-soft", "value": {"dark": "rgba(127, 212, 166, 0.16)", "light": "rgba(29, 107, 69, 0.14)"}, "usage": "Fondo de etiquetas de ingreso."},
+      {"name": "negative", "value": {"dark": "#f09a9a", "light": "#a12b2b"}, "usage": "Gastos, excesos y errores."},
+      {"name": "negative-soft", "value": {"dark": "rgba(240, 154, 154, 0.16)", "light": "rgba(161, 43, 43, 0.12)"}, "usage": "Fondo de etiquetas de gasto."},
+      {"name": "focus", "value": {"dark": "#ecd33f", "light": "#2a2420"}, "usage": "Anillo de foco de 2px con 2px de separación."},
+      {"name": "ink-on-dark", "value": {"dark": "#f4eee4", "light": "#f4eee4"}, "usage": "Texto sobre las tarjetas de carbón sólido (igual en ambos temas)."},
+      {"name": "card-dark", "value": {"dark": "#2a2420", "light": "#2f2825"}, "usage": "Tarjeta de carbón sólido (saldo, estado destacado)."},
+      {"name": "card-dark-ink-muted", "value": {"dark": "#b9afa1", "light": "#b9afa1"}, "usage": "Texto secundario sobre card-dark (7:1)."},
+      {"name": "accent-yellow", "value": {"dark": "#ecd33f", "light": "#ecd33f"}, "usage": "Amarillo de resalte sobre card-dark y en etiquetas; el texto encima es carbón (#2a2420)."}
+    ]
+  },
+  "radius": {
+    "tokens": [
+      {"name": "radius-sm", "value": "14px", "usage": "Campos, chips de icono, controles."},
+      {"name": "radius-md", "value": "22px", "usage": "Filas agrupadas, módulos KPI."},
+      {"name": "radius-lg", "value": "28px", "usage": "Tarjetas, hojas y barra de pestañas."},
+      {"name": "radius-xl", "value": "40px", "usage": "Marco de vidrio que envuelve toda la pantalla en escritorio."}
+    ]
+  },
+  "shadow": {
+    "tokens": [
+      {"name": "shadow-glass", "value": {"dark": "0 12px 40px rgba(0, 0, 0, 0.45)", "light": "0 10px 32px rgba(70, 52, 32, 0.12)"}, "usage": "Sombra suave bajo cada módulo de vidrio."},
+      {"name": "shadow-brand", "value": {"dark": "0 8px 22px rgba(236, 211, 63, 0.28)", "light": "0 8px 20px rgba(42, 36, 32, 0.30)"}, "usage": "Halo bajo la acción primaria."},
+      {"name": "shadow-lift", "value": {"dark": "0 20px 60px rgba(0, 0, 0, 0.55)", "light": "0 18px 50px rgba(70, 52, 32, 0.20)"}, "usage": "Tarjeta de saldo y hojas modales."}
+    ]
+  },
+  "blur": {
+    "tokens": [
+      {"name": "blur-md", "value": "28px", "usage": "backdrop-filter de módulos de vidrio."},
+      {"name": "blur-lg", "value": "42px", "usage": "Barra superior, marco y hojas modales."}
+    ]
+  }
+}

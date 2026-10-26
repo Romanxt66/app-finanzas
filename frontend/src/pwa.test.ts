@@ -25,7 +25,10 @@ describe('PWA / app instalable', () => {
   })
 
   it('los colores del manifest coinciden con el fondo oscuro del diseño', () => {
-    const tokens = JSON.parse(readFileSync(resolve(publicDir, '../../design/tokens.json'), 'utf8'))
+    // la web usa la capa cálida (tokens.calido.json) sobre tokens.json
+    const tokens = JSON.parse(
+      readFileSync(resolve(publicDir, '../../design/tokens.calido.json'), 'utf8'),
+    )
     const bg = tokens.color.tokens.find((t: { name: string }) => t.name === 'bg').value.dark
     expect(manifest.background_color).toBe(bg)
     expect(manifest.theme_color).toBe(bg)
