@@ -1,6 +1,9 @@
 # Despliegue (Coolify) — Alvea: backend FastAPI + frontend React servido por nginx.
 # La base de datos NO está aquí: es el Postgres existente. Las variables llegan del entorno
 # (en Coolify: variables de entorno secretas del recurso). Nada de credenciales en el repositorio.
+# DATABASE_URL y SECRET_KEY van con `:-` (no `:?`): Coolify solo pasa al `docker compose build` las variables
+# marcadas «build-time», y esas dos son secretas (solo runtime). Si faltan, el backend no arranca
+# (settings exige database_url y secret_key de 32+ caracteres), así que el fallo sigue siendo explícito.
 #
 # Nombres de servicio únicos (alvea-*): la red "coolify" es compartida con otras apps y los
 # nombres de servicio se publican como alias DNS en ella.
@@ -10,8 +13,8 @@ services:
       context: ./backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL:?define DATABASE_URL}
-      SECRET_KEY: ${SECRET_KEY:?define SECRET_KEY (>=32 caracteres)}
+      DATABASE_URL: ${DATABASE_URL:-}
+      SECRET_KEY: ${SECRET_KEY:-}
       ENVIRONMENT: production
       ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-15}
       REFRESH_TOKEN_DAYS: ${REFRESH_TOKEN_DAYS:-7}
