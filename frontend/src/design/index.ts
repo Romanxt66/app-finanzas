@@ -2,6 +2,7 @@ import '@fontsource-variable/manrope'
 import './tokens.css'
 import './cristal.css'
 import './motion.css'
+import './calido.css'
 
 export * from './components'
 export { Icon, type IconName } from './Icon'
