@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'icons.dart';
+import 'logo.dart';
 import 'motion.dart';
 import 'theme.dart';
 
@@ -69,13 +69,18 @@ class _BrandIntroState extends State<BrandIntro> with SingleTickerProviderStateM
                         width: base,
                         height: base,
                         decoration: BoxDecoration(
-                          color: c.neon,
+                          gradient: const RadialGradient(
+                            center: Alignment(0, -0.4),
+                            radius: 0.8,
+                            colors: [Color(0xFF2A0F4A), Color(0xFF140826), Color(0xFF0A0414)],
+                            stops: [0, 0.6, 1],
+                          ),
                           borderRadius: BorderRadius.circular(22 * (1 - grow) + 4),
                           boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 40)],
                         ),
                         child: Opacity(
                           opacity: (1 - grow * 2.2).clamp(0.0, 1.0),
-                          child: Center(child: CrIcon('chevrons', size: 34, color: c.onNeon, stroke: 2.6)),
+                          child: const AlveaLogo(size: base, background: false),
                         ),
                       ),
                     ),

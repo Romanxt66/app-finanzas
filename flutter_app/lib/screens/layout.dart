@@ -8,6 +8,7 @@ import '../ui/buttons.dart';
 import '../ui/glass.dart';
 import '../ui/icons.dart';
 import '../ui/intro.dart';
+import '../ui/logo.dart';
 import '../ui/motion.dart';
 import '../ui/online.dart';
 import '../ui/theme.dart';
@@ -139,25 +140,11 @@ class _OfflineBanner extends StatelessWidget {
 }
 
 class BrandMark extends StatelessWidget {
-  const BrandMark({super.key, this.size = 30});
+  const BrandMark({super.key, this.size = 32});
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    final c = context.c;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(size * 0.28),
-        color: c.neon,
-        boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 16)],
-      ),
-      child: Center(
-        child: CrIcon('chevrons', size: size * 0.56, color: c.onNeon, stroke: 2.4),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AlveaLogo(size: size);
 }
 
 class _TopBar extends StatelessWidget {
@@ -189,7 +176,7 @@ class _TopBar extends StatelessWidget {
             const BrandMark(),
             const SizedBox(width: 10),
             Text(
-              'Alvea',
+              'alvea',
               style: TextStyle(
                 fontFamily: fontFamily,
                 fontFamilyFallback: fontFallback,

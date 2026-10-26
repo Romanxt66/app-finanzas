@@ -1,12 +1,10 @@
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
-import 'ribbons.dart';
 import 'theme.dart';
 
-/// Fondo con resplandores y "aurora" detrás del vidrio (`.cr-backdrop`).
+/// Fondo oscuro liso con dos resplandores muy tenues (`.cr-backdrop`).
 /// Es estático y va en su propia capa para que no se repinte al desplazar la página.
 class CrBackdrop extends StatelessWidget {
   const CrBackdrop({super.key, required this.child});
@@ -18,69 +16,17 @@ class CrBackdrop extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: RepaintBoundary(
-            child: Stack(
-              children: [
-                Positioned.fill(child: ColoredBox(color: c.bg)),
-                Positioned.fill(child: CustomPaint(painter: _GlowPainter(c.bgGlowBrand, c.bgGlowAlt))),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: LayoutBuilder(
-                      builder: (context, box) {
-                        final vmax = math.max(box.maxWidth, box.maxHeight) / 100;
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Positioned(
-                              top: -18 * vmax,
-                              right: -12 * vmax,
-                              child: _Blob(size: 46 * vmax, color: c.bgGlowBrand),
-                            ),
-                            Positioned(
-                              bottom: -16 * vmax,
-                              left: -10 * vmax,
-                              child: _Blob(size: 40 * vmax * 1.1, color: c.bgGlowAlt),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          child: RepaintBoundary(child: CustomPaint(painter: _GlowPainter(c.bg, c.bgGlowBrand, c.bgGlowAlt))),
         ),
-        // Haz de fibras de luz (estilo «Relay») por encima de los resplandores y bajo los paneles
-        const Positioned.fill(child: RibbonField()),
         child,
       ],
     );
   }
 }
 
-class _Blob extends StatelessWidget {
-  const _Blob({required this.size, required this.color});
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Opacity(
-    opacity: 0.55,
-    child: Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)], stops: const [0, 0.65]),
-      ),
-    ),
-  );
-}
-
 class _GlowPainter extends CustomPainter {
-  _GlowPainter(this.brand, this.alt);
-  final Color brand, alt;
+  _GlowPainter(this.bg, this.brand, this.alt);
+  final Color bg, brand, alt;
 
   void _ellipse(Canvas canvas, Offset center, double rx, double ry, Color color) {
     final paint = Paint()
@@ -97,12 +43,13 @@ class _GlowPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = bg);
     _ellipse(canvas, Offset(size.width * 0.10, size.height * 0.06), 520, 380, brand);
     _ellipse(canvas, Offset(size.width * 0.94, size.height * 0.98), 460, 360, alt);
   }
 
   @override
-  bool shouldRepaint(_GlowPainter old) => old.brand != brand || old.alt != alt;
+  bool shouldRepaint(_GlowPainter old) => old.bg != bg || old.brand != brand || old.alt != alt;
 }
 
 /// Pinta el borde interior superior de 1 px (`inset 0 1px 0 glass-highlight`).

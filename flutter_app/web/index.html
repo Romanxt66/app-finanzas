@@ -36,14 +36,13 @@
     @media (prefers-color-scheme: dark) { html, body { background: #020103; } }
     /* Indicador de carga: queda detrás de Flutter, que lo tapa al pintar su primer fotograma */
     #boot { position: fixed; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; }
-    #boot i { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(162, 28, 175, .25);
-      border-top-color: #a21caf; animation: boot-spin .8s linear infinite; }
-    @keyframes boot-spin { to { transform: rotate(360deg); } }
-    @media (prefers-reduced-motion: reduce) { #boot i { animation-duration: 3s; } }
+    #boot img { width: 72px; height: 72px; animation: boot-pulse 1.4s ease-in-out infinite; }
+    @keyframes boot-pulse { 50% { transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(181, 77, 255, .55)); } }
+    @media (prefers-reduced-motion: reduce) { #boot img { animation: none; } }
   </style>
 </head>
 <body>
-  <div id="boot" role="status" aria-label="Cargando"><i></i></div>
+  <div id="boot" role="status" aria-label="Cargando"><img src="icons/Icon-192.png" alt=""></div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
