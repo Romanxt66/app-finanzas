@@ -206,7 +206,10 @@ class PageHead extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.end,
         spacing: space4,
         runSpacing: space4,
-        children: [heading, ...actions],
+        children: [
+          ScrollParallax(child: heading),
+          ...actions,
+        ],
       ),
     );
   }

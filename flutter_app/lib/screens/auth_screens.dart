@@ -77,7 +77,7 @@ class _AuthShell extends StatelessWidget {
               const BrandMark(),
               const SizedBox(width: space2),
               Text(
-                'Alvea',
+                'alvea',
                 style: TextStyle(
                   fontFamily: fontFamily,
                   fontFamilyFallback: fontFallback,

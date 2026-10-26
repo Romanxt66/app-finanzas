@@ -10,13 +10,15 @@ Paridad con la web React: mismas pantallas, mismas rutas (`/transactions`, `/bud
   Presupuestos, Metas, Recurrentes, Suscripciones, Importar CSV, Más y Perfil.
 - **Diseño "Cristal":** los colores, radios, sombras y desenfoques salen de `design/tokens.json`. `lib/ui/tokens.g.dart` se
   **genera**: `dart run tool/gen_tokens.dart` (el CI falla si está desactualizado). No editarlo a mano.
-- **Movimiento:** entrada escalonada de módulos (`cr-rise`), filas que aparecen (`cr-fade`), barras que crecen, cifras que
-  cuentan hasta su valor, dona y medidor animados, aurora de fondo a la deriva, menús y diálogos con "pop", avisos (toasts),
+- **Movimiento:** entrada escalonada de módulos (`cr-rise`) que, si empiezan fuera de pantalla, aparecen al desplazar hasta
+  ellos; titular con paralaje al desplazar (`ScrollParallax`), filas que aparecen (`cr-fade`), barras que crecen, cifras que
+  cuentan hasta su valor, dona y medidor animados, menús y diálogos con "pop", avisos (toasts),
   esqueletos con brillo y elevación al pasar el puntero. Todo respeta «reducir movimiento».
-- **Estilo «Relay» (solo Flutter):** haz de fibras de luz animado en el fondo (`lib/ui/ribbons.dart`), titulares con la palabra
+- **Estilo «Relay» (solo Flutter):** fondo oscuro estático (sin efectos que se repinten en cada fotograma), titulares con la palabra
   destacada en serif cursiva (`CrHeadline`, marca con `*asteriscos*`), etiquetas y metadatos en monoespaciada (`CrTag`,
   `CrText.mono`), botones píldora en fucsia neón, barras isométricas en la tendencia, panel en perspectiva en el acceso y entrada
-  de la app con el logo (`lib/ui/intro.dart`). Los acentos neón se derivan de los fucsias de `tokens.json` (`CrAccent`), sin tonos
+  de la app con el logo (`lib/ui/intro.dart`). **Logo:** `AlveaLogo` (`lib/ui/logo.dart`) lo dibuja en vectorial a partir de
+  los SVG de `brand/`; los iconos de la PWA y el favicon de `web/` salen de los mismos archivos. Los acentos neón se derivan de los fucsias de `tokens.json` (`CrAccent`), sin tonos
   nuevos: la web React no cambia.
 - **Iconos:** los mismos trazos SVG de la web (`lib/ui/icons.dart`). **Tipografía:** Manrope y un respaldo de símbolos van
   incluidos en `assets/fonts` (la app no pide nada a CDNs, requisito de la CSP).

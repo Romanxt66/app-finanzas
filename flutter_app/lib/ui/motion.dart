@@ -8,7 +8,8 @@ import 'theme.dart';
 const crEase = Cubic(0.2, 0.7, 0.2, 1);
 const crPopEase = Cubic(0.2, 0.8, 0.2, 1);
 
-/// Entrada de módulo: sube y aparece (0,52 s). Se escalona con [delay].
+/// Entrada de módulo: sube, crece un poco y aparece (0,52 s). Se escalona con [delay].
+/// Si el módulo empieza fuera de la pantalla, espera a que el desplazamiento lo traiga a la vista.
 class Rise extends StatefulWidget {
   const Rise({super.key, required this.child, this.delay = Duration.zero, this.duration = const Duration(milliseconds: 520), this.dy = 14});
   final Widget child;
@@ -23,25 +24,65 @@ class Rise extends StatefulWidget {
 class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(vsync: this, duration: widget.duration);
   Timer? _timer;
+  ScrollPosition? _watching;
+  bool _scheduled = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_c.status == AnimationStatus.dismissed && _timer == null) {
-      if (context.reduceMotion) {
-        _c.value = 1;
-      } else if (widget.delay == Duration.zero) {
-        _c.forward();
+    if (_c.status != AnimationStatus.dismissed || _timer != null || _scheduled) return;
+    if (context.reduceMotion) {
+      _c.value = 1;
+      return;
+    }
+    _scheduled = true;
+    // Se decide tras el primer fotograma, cuando ya se conoce la posición en pantalla
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_inView()) {
+        _start(widget.delay);
       } else {
-        _timer = Timer(widget.delay, () {
-          if (mounted) _c.forward();
-        });
+        _watching = Scrollable.maybeOf(context)?.position;
+        _watching?.addListener(_onScroll);
+        if (_watching == null) _start(widget.delay);
       }
+    });
+  }
+
+  /// Visible si su borde superior ya asoma por la parte baja de la zona desplazable.
+  bool _inView() {
+    final box = context.findRenderObject();
+    final scrollable = Scrollable.maybeOf(context);
+    final viewport = scrollable?.context.findRenderObject();
+    if (box is! RenderBox || viewport is! RenderBox || !box.attached || !viewport.attached) return true;
+    final top = box.localToGlobal(Offset.zero, ancestor: viewport).dy;
+    return top < viewport.size.height - 24;
+  }
+
+  void _onScroll() {
+    if (!mounted || !_inView()) return;
+    _stopWatching();
+    _start(Duration.zero);
+  }
+
+  void _stopWatching() {
+    _watching?.removeListener(_onScroll);
+    _watching = null;
+  }
+
+  void _start(Duration delay) {
+    if (delay == Duration.zero) {
+      _c.forward();
+    } else {
+      _timer = Timer(delay, () {
+        if (mounted) _c.forward();
+      });
     }
   }
 
   @override
   void dispose() {
+    _stopWatching();
     _timer?.cancel();
     _c.dispose();
     super.dispose();
@@ -55,9 +96,56 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
       child: widget.child,
       builder: (context, child) {
         final v = curved.value.clamp(0.0, 1.0);
-        final out = Transform.translate(offset: Offset(0, widget.dy * (1 - v)), child: child);
+        final out = Transform.translate(
+          offset: Offset(0, widget.dy * (1 - v)),
+          child: Transform.scale(scale: 0.97 + 0.03 * v, alignment: Alignment.topCenter, child: child),
+        );
         return Opacity(opacity: v, child: out);
       },
+    );
+  }
+}
+
+/// Paralaje del titular: al desplazar hacia abajo se queda un poco atrás y se desvanece.
+/// Solo escucha la posición del desplazamiento; no cambia el diseño de la página.
+class ScrollParallax extends StatefulWidget {
+  const ScrollParallax({super.key, required this.child, this.factor = 0.3, this.fadeOver = 280});
+  final Widget child;
+  final double factor;
+  final double fadeOver;
+
+  @override
+  State<ScrollParallax> createState() => _ScrollParallaxState();
+}
+
+class _ScrollParallaxState extends State<ScrollParallax> {
+  ScrollPosition? _position;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.reduceMotion ? null : Scrollable.maybeOf(context)?.position;
+    if (next != _position) {
+      _position?.removeListener(_changed);
+      _position = next?..addListener(_changed);
+    }
+  }
+
+  void _changed() => setState(() {});
+
+  @override
+  void dispose() {
+    _position?.removeListener(_changed);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = _position;
+    final px = (p == null || !p.hasPixels) ? 0.0 : p.pixels.clamp(0.0, widget.fadeOver * 2);
+    return Opacity(
+      opacity: (1 - px / widget.fadeOver).clamp(0.15, 1.0),
+      child: Transform.translate(offset: Offset(0, px * widget.factor), child: widget.child),
     );
   }
 }

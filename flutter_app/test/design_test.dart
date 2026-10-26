@@ -1,6 +1,7 @@
 import 'package:alvea_app/ui/glass.dart';
 import 'package:alvea_app/ui/intro.dart';
-import 'package:alvea_app/ui/ribbons.dart';
+import 'package:alvea_app/ui/logo.dart';
+import 'package:alvea_app/ui/motion.dart';
 import 'package:alvea_app/ui/theme.dart';
 import 'package:alvea_app/ui/widgets.dart';
 import 'package:flutter/material.dart';
@@ -21,20 +22,47 @@ void main() {
       expect(find.byType(BackdropFilter), findsNothing);
     });
 
-    testWidgets('en móvil el haz de luz no pide fotogramas nuevos', (tester) async {
-      await tester.pumpWidget(_app(const SizedBox(width: 390, height: 800, child: RibbonField())));
+    testWidgets('el fondo es estático: no pide fotogramas nuevos', (tester) async {
+      await tester.pumpWidget(_app(const SizedBox(width: 1200, height: 800, child: CrBackdrop(child: SizedBox()))));
       await tester.pump(const Duration(seconds: 1));
       expect(tester.binding.hasScheduledFrame, isFalse);
     });
 
-    testWidgets('en escritorio el foco late pocas veces por segundo', (tester) async {
-      await tester.pumpWidget(_app(const SizedBox(width: 1200, height: 800, child: RibbonField())));
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(tester.binding.hasScheduledFrame, isFalse);
-      // Avanza el reloj sin dibujar: al cumplirse el paso de 250 ms se pide un fotograma
-      await tester.binding.delayed(const Duration(milliseconds: 200));
-      expect(tester.binding.hasScheduledFrame, isTrue);
-      await tester.pumpWidget(const SizedBox());
+    testWidgets('los módulos fuera de pantalla aparecen al desplazar', (tester) async {
+      await tester.pumpWidget(
+        _app(
+          SizedBox(
+            height: 600,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 900),
+                  Rise(
+                    child: Container(key: const ValueKey('abajo'), height: 100, color: Colors.red),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      double opacity() => tester
+          .widget<Opacity>(
+            find.ancestor(of: find.byKey(const ValueKey('abajo'), skipOffstage: false), matching: find.byType(Opacity)).first,
+          )
+          .opacity;
+      expect(opacity(), 0, reason: 'sigue oculto mientras no se ve');
+      await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      expect(opacity(), 1);
+    });
+
+    testWidgets('el logo de Alvea se anuncia a lectores de pantalla', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(_app(const AlveaLogo(size: 48)));
+      expect(find.bySemanticsLabel('Alvea'), findsOneWidget);
+      handle.dispose();
     });
   });
 

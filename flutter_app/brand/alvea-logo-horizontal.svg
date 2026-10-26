@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" width="840" height="240"><defs>
+<radialGradient id="bg" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#2A0F4A"/><stop offset="0.6" stop-color="#140826"/><stop offset="1" stop-color="#0A0414"/></radialGradient>
+<linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B1250"/><stop offset="1" stop-color="#0E0520"/></linearGradient>
+<filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/></filter>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feFlood flood-color="#B54DFF" flood-opacity="0.95"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs><rect width="420" height="120" rx="20" fill="url(#bg)"/><g transform="translate(6,6)"><g transform="translate(-3,1)"><g filter="url(#sh)"><path d="M36 78 L54 32 L72 78" fill="none" stroke="#9B3BEA" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M36 78 L54 32 L72 78" fill="none" stroke="url(#a)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g filter="url(#glow)"><path d="M40 64 L51 57 L58 61 L74 48" fill="none" stroke="#C35BFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="78" cy="45" r="5.5" fill="#C35BFF"/><circle cx="78" cy="45" r="2.2" fill="#F3DDFF"/></g></g></g>
+<g filter="url(#sh)"><text x="120" y="80" font-family="Poppins, 'DejaVu Sans', sans-serif" font-weight="600" font-size="58" letter-spacing="-1" fill="#F7F0FF">alvea</text></g></svg>
