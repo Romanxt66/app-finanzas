@@ -49,7 +49,10 @@ class CrHeadline extends StatelessWidget {
         TextSpan(
           children: [
             for (final (part, accent) in parseAccent(text))
-              TextSpan(text: part, style: accent ? CrText.serif(accentColor ?? ink, size: size) : null),
+              TextSpan(
+                text: part,
+                style: accent ? CrText.serif(accentColor ?? ink, size: size) : null,
+              ),
           ],
         ),
         maxLines: maxLines,
@@ -136,23 +139,28 @@ class _PulseDotState extends State<_PulseDot> with SingleTickerProviderStateMixi
   }
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 6,
-    height: 6,
-    child: AnimatedBuilder(
-      animation: _c,
-      builder: (context, _) => Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          Transform.scale(
-            scale: 1 + 1.6 * _c.value,
-            child: Container(
-              decoration: BoxDecoration(color: widget.color.withValues(alpha: 0.45 * (1 - _c.value)), shape: BoxShape.circle),
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: SizedBox(
+      width: 6,
+      height: 6,
+      child: AnimatedBuilder(
+        animation: _c,
+        builder: (context, _) => Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Transform.scale(
+              scale: 1 + 1.6 * _c.value,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: widget.color.withValues(alpha: 0.45 * (1 - _c.value)),
+                  shape: BoxShape.circle,
+                ),
+              ),
             ),
-          ),
-          _Dot(color: widget.color),
-        ],
+            _Dot(color: widget.color),
+          ],
+        ),
       ),
     ),
   );
@@ -262,10 +270,7 @@ class SectionTitle extends StatelessWidget {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Semantics(
-          header: true,
-          child: Text(title, style: CrText.heading(context.c.ink).copyWith(fontSize: 18, letterSpacing: -0.25)),
-        ),
+        Semantics(header: true, child: Text(title, style: CrText.heading(context.c.ink).copyWith(fontSize: 18, letterSpacing: -0.25))),
         ?trailing,
       ],
     ),

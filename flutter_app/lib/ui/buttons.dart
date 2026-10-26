@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'glass.dart';
 import 'icons.dart';
 import 'motion.dart';
 import 'theme.dart';
@@ -104,9 +103,7 @@ class _CrButtonState extends State<CrButton> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: shape,
-        border: Border.all(
-          color: v == CrButtonVariant.glass ? (hover ? c.glassHighlight : c.glassBorder) : Colors.transparent,
-        ),
+        border: Border.all(color: v == CrButtonVariant.glass ? (hover ? c.glassHighlight : c.glassBorder) : Colors.transparent),
         boxShadow: v == CrButtonVariant.primary
             ? [BoxShadow(color: c.neonGlow, blurRadius: hover ? 28 : 18, offset: const Offset(0, 4))]
             : null,
@@ -119,12 +116,6 @@ class _CrButtonState extends State<CrButton> {
           : null,
       child: Center(widthFactor: 1, child: content),
     );
-    if (v == CrButtonVariant.glass) {
-      btn = ClipRRect(
-        borderRadius: shape,
-        child: BackdropFilter(filter: glassFilter(blurMd, 1), child: btn),
-      );
-    }
     if (hover && v == CrButtonVariant.primary && !context.reduceMotion) {
       btn = Transform.translate(offset: const Offset(0, -1), child: btn);
     }

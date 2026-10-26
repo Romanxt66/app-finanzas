@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -9,23 +8,13 @@ import 'theme.dart';
 const crEase = Cubic(0.2, 0.7, 0.2, 1);
 const crPopEase = Cubic(0.2, 0.8, 0.2, 1);
 
-/// Entrada de módulo: sube, aparece y se enfoca (0,52 s). Se escalona con [delay].
+/// Entrada de módulo: sube y aparece (0,52 s). Se escalona con [delay].
 class Rise extends StatefulWidget {
-  const Rise({
-    super.key,
-    required this.child,
-    this.delay = Duration.zero,
-    this.duration = const Duration(milliseconds: 520),
-    this.dy = 14,
-    this.blur = 6,
-  });
+  const Rise({super.key, required this.child, this.delay = Duration.zero, this.duration = const Duration(milliseconds: 520), this.dy = 14});
   final Widget child;
   final Duration delay;
   final Duration duration;
   final double dy;
-
-  /// Desenfoque inicial (píxeles); 0 lo desactiva.
-  final double blur;
 
   @override
   State<Rise> createState() => _RiseState();
@@ -66,12 +55,7 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
       child: widget.child,
       builder: (context, child) {
         final v = curved.value.clamp(0.0, 1.0);
-        Widget out = Transform.translate(offset: Offset(0, widget.dy * (1 - v)), child: child);
-        // Aparece desenfocado y se aclara, como los titulares del diseño «Relay»
-        if (widget.blur > 0 && v < 1) {
-          final sigma = widget.blur * (1 - v);
-          out = ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma), child: out);
-        }
+        final out = Transform.translate(offset: Offset(0, widget.dy * (1 - v)), child: child);
         return Opacity(opacity: v, child: out);
       },
     );

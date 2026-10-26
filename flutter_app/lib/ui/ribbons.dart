@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
 
 /// Haz de fibras de luz que convergen en un foco y se abren en abanico, con polvo luminoso
 /// y una retícula de puntos tenue (estilo «Relay»). Solo decorativo: no recibe toques.
+/// Es estático para no costar rendimiento; solo el foco late despacio en pantallas anchas.
 class RibbonField extends StatefulWidget {
   const RibbonField({super.key});
 
@@ -14,38 +17,98 @@ class RibbonField extends StatefulWidget {
   State<RibbonField> createState() => _RibbonFieldState();
 }
 
-class _RibbonFieldState extends State<RibbonField> with SingleTickerProviderStateMixin {
-  late final AnimationController _t = AnimationController(vsync: this, duration: const Duration(seconds: 48));
-  bool _running = false;
+class _RibbonFieldState extends State<RibbonField> {
+  // El haz se pinta una sola vez (queda en caché); solo el brillo del foco «respira»,
+  // con pocos pasos por segundo para no recalcular toda la pantalla en cada fotograma.
+  static const _step = Duration(milliseconds: 250);
+  static const _steps = 40; // ciclo de 10 s
+  final ValueNotifier<int> _tick = ValueNotifier(0);
+  Timer? _timer;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final reduce = context.reduceMotion;
-    if (reduce && _running) {
-      _t.stop();
-      _running = false;
-    } else if (!reduce && !_running) {
-      _t.repeat();
-      _running = true;
+  void _sync(bool animate) {
+    if (animate && _timer == null) {
+      _timer = Timer.periodic(_step, (_) => _tick.value = (_tick.value + 1) % _steps);
+    } else if (!animate && _timer != null) {
+      _timer!.cancel();
+      _timer = null;
     }
   }
 
   @override
   void dispose() {
-    _t.dispose();
+    _timer?.cancel();
+    _tick.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
+    final colors = ribbonColors(c);
     return IgnorePointer(
-      child: RepaintBoundary(
-        child: CustomPaint(painter: _RibbonPainter(_t, ribbonColors(c), c.isDark), size: Size.infinite),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          // En pantallas estrechas el fondo queda totalmente quieto
+          _sync(!context.reduceMotion && box.maxWidth >= 640);
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              RepaintBoundary(child: CustomPaint(painter: _RibbonPainter(colors, c.isDark))),
+              RepaintBoundary(child: CustomPaint(painter: _FocusGlow(_tick, _steps, colors[1], c.isDark))),
+            ],
+          );
+        },
       ),
     );
   }
+}
+
+/// Brillo del foco, aparte del haz para repintar solo esta capa.
+class _FocusGlow extends CustomPainter {
+  _FocusGlow(this.tick, this.steps, this.color, this.dark) : super(repaint: tick);
+  final ValueListenable<int> tick;
+  final int steps;
+  final Color color;
+  final bool dark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final k = 0.8 + 0.2 * math.sin(tick.value / steps * math.pi * 2);
+    final focus = _spine(0.55, size);
+    final r = math.min(size.width, size.height) * 0.16;
+    canvas.drawCircle(
+      focus,
+      r,
+      Paint()
+        ..blendMode = dark ? BlendMode.plus : BlendMode.srcOver
+        ..shader = ui.Gradient.radial(
+          focus,
+          r,
+          [
+            Colors.white.withValues(alpha: dark ? 0.32 * k : 0.0),
+            color.withValues(alpha: (dark ? 0.22 : 0.10) * k),
+            color.withValues(alpha: 0),
+          ],
+          const [0.0, 0.25, 1.0],
+        ),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_FocusGlow old) => old.color != color || old.dark != dark || old.tick != tick;
+}
+
+/// Curva central del haz: entra por la derecha, baja al foco y vuelve a abrirse.
+Offset _spine(double u, Size s) {
+  // En pantallas estrechas el haz se pega al borde derecho para no cruzar los titulares
+  final narrow = s.width < 640;
+  final p0 = Offset(s.width * (narrow ? 1.25 : 1.08), s.height * -0.08);
+  final p1 = Offset(s.width * (narrow ? 1.02 : 0.72), s.height * (narrow ? 0.16 : 0.10));
+  final p2 = Offset(s.width * (narrow ? 0.80 : 0.32), s.height * (narrow ? 0.48 : 0.40));
+  final p3 = Offset(s.width * (narrow ? 1.05 : 0.46), s.height * 1.05);
+  final v = 1 - u;
+  return p0 * (v * v * v) + p1 * (3 * v * v * u) + p2 * (3 * v * u * u) + p3 * (u * u * u);
 }
 
 /// Colores de las fibras: fucsias de la paleta, un violeta de apoyo y algún azul frío.
@@ -54,35 +117,22 @@ List<Color> ribbonColors(CrPalette c) => c.isDark
     : [c.brandFill, c.focus, c.chart4, const Color(0xFF3B82F6), c.brandFill2];
 
 class _RibbonPainter extends CustomPainter {
-  _RibbonPainter(this.anim, this.colors, this.dark) : super(repaint: anim);
-  final Animation<double> anim;
+  _RibbonPainter(this.colors, this.dark);
   final List<Color> colors;
   final bool dark;
 
-  static const _strands = 54;
-  static const _segments = 48;
-  static const _dust = 70;
+  static const _strands = 30;
+  static const _segments = 40;
+  static const _dust = 50;
 
-  // Semillas fijas: el dibujo es estable entre fotogramas y entre sesiones.
+  // Semillas fijas: el dibujo es estable entre repintados y entre sesiones.
   static final _rand = math.Random(7);
   static final List<double> _phase = List.generate(_strands, (_) => _rand.nextDouble() * math.pi * 2);
-  static final List<double> _width = List.generate(_strands, (_) => 0.5 + _rand.nextDouble() * 0.9);
-  static final List<double> _alpha = List.generate(_strands, (_) => 0.22 + _rand.nextDouble() * 0.45);
+  static final List<double> _width = List.generate(_strands, (_) => 0.6 + _rand.nextDouble() * 0.9);
+  static final List<double> _alpha = List.generate(_strands, (_) => 0.25 + _rand.nextDouble() * 0.45);
   static final List<int> _tone = List.generate(_strands, (i) => _rand.nextDouble() < 0.14 ? 3 : (i % 3 == 0 ? 2 : (i % 2)));
   static final List<Offset> _dustSeed = List.generate(_dust, (_) => Offset(_rand.nextDouble(), _rand.nextDouble()));
   static final List<double> _dustSize = List.generate(_dust, (_) => 0.6 + _rand.nextDouble() * 1.8);
-
-  /// Curva central del haz: entra por la derecha, baja al foco y vuelve a abrirse.
-  Offset _spine(double u, Size s, double t) {
-    // En pantallas estrechas el haz se pega al borde derecho para no cruzar los titulares
-    final narrow = s.width < 640;
-    final p0 = Offset(s.width * (narrow ? 1.25 : 1.08), s.height * -0.08);
-    final p1 = Offset(s.width * ((narrow ? 1.02 : 0.72) + 0.02 * math.sin(t)), s.height * (narrow ? 0.16 : 0.10));
-    final p2 = Offset(s.width * ((narrow ? 0.78 : 0.30) + 0.02 * math.cos(t * 0.8)), s.height * (narrow ? 0.48 : 0.40));
-    final p3 = Offset(s.width * (narrow ? 1.05 : 0.46), s.height * 1.05);
-    final v = 1 - u;
-    return p0 * (v * v * v) + p1 * (3 * v * v * u) + p2 * (3 * v * u * u) + p3 * (u * u * u);
-  }
 
   /// Apertura del abanico: estrecha en el foco (u ≈ 0,55), ancha en los extremos.
   double _spread(double u, Size s) {
@@ -93,56 +143,59 @@ class _RibbonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
-    final t = anim.value * math.pi * 2;
     _dots(canvas, size);
     if (size.width < 640) {
       // Más tenue en móvil: el contenido ocupa todo el ancho
       canvas.saveLayer(Offset.zero & size, Paint()..color = const Color.fromRGBO(0, 0, 0, 0.6));
-      _paintRibbon(canvas, size, t);
+      _paintRibbon(canvas, size);
       canvas.restore();
     } else {
-      _paintRibbon(canvas, size, t);
+      _paintRibbon(canvas, size);
     }
   }
 
-  void _paintRibbon(Canvas canvas, Size size, double t) {
+  void _paintRibbon(Canvas canvas, Size size) {
     final glowBlend = dark ? BlendMode.plus : BlendMode.srcOver;
+    final spine = [for (var j = 0; j <= _segments; j++) _spine(j / _segments, size)];
 
-    // Halo amplio y difuso bajo el haz
-    final halo = Path();
-    for (var j = 0; j <= _segments; j++) {
-      final p = _spine(j / _segments, size, t);
-      j == 0 ? halo.moveTo(p.dx, p.dy) : halo.lineTo(p.dx, p.dy);
+    // Halo amplio bajo el haz: trazos anchos y translúcidos en lugar de un desenfoque
+    final halo = Path()..addPolygon(spine, false);
+    final base = math.min(size.width, size.height);
+    for (final (w, a) in [(0.16, 0.035), (0.10, 0.05), (0.05, 0.06)]) {
+      canvas.drawPath(
+        halo,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = base * w
+          ..strokeCap = StrokeCap.round
+          ..color = colors[0].withValues(alpha: a * (dark ? 1 : 0.5))
+          ..blendMode = glowBlend,
+      );
     }
-    canvas.drawPath(
-      halo,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.min(size.width, size.height) * 0.10
-        ..color = colors[0].withValues(alpha: dark ? 0.15 : 0.07)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40)
-        ..blendMode = glowBlend,
-    );
+
+    // Normales de la curva, calculadas una vez para todas las fibras
+    final normals = <Offset>[
+      for (var j = 0; j <= _segments; j++)
+        () {
+          final t = spine[math.min(_segments, j + 1)] - spine[math.max(0, j - 1)];
+          final len = t.distance == 0 ? 1.0 : t.distance;
+          return Offset(-t.dy / len, t.dx / len);
+        }(),
+    ];
+    final shaderFrom = spine.first, shaderTo = spine.last;
 
     // Fibras
     for (var i = 0; i < _strands; i++) {
       final lane = i / (_strands - 1) - 0.5;
-      final path = Path();
+      final pts = <Offset>[];
       for (var j = 0; j <= _segments; j++) {
         final u = j / _segments;
-        final base = _spine(u, size, t);
-        final ahead = _spine(math.min(1, u + 0.01), size, t);
-        final behind = _spine(math.max(0, u - 0.01), size, t);
-        final tangent = ahead - behind;
-        final len = tangent.distance == 0 ? 1.0 : tangent.distance;
-        final normal = Offset(-tangent.dy / len, tangent.dx / len);
-        final wobble = math.sin(u * 6.0 + _phase[i] + t * 1.0) * 0.18 + math.sin(u * 13.0 - t * 1.6 + _phase[i]) * 0.06;
-        final offset = _spread(u, size) * (lane * 2 + wobble);
-        final p = base + normal * offset;
-        j == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+        final wobble = math.sin(u * 6.0 + _phase[i]) * 0.18 + math.sin(u * 13.0 + _phase[i]) * 0.06;
+        pts.add(spine[j] + normals[j] * (_spread(u, size) * (lane * 2 + wobble)));
       }
-      // Una de cada nueve fibras es «núcleo»: más gruesa, casi blanca y con brillo propio
-      final core = i % 9 == 4;
+      final path = Path()..addPolygon(pts, false);
+      // Una de cada seis fibras es «núcleo»: más gruesa, casi blanca y con brillo propio
+      final core = i % 6 == 3;
       final tint = colors[_tone[i] % colors.length];
       final color = core ? Color.lerp(tint, Colors.white, dark ? 0.45 : 0.1)! : tint;
       final a = (core ? 0.85 : _alpha[i]) * (dark ? 1 : 0.55);
@@ -151,10 +204,9 @@ class _RibbonPainter extends CustomPainter {
           path,
           Paint()
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 6
+            ..strokeWidth = 5
             ..blendMode = glowBlend
-            ..color = tint.withValues(alpha: dark ? 0.16 : 0.08)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+            ..color = tint.withValues(alpha: dark ? 0.10 : 0.05),
         );
       }
       canvas.drawPath(
@@ -165,42 +217,22 @@ class _RibbonPainter extends CustomPainter {
           ..strokeCap = StrokeCap.round
           ..blendMode = glowBlend
           ..shader = ui.Gradient.linear(
-            _spine(0, size, t),
-            _spine(1, size, t),
+            shaderFrom,
+            shaderTo,
             [color.withValues(alpha: 0), color.withValues(alpha: a), color.withValues(alpha: a * 0.9), color.withValues(alpha: 0)],
             const [0.0, 0.35, 0.75, 1.0],
           ),
       );
     }
 
-    // Foco brillante donde convergen las fibras
-    final focus = _spine(0.55, size, t);
-    final r = math.min(size.width, size.height) * 0.16;
-    canvas.drawCircle(
-      focus,
-      r,
-      Paint()
-        ..blendMode = glowBlend
-        ..shader = ui.Gradient.radial(
-          focus,
-          r,
-          [
-            Colors.white.withValues(alpha: dark ? 0.32 : 0.0),
-            colors[1].withValues(alpha: dark ? 0.22 : 0.10),
-            colors[1].withValues(alpha: 0),
-          ],
-          const [0.0, 0.25, 1.0],
-        ),
-    );
-
-    // Polvo luminoso que deriva a lo largo del haz
+    // Polvo luminoso repartido a lo largo del haz
     for (var k = 0; k < _dust; k++) {
       final seed = _dustSeed[k];
-      final u = (seed.dx + anim.value * (0.35 + seed.dy * 0.4)) % 1.0;
-      final base = _spine(u, size, t);
+      final u = seed.dx;
+      final p0 = _spine(u, size);
       final side = (seed.dy - 0.5) * 2;
-      final p = base + Offset(side * _spread(u, size) * 1.4, side * _spread(u, size) * 0.6);
-      final twinkle = 0.5 + 0.5 * math.sin(t * 3 + k);
+      final p = p0 + Offset(side * _spread(u, size) * 1.4, side * _spread(u, size) * 0.6);
+      final twinkle = 0.5 + 0.5 * math.sin(k * 1.7);
       canvas.drawCircle(
         p,
         _dustSize[k],
@@ -230,5 +262,5 @@ class _RibbonPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RibbonPainter old) => old.dark != dark || old.colors != colors;
+  bool shouldRepaint(_RibbonPainter old) => old.dark != dark || !listEquals(old.colors, colors);
 }

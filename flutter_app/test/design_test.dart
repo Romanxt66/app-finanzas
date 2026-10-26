@@ -1,4 +1,6 @@
+import 'package:alvea_app/ui/glass.dart';
 import 'package:alvea_app/ui/intro.dart';
+import 'package:alvea_app/ui/ribbons.dart';
 import 'package:alvea_app/ui/theme.dart';
 import 'package:alvea_app/ui/widgets.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,30 @@ Widget _app(Widget child, {Brightness brightness = Brightness.dark}) => Material
 
 void main() {
   group('entrada de la app', introTests);
+
+  group('rendimiento', () {
+    testWidgets('las tarjetas de vidrio no desenfocan el fondo en cada fotograma', (tester) async {
+      await tester.pumpWidget(_app(const Glass(child: Text('panel'))));
+      expect(find.text('panel'), findsOneWidget);
+      expect(find.byType(BackdropFilter), findsNothing);
+    });
+
+    testWidgets('en móvil el haz de luz no pide fotogramas nuevos', (tester) async {
+      await tester.pumpWidget(_app(const SizedBox(width: 390, height: 800, child: RibbonField())));
+      await tester.pump(const Duration(seconds: 1));
+      expect(tester.binding.hasScheduledFrame, isFalse);
+    });
+
+    testWidgets('en escritorio el foco late pocas veces por segundo', (tester) async {
+      await tester.pumpWidget(_app(const SizedBox(width: 1200, height: 800, child: RibbonField())));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(tester.binding.hasScheduledFrame, isFalse);
+      // Avanza el reloj sin dibujar: al cumplirse el paso de 250 ms se pide un fotograma
+      await tester.binding.delayed(const Duration(milliseconds: 200));
+      expect(tester.binding.hasScheduledFrame, isTrue);
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
 
   group('parseAccent', () {
     test('separa la palabra destacada entre asteriscos', () {
