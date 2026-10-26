@@ -31,8 +31,22 @@
 
   <title>Alvea</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Descarga el motor en paralelo con el arranque de Flutter (pesa ~3 MB) -->
+  <link rel="preload" href="canvaskit/canvaskit.wasm" as="fetch" crossorigin>
+  <link rel="preload" href="main.dart.js" as="script">
+  <style>
+    html, body { margin: 0; height: 100%; background: #f6f4ff; }
+    @media (prefers-color-scheme: dark) { html, body { background: #0b0a14; } }
+    /* Indicador de carga: queda detrás de Flutter, que lo tapa al pintar su primer fotograma */
+    #boot { position: fixed; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; }
+    #boot i { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(124, 92, 255, .25);
+      border-top-color: #7c5cff; animation: boot-spin .8s linear infinite; }
+    @keyframes boot-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #boot i { animation-duration: 3s; } }
+  </style>
 </head>
 <body>
+  <div id="boot" role="status" aria-label="Cargando"><i></i></div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
