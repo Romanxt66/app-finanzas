@@ -101,7 +101,7 @@ for (const vp of viewports) {
       const bg = await page.evaluate(() =>
         getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
       )
-      expect(bg).toBe(scheme === 'dark' ? '#020103' : '#f7f2f9')
+      expect(bg).toBe(scheme === 'dark' ? '#151210' : '#d8cdbc')
 
       // selector de tema: automático → claro → oscuro, recordado al recargar
       const themeBtn = page.getByRole('button', { name: /^Tema:/ })
@@ -111,7 +111,7 @@ for (const vp of viewports) {
         await page.evaluate(() =>
           getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
         ),
-      ).toBe('#f7f2f9')
+      ).toBe('#d8cdbc')
       await themeBtn.click()
       await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
       await page.reload()

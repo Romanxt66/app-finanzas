@@ -21,3 +21,8 @@ vidrio solo sobre `cr-backdrop`; objetivos táctiles de 44 px; foco visible de 2
 tracking 0.08em) vienen del sistema "Alvea" diseñado en Claude. Fondo casi negro `#020103`, acción `brand-fill` `#a21caf`
 (texto blanco 6.3:1), acento `brand` `#f0abfc` (oscuro) / `#a21cae` (claro). Se añadieron `chart-1…5` para gráficos.
 Fuente tipográfica: solo Manrope (incluida, sin CDN); no se usa Inter por la CSP.
+
+**Web React: capa «cálida».** `tokens.calido.json` sustituye por nombre los tokens de `tokens.json` solo para la web React
+(`build-tokens.mjs` los mezcla al generar `tokens.css`): vidrio beige sobre una sala difuminada, acción en carbón (amarilla
+en oscuro) y resaltes amarillos. Los estilos de componentes están en `frontend/src/design/calido.css` (solo presentación).
+Flutter no la lee y conserva el fucsia.
