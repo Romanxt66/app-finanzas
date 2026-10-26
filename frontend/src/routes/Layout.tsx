@@ -1,9 +1,10 @@
-import { Suspense } from 'react'
+import { Suspense, useMemo } from 'react'
 import { Link, Navigate, Outlet } from 'react-router-dom'
 import { useRunDueRecurring } from '../api/hooks'
 import {
   Backdrop,
   Button,
+  CommandPalette,
   Glass,
   Icon,
   Skeleton,
@@ -11,6 +12,7 @@ import {
   TopNav,
   useOnline,
   useTheme,
+  type Command,
   type NavItem,
 } from '../design'
 import { useAuth } from '../features/authContext'
@@ -40,6 +42,14 @@ export function Layout() {
   const theme = useTheme()
   const online = useOnline()
   useRunDueRecurring(!!user)
+  const actions = useMemo<Command[]>(
+    () => [
+      { id: 'profile', label: 'Perfil', icon: 'user', group: 'Cuenta', to: '/profile' },
+      { id: 'theme', label: 'Cambiar tema', icon: 'sun', group: 'Cuenta', run: theme.cycle },
+      { id: 'logout', label: 'Cerrar sesión', icon: 'logout', group: 'Cuenta', run: logout },
+    ],
+    [theme.cycle, logout],
+  )
   if (loading)
     return (
       <Backdrop>
@@ -61,6 +71,7 @@ export function Layout() {
           </span>
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
+          <CommandPalette items={DESKTOP_NAV} actions={actions} />
           <Link to="/profile" className="label cr-muted cr-user" title="Perfil">
             <Icon name="user" />
             <span className="cr-user-name">{user.full_name}</span>

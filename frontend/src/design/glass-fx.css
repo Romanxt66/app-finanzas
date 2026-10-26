@@ -1,0 +1,291 @@
+/* Efectos de cristal: grano, borde biselado, reflejo que sigue al cursor, parallax del fondo,
+   indicador deslizante de la navegación y paleta de comandos. Solo presentación; el movimiento
+   se apaga con «reducir movimiento» y el reflejo/parallax solo corren con puntero fino (useGlassFx). */
+
+:root {
+  --cr-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --cr-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --cr-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Vidrio: textura de grano, borde de luz biselado y reflejo especular */
+.cr-glass {
+  --mx: 50%;
+  --my: 0%;
+  --hl: 0;
+  background-image: var(--cr-grain);
+}
+.cr-glass::before,
+.cr-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.cr-glass::before {
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.04) 38%,
+    rgba(255, 255, 255, 0.04) 62%,
+    rgba(255, 255, 255, 0.35)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.6;
+}
+.cr-glass::after {
+  background:
+    radial-gradient(
+      360px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, calc(0.3 * var(--hl))),
+      transparent 60%
+    ),
+    linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.2) 45%, transparent 52%)
+      var(--sx, -160%) 0 / 250% 100% no-repeat;
+  mix-blend-mode: soft-light;
+  transition: background-position 0.9s var(--cr-soft);
+}
+@media (hover: hover) {
+  .cr-glass:hover {
+    --sx: 160%;
+  }
+}
+/* Las tarjetas de carbón no llevan reflejo (se ve sucio sobre oscuro sólido) */
+.cr-balance::after {
+  display: none;
+}
+
+/* Parallax del fondo: las manchas de luz se desplazan en sentido contrario al cursor.
+   `translate` es independiente de `transform`, así que no pisa la deriva animada. */
+.cr-backdrop::before {
+  translate: calc(var(--px, 0) * -26px) calc(var(--py, 0) * -18px);
+  transition: translate 0.9s var(--cr-soft);
+}
+.cr-backdrop::after {
+  translate: calc(var(--px, 0) * 20px) calc(var(--py, 0) * 14px);
+  transition: translate 0.9s var(--cr-soft);
+}
+
+/* Entrada de cada pantalla: sube y se enfoca; al acabar, el módulo queda libre (inclinación 3D) */
+@keyframes cr-rise-blur {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+.cr-main > * {
+  animation: cr-rise-blur 0.5s var(--cr-soft) backwards;
+}
+
+/* Inclinación 3D: transición con rebote al volver a su sitio */
+.cr-balance,
+.cr-stat,
+.cr-budget {
+  transition:
+    transform 0.5s var(--cr-bounce),
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+/* Botones: suben al pasar el cursor y se hunden al pulsar */
+@media (hover: hover) {
+  .cr-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+}
+.cr-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Navegación superior: píldora deslizante hacia la pestaña activa */
+.cr-nav {
+  position: relative;
+}
+.cr-nav::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: var(--ind-w, 0);
+  translate: var(--ind-x, 0) 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-fill);
+  opacity: 0;
+  transition:
+    translate 0.5s var(--cr-bounce),
+    width 0.4s var(--cr-soft),
+    opacity 0.2s ease;
+  pointer-events: none;
+}
+.cr-nav[data-ind]::before {
+  opacity: 1;
+}
+.cr-nav a {
+  position: relative;
+  z-index: 1;
+}
+.cr-nav[data-ind] a[aria-current='page'] {
+  background: transparent;
+}
+/* El texto de la pestaña que se activa cambia a blanco cuando la píldora ya casi ha llegado */
+.cr-nav a {
+  transition:
+    background 0.2s ease,
+    color 0.15s ease;
+}
+.cr-nav a[aria-current='page'] {
+  transition:
+    background 0.2s ease,
+    color 0.15s ease 0.2s;
+}
+.cr-nav a svg {
+  transition: transform 0.35s var(--cr-bounce);
+}
+/* Con el buscador añadido, la barra se queda corta por debajo de 1520 px: solo la pestaña activa
+   conserva su texto y el nombre de usuario pasa a ser solo el icono */
+@media (max-width: 1519px) {
+  .cr-nav a:not([aria-current='page']) .cr-nav-label,
+  .cr-user .cr-user-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .cr-nav a {
+    padding: 0 var(--space-3);
+  }
+}
+.cr-nav a:hover svg {
+  transform: scale(1.12);
+}
+
+/* Paleta de comandos (Ctrl/⌘ + K) */
+.cr-palette-overlay {
+  place-items: start center;
+  padding-top: min(18vh, 140px);
+}
+.cr-palette {
+  width: min(100%, 560px);
+  padding: 0;
+  overflow: hidden;
+  animation: cr-pop 0.28s var(--cr-bounce) both;
+}
+.cr-palette-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink-muted);
+}
+.cr-palette-field svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.cr-palette-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 500 16px/24px var(--font-sans);
+  outline: none;
+}
+.cr-palette-field input::placeholder {
+  color: var(--ink-faint);
+}
+.cr-palette-field kbd {
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--ink-faint);
+  font: 600 11px/16px var(--font-sans);
+}
+.cr-palette-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+  max-height: min(55vh, 360px);
+  overflow: auto;
+}
+.cr-palette-list li[role='option'] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  height: 44px;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font: 500 14px/1 var(--font-sans);
+  cursor: pointer;
+}
+.cr-palette-list li[role='option'] svg {
+  width: 18px;
+  height: 18px;
+  color: var(--ink-muted);
+}
+.cr-palette-list li[role='option'][aria-selected='true'] {
+  background: var(--brand-fill);
+  color: var(--on-brand);
+}
+.cr-palette-list li[role='option'][aria-selected='true'] svg {
+  color: inherit;
+}
+.cr-palette-group {
+  padding: var(--space-3) var(--space-3) var(--space-1);
+  color: var(--ink-faint);
+  font: 600 11px/16px var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cr-palette-empty {
+  padding: var(--space-5) var(--space-3);
+  color: var(--ink-muted);
+  font: 500 14px/20px var(--font-sans);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cr-main > * {
+    animation: none;
+  }
+  .cr-glass::after,
+  .cr-backdrop::before,
+  .cr-backdrop::after,
+  .cr-nav::before,
+  .cr-nav a svg,
+  .cr-balance,
+  .cr-stat,
+  .cr-budget,
+  .cr-palette {
+    transition: none;
+    animation: none;
+  }
+  .cr-btn:hover:not(:disabled),
+  .cr-btn:active:not(:disabled) {
+    transform: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .cr-glass::after {
+    display: none;
+  }
+}

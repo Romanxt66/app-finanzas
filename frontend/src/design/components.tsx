@@ -1,6 +1,8 @@
 import {
   forwardRef,
   useId,
+  useLayoutEffect,
+  useRef,
   useState,
   type ButtonHTMLAttributes,
   type ElementType,
@@ -8,15 +10,17 @@ import {
   type InputHTMLAttributes,
   type ReactNode,
 } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
 import { Icon, type IconName } from './Icon'
 import { useCountUp } from './useCountUp'
+import { useGlassFx } from './useGlassFx'
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ')
 
 /** Raíz de tema: aplica tipografía y variables de Cristal a todo lo que contiene. */
 export function Backdrop({ children }: { children: ReactNode }) {
+  useGlassFx()
   return <div className="cr cr-backdrop">{children}</div>
 }
 
@@ -333,8 +337,29 @@ export function TabBar({ items }: { items: NavItem[] }) {
 }
 
 export function TopNav({ items }: { items: NavItem[] }) {
+  const nav = useRef<HTMLElement>(null)
+  const { pathname } = useLocation()
+
+  // Indicador deslizante: una píldora que viaja hasta la pestaña activa (se mide tras cada ruta/redimensión)
+  useLayoutEffect(() => {
+    const el = nav.current
+    if (!el) return
+    const place = () => {
+      const active = el.querySelector<HTMLElement>('a[aria-current="page"]')
+      if (!active) return el.removeAttribute('data-ind')
+      el.style.setProperty('--ind-x', `${active.offsetLeft}px`)
+      el.style.setProperty('--ind-w', `${active.offsetWidth}px`)
+      el.setAttribute('data-ind', '')
+    }
+    place()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(place)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [pathname])
+
   return (
-    <nav className="cr-nav" aria-label="Principal">
+    <nav ref={nav} className="cr-nav" aria-label="Principal">
       {items.map((t) => (
         <NavLink key={t.to} to={t.to} end={t.end} title={t.label}>
           <Icon name={t.icon} />
