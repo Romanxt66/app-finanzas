@@ -8,22 +8,43 @@
   --cr-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Vidrio: textura de grano, borde de luz biselado y reflejo especular */
-.cr-glass {
-  --mx: 50%;
-  --my: 0%;
-  --hl: 0;
-  background-image: var(--cr-grain);
+/* Propiedades registradas SIN herencia: al mover el cursor solo se recalcula el módulo bajo el puntero
+   (una variable normal invalidaría el estilo de todo su contenido en cada fotograma). */
+@property --mx {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 50%;
 }
-.cr-glass::before,
-.cr-glass::after {
+@property --my {
+  syntax: '<length-percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+@property --hl {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+/* Vidrio: reflejo del cursor (capa de fondo), grano y borde de luz biselado.
+   El desenfoque es más corto que el de los tokens: el coste crece con el radio y sale igual de esmerilado. */
+.cr-glass {
+  background-image:
+    radial-gradient(
+      340px circle at var(--mx) var(--my),
+      rgba(255, 255, 255, calc(0.22 * var(--hl))),
+      transparent 62%
+    ),
+    var(--cr-grain);
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  backdrop-filter: blur(var(--blur-md));
+}
+.cr-glass::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-}
-.cr-glass::before {
   padding: 1px;
   background: linear-gradient(
     140deg,
@@ -39,50 +60,45 @@
   mask-composite: exclude;
   opacity: 0.6;
 }
-.cr-glass::after {
-  background:
-    radial-gradient(
-      360px circle at var(--mx) var(--my),
-      rgba(255, 255, 255, calc(0.3 * var(--hl))),
-      transparent 60%
-    ),
-    linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.2) 45%, transparent 52%)
-      var(--sx, -160%) 0 / 250% 100% no-repeat;
-  mix-blend-mode: soft-light;
-  transition: background-position 0.9s var(--cr-soft);
-}
-@media (hover: hover) {
-  .cr-glass:hover {
-    --sx: 160%;
-  }
+/* Barra de pestañas y menús: desenfoque sin saturación extra (un paso de filtro menos) */
+.cr-tabbar,
+.cr-menu {
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  backdrop-filter: blur(var(--blur-lg));
 }
 /* Las tarjetas de carbón no llevan reflejo (se ve sucio sobre oscuro sólido) */
-.cr-balance::after {
+.cr-balance {
+  background-image: var(--cr-grain);
+}
+
+/* Fondo: la sala difuminada vive en UNA capa fija (no se repinta al hacer scroll) y no se anima:
+   una capa que cambia cada fotograma obliga a re-desenfocar todo el vidrio que tiene encima. */
+.cr-backdrop {
+  background: var(--bg);
+}
+.cr-backdrop::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  filter: none;
+  opacity: 1;
+  background: var(--room);
+  animation: none;
+}
+.cr-backdrop::after {
   display: none;
 }
 
-/* Parallax del fondo: las manchas de luz se desplazan en sentido contrario al cursor.
-   `translate` es independiente de `transform`, así que no pisa la deriva animada. */
-.cr-backdrop::before {
-  translate: calc(var(--px, 0) * -26px) calc(var(--py, 0) * -18px);
-  transition: translate 0.9s var(--cr-soft);
-}
-.cr-backdrop::after {
-  translate: calc(var(--px, 0) * 20px) calc(var(--py, 0) * 14px);
-  transition: translate 0.9s var(--cr-soft);
-}
-
-/* Entrada de cada pantalla: sube y se enfoca; al acabar, el módulo queda libre (inclinación 3D) */
+/* Entrada de cada pantalla: sube y aparece (solo opacidad y transform, que van en el compositor); al acabar, el módulo queda libre (inclinación 3D) */
 @keyframes cr-rise-blur {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.985);
-    filter: blur(8px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
     transform: none;
-    filter: blur(0);
   }
 }
 .cr-main > * {
@@ -97,7 +113,6 @@
     transform 0.5s var(--cr-bounce),
     background 0.3s ease,
     box-shadow 0.3s ease;
-  will-change: transform;
 }
 
 /* Botones: suben al pasar el cursor y se hunden al pulsar */
@@ -263,13 +278,48 @@
   text-align: center;
 }
 
+/* Listas largas: lo que está fuera de pantalla no se maqueta ni se pinta hasta que se acerca */
+.cr-txn,
+.cr-row-split {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 64px;
+}
+
+/* Modo ligero (usePerfGuard): vidrio sólido sin desenfoque, sin reflejo, borde ni grano, y sin animaciones
+   de entrada. Misma estructura y colores; solo se quita lo que cuesta fotogramas. */
+html[data-perf='lite'] .cr-glass,
+html[data-perf='lite'] .cr-topbar,
+html[data-perf='lite'] .cr-tabbar,
+html[data-perf='lite'] .cr-menu,
+html[data-perf='lite'] .cr-overlay {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-perf='lite'] .cr-glass:not(.cr-balance),
+html[data-perf='lite'] .cr-topbar,
+html[data-perf='lite'] .cr-tabbar {
+  background-color: var(--surface-solid);
+  background-image: none;
+}
+html[data-perf='lite'] .cr-glass::before {
+  display: none;
+}
+html[data-perf='lite'] .cr-main > *,
+html[data-perf='lite'] .cr-txn,
+html[data-perf='lite'] .cr-row-split {
+  animation: none;
+}
+html[data-perf='lite'] .cr-balance,
+html[data-perf='lite'] .cr-stat,
+html[data-perf='lite'] .cr-budget {
+  transform: none !important;
+  transition: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cr-main > * {
     animation: none;
   }
-  .cr-glass::after,
-  .cr-backdrop::before,
-  .cr-backdrop::after,
   .cr-nav::before,
   .cr-nav a svg,
   .cr-balance,
@@ -282,10 +332,5 @@
   .cr-btn:hover:not(:disabled),
   .cr-btn:active:not(:disabled) {
     transform: none;
-  }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .cr-glass::after {
-    display: none;
   }
 }
