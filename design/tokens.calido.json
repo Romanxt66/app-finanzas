@@ -50,8 +50,8 @@
   },
   "blur": {
     "tokens": [
-      {"name": "blur-md", "value": "28px", "usage": "backdrop-filter de módulos de vidrio."},
-      {"name": "blur-lg", "value": "42px", "usage": "Barra superior, marco y hojas modales."}
+      {"name": "blur-md", "value": "20px", "usage": "backdrop-filter de módulos de vidrio."},
+      {"name": "blur-lg", "value": "28px", "usage": "Barra superior, marco y hojas modales."}
     ]
   }
 }

@@ -4,9 +4,10 @@ import { useEffect } from 'react'
 const TILT = '.cr-balance, .cr-stat, .cr-budget'
 
 /**
- * Efectos de cristal que siguen al cursor: reflejo especular (--mx, --my, --hl en cada `.cr-glass`),
- * parallax del fondo (--px, --py en <html>) e inclinación 3D de los módulos. Solo punteros finos y sin
- * «reducir movimiento»: en táctil o con la preferencia activa no hace nada. Una sola escucha global.
+ * Efectos de cristal que siguen al cursor: reflejo especular (--mx, --my, --hl) y ligera inclinación 3D.
+ * Solo toca UN módulo por fotograma (el que está bajo el puntero) y nunca recorre el documento: así el
+ * coste no depende de cuántas tarjetas haya. Solo punteros finos, sin «reducir movimiento» y fuera del
+ * modo ligero (ver usePerfGuard).
  */
 export function useGlassFx() {
   useEffect(() => {
@@ -15,36 +16,36 @@ export function useGlassFx() {
     const calm = matchMedia('(prefers-reduced-motion: reduce)')
     if (!fine.matches || calm.matches) return
 
-    const root = document.documentElement
     let raf = 0
-    let last: PointerEvent | undefined
+    let x = 0
+    let y = 0
+    let current: HTMLElement | null = null
 
     const frame = () => {
       raf = 0
-      if (!last) return
-      const { clientX: x, clientY: y } = last
-      document.querySelectorAll<HTMLElement>('.cr-glass').forEach((el) => {
-        const r = el.getBoundingClientRect()
-        if (r.bottom < 0 || r.top > innerHeight) return
-        el.style.setProperty('--mx', `${x - r.left}px`)
-        el.style.setProperty('--my', `${y - r.top}px`)
-        // el brillo se intensifica cerca del módulo
-        const dx = Math.max(r.left - x, 0, x - r.right)
-        const dy = Math.max(r.top - y, 0, y - r.bottom)
-        el.style.setProperty('--hl', Math.max(0, 1 - Math.hypot(dx, dy) / 260).toFixed(2))
-      })
-      root.style.setProperty('--px', (x / innerWidth - 0.5).toFixed(3))
-      root.style.setProperty('--py', (y / innerHeight - 0.5).toFixed(3))
+      if (document.documentElement.dataset.perf === 'lite') return
+      const glass = (document.elementFromPoint(x, y) as Element | null)?.closest<HTMLElement>(
+        '.cr-glass',
+      )
+      if (current && current !== glass) current.style.setProperty('--hl', '0')
+      current = glass ?? null
+      if (!glass) return
+      const r = glass.getBoundingClientRect()
+      glass.style.setProperty('--mx', `${Math.round(x - r.left)}px`)
+      glass.style.setProperty('--my', `${Math.round(y - r.top)}px`)
+      glass.style.setProperty('--hl', '1')
     }
 
     const move = (e: PointerEvent) => {
-      last = e
+      x = e.clientX
+      y = e.clientY
       if (!raf) raf = requestAnimationFrame(frame)
+      if (document.documentElement.dataset.perf === 'lite') return
       const card = (e.target as Element | null)?.closest?.<HTMLElement>(TILT)
       if (card) {
         const r = card.getBoundingClientRect()
-        const rx = ((e.clientY - r.top) / r.height - 0.5) * -5
-        const ry = ((e.clientX - r.left) / r.width - 0.5) * 6
+        const rx = ((y - r.top) / r.height - 0.5) * -5
+        const ry = ((x - r.left) / r.width - 0.5) * 6
         card.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-2px)`
       }
     }
