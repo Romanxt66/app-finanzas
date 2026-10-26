@@ -85,37 +85,34 @@ class FieldFace extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: shape,
-        child: BackdropFilter(
-          filter: glassFilter(blurMd, 1),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              constraints: const BoxConstraints(minHeight: 44),
-              decoration: BoxDecoration(
-                color: hovered ? c.glassStrong : c.glass,
-                borderRadius: shape,
-                border: Border.all(color: border),
-              ),
-              child: Stack(
-                alignment: Alignment.centerLeft,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: left ?? space4, right: right ?? space4),
-                    child: child,
-                  ),
-                  if (lead != null)
-                    Positioned(
-                      left: space4,
-                      child: IconTheme(
-                        data: IconThemeData(color: focused ? c.brand : c.inkMuted),
-                        child: lead!,
-                      ),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            constraints: const BoxConstraints(minHeight: 44),
+            decoration: BoxDecoration(
+              color: frosted(c, hovered ? c.glassStrong : c.glass),
+              borderRadius: shape,
+              border: Border.all(color: border),
+            ),
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: left ?? space4, right: right ?? space4),
+                  child: child,
+                ),
+                if (lead != null)
+                  Positioned(
+                    left: space4,
+                    child: IconTheme(
+                      data: IconThemeData(color: focused ? c.brand : c.inkMuted),
+                      child: lead!,
                     ),
-                  if (trail != null) Positioned(right: space2, child: trail!),
-                ],
-              ),
+                  ),
+                if (trail != null) Positioned(right: space2, child: trail!),
+              ],
             ),
           ),
         ),

@@ -6,97 +6,54 @@ import 'package:flutter/material.dart';
 import 'ribbons.dart';
 import 'theme.dart';
 
-/// Fondo con resplandores y "aurora" a la deriva detrás del vidrio (`.cr-backdrop`).
-class CrBackdrop extends StatefulWidget {
+/// Fondo con resplandores y "aurora" detrás del vidrio (`.cr-backdrop`).
+/// Es estático y va en su propia capa para que no se repinte al desplazar la página.
+class CrBackdrop extends StatelessWidget {
   const CrBackdrop({super.key, required this.child});
   final Widget child;
-
-  @override
-  State<CrBackdrop> createState() => _CrBackdropState();
-}
-
-class _CrBackdropState extends State<CrBackdrop> with TickerProviderStateMixin {
-  late final AnimationController _a = AnimationController(vsync: this, duration: const Duration(seconds: 26));
-  late final AnimationController _b = AnimationController(vsync: this, duration: const Duration(seconds: 32));
-  bool _running = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final reduce = context.reduceMotion;
-    if (reduce && _running) {
-      _a.stop();
-      _b.stop();
-      _running = false;
-    } else if (!reduce && !_running) {
-      _a.repeat(reverse: true);
-      _b.repeat(reverse: true);
-      _running = true;
-    }
-  }
-
-  @override
-  void dispose() {
-    _a.dispose();
-    _b.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
     return Stack(
       children: [
-        Positioned.fill(child: ColoredBox(color: c.bg)),
-        Positioned.fill(child: CustomPaint(painter: _GlowPainter(c.bgGlowBrand, c.bgGlowAlt))),
-        // Haz de fibras de luz (estilo «Relay») por encima de los resplandores y bajo el vidrio
-        const Positioned.fill(child: RibbonField()),
         Positioned.fill(
-          child: IgnorePointer(
-            child: LayoutBuilder(
-              builder: (context, box) {
-                final vmax = math.max(box.maxWidth, box.maxHeight) / 100;
-                return AnimatedBuilder(
-                  animation: Listenable.merge([_a, _b]),
-                  builder: (context, _) {
-                    final ta = Curves.easeInOut.transform(_a.value);
-                    final tb = Curves.easeInOut.transform(_b.value);
-                    final sa = 46 * vmax;
-                    final sb = 40 * vmax;
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Positioned(
-                          top: -18 * vmax,
-                          right: -12 * vmax,
-                          child: Transform.translate(
-                            offset: Offset(-8 * vmax * ta, 10 * vmax * ta),
-                            child: Transform.scale(
-                              scale: 1 + 0.15 * ta,
-                              child: _Blob(size: sa, color: c.bgGlowBrand),
+          child: RepaintBoundary(
+            child: Stack(
+              children: [
+                Positioned.fill(child: ColoredBox(color: c.bg)),
+                Positioned.fill(child: CustomPaint(painter: _GlowPainter(c.bgGlowBrand, c.bgGlowAlt))),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: LayoutBuilder(
+                      builder: (context, box) {
+                        final vmax = math.max(box.maxWidth, box.maxHeight) / 100;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned(
+                              top: -18 * vmax,
+                              right: -12 * vmax,
+                              child: _Blob(size: 46 * vmax, color: c.bgGlowBrand),
                             ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: -16 * vmax,
-                          left: -10 * vmax,
-                          child: Transform.translate(
-                            offset: Offset(10 * vmax * tb, -8 * vmax * tb),
-                            child: Transform.scale(
-                              scale: 1.1 - 0.15 * tb,
-                              child: _Blob(size: sb, color: c.bgGlowAlt),
+                            Positioned(
+                              bottom: -16 * vmax,
+                              left: -10 * vmax,
+                              child: _Blob(size: 40 * vmax * 1.1, color: c.bgGlowAlt),
                             ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        widget.child,
+        // Haz de fibras de luz (estilo «Relay») por encima de los resplandores y bajo los paneles
+        const Positioned.fill(child: RibbonField()),
+        child,
       ],
     );
   }
@@ -167,6 +124,11 @@ class _InsetHighlight extends CustomPainter {
   bool shouldRepaint(_InsetHighlight old) => old.color != color || old.radius != radius;
 }
 
+/// Vidrio «esmerilado» sin desenfoque real: mezcla el tinte del vidrio con el fondo para que
+/// el contenido se lea bien. Desenfocar lo que hay detrás en cada fotograma es muy costoso
+/// en la web, así que el desenfoque real queda solo para diálogos y menús desplegables.
+Color frosted(CrPalette c, Color fill, [double base = 0.55]) => Color.alphaBlend(fill, c.bg.withValues(alpha: base));
+
 ui.ImageFilter glassFilter(double blur, [double saturate = 1.6]) {
   final s = saturate;
   const lr = 0.2126, lg = 0.7152, lb = 0.0722;
@@ -190,7 +152,6 @@ class Glass extends StatefulWidget {
     this.strong = false,
     this.radius = radiusLg,
     this.padding,
-    this.blur = blurMd,
     this.lift = false,
     this.onTap,
     this.margin,
@@ -201,7 +162,6 @@ class Glass extends StatefulWidget {
   final bool strong;
   final double radius;
   final EdgeInsetsGeometry? padding;
-  final double blur;
   final bool lift;
   final VoidCallback? onTap;
   final EdgeInsetsGeometry? margin;
@@ -229,18 +189,15 @@ class _GlassState extends State<Glass> {
       decoration: BoxDecoration(borderRadius: shape, boxShadow: [widget.strong ? c.shadowLift : c.shadowGlass]),
       child: ClipRRect(
         borderRadius: shape,
-        child: BackdropFilter(
-          filter: glassFilter(widget.blur),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: fill,
-              borderRadius: shape,
-              border: Border.all(color: widget.borderColor ?? c.glassBorder),
-            ),
-            foregroundDecoration: const BoxDecoration(),
-            child: CustomPaint(foregroundPainter: _InsetHighlight(c.glassHighlight, widget.radius), child: body),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: frosted(c, fill, widget.strong ? 0.9 : 0.55),
+            borderRadius: shape,
+            border: Border.all(color: widget.borderColor ?? c.glassBorder),
           ),
+          foregroundDecoration: const BoxDecoration(),
+          child: CustomPaint(foregroundPainter: _InsetHighlight(c.glassHighlight, widget.radius), child: body),
         ),
       ),
     );

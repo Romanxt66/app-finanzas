@@ -153,7 +153,9 @@ class BrandMark extends StatelessWidget {
         color: c.neon,
         boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 16)],
       ),
-      child: Center(child: CrIcon('chevrons', size: size * 0.56, color: c.onNeon, stroke: 2.4)),
+      child: Center(
+        child: CrIcon('chevrons', size: size * 0.56, color: c.onNeon, stroke: 2.4),
+      ),
     );
   }
 }
@@ -178,7 +180,7 @@ class _TopBar extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Glass(
-        blur: blurLg,
+        strong: true,
         radius: 18,
         margin: const EdgeInsets.fromLTRB(space3, space3, space3, 0),
         padding: const EdgeInsets.symmetric(horizontal: space4, vertical: 10),
@@ -203,9 +205,7 @@ class _TopBar extends StatelessWidget {
               Expanded(
                 child: Row(
                   mainAxisAlignment: textNav ? MainAxisAlignment.center : MainAxisAlignment.start,
-                  children: [
-                    for (final item in desktopNav) _NavLink(item: item, active: _active(item, location), text: textNav),
-                  ],
+                  children: [for (final item in desktopNav) _NavLink(item: item, active: _active(item, location), text: textNav)],
                 ),
               ),
             ] else
@@ -372,7 +372,7 @@ class _TabBar extends StatelessWidget {
     container: true,
     label: 'Navegación principal',
     child: Glass(
-      blur: blurLg,
+      strong: true,
       padding: const EdgeInsets.all(space2),
       child: Row(
         children: [

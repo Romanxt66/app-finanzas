@@ -102,7 +102,6 @@ class _AuthShell extends StatelessWidget {
         Rise(
           delay: const Duration(milliseconds: 120),
           duration: const Duration(milliseconds: 700),
-          blur: 10,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: titleSize * 11),
             child: CrHeadline('Tu dinero, *claro* como el cristal.', size: titleSize, accentColor: c.brand),
@@ -136,7 +135,7 @@ class _AuthShell extends StatelessWidget {
         if (wide) ...[
           const SizedBox(height: space5),
           const SizedBox(height: space3),
-          Rise(delay: const Duration(milliseconds: 320), duration: const Duration(milliseconds: 800), blur: 12, child: const _FlowPanel()),
+          Rise(delay: const Duration(milliseconds: 320), duration: const Duration(milliseconds: 800), child: const _FlowPanel()),
         ],
       ],
     );
@@ -153,13 +152,7 @@ class _AuthShell extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Semantics(
-                header: true,
-                child: Text(
-                  title,
-                  style: CrText.display(c.ink, size: 28),
-                ),
-              ),
+              Semantics(header: true, child: Text(title, style: CrText.display(c.ink, size: 28))),
               const SizedBox(height: space3),
               Padding(
                 padding: const EdgeInsets.only(bottom: space2),
@@ -274,14 +267,22 @@ class _FlowPanelState extends State<_FlowPanel> with TickerProviderStateMixin {
     );
     Widget chip(String text) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: c.panel, borderRadius: BorderRadius.circular(5), border: Border.all(color: c.glassBorder)),
+      decoration: BoxDecoration(
+        color: c.panel,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: c.glassBorder),
+      ),
       child: Text(text, style: CrText.mono(c.inkMuted, size: 10)),
     );
     Widget event(String what, String when) => Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Container(width: 4, height: 4, decoration: BoxDecoration(color: c.neon, shape: BoxShape.circle)),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(color: c.neon, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 10),
           Expanded(child: Text(what, style: CrText.mono(c.inkMuted, size: 11))),
           Text(when, style: CrText.mono(c.inkFaint, size: 11)),
@@ -408,7 +409,13 @@ class _FlowLinesPainter extends CustomPainter {
         final phase = (t + i * 0.22) % 1.0;
         final pos = m.getTangentForOffset(m.length * phase)?.position;
         if (pos == null) continue;
-        canvas.drawCircle(pos, 6, Paint()..color = neon.withValues(alpha: 0.25)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+        canvas.drawCircle(
+          pos,
+          6,
+          Paint()
+            ..color = neon.withValues(alpha: 0.25)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+        );
         canvas.drawCircle(pos, 2.2, Paint()..color = Colors.white);
       }
     }
