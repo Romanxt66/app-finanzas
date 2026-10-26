@@ -245,7 +245,7 @@ class DailyAllowanceCard extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Gauge(ratio: ratio, danger: danger, size: wide ? 120 : 96),
-              Text('${(ratio.clamp(0, 9.99) * 100).round()} %', style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w700)),
+              Text('${(ratio.clamp(0, 9.99) * 100).round()}%', style: CrText.display(c.ink, size: wide ? 24 : 20)),
             ],
           ),
         );
@@ -253,9 +253,9 @@ class DailyAllowanceCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Semantics(header: true, child: Text('Disponible hoy', style: CrText.label(c.inkMuted))),
+            Semantics(header: true, child: Text('disponible hoy', style: CrText.overline(c.inkFaint))),
             const SizedBox(height: space2),
-            AnimatedMoney(value: d.leftToday, currency: d.currency, style: CrText.amountXl(danger ? c.ink : c.ink)),
+            AnimatedMoney(value: d.leftToday, currency: d.currency, style: CrText.display(danger ? c.negative : c.ink, size: 44)),
             const SizedBox(height: space2),
             Text(_messages[d.status] ?? '', style: CrText.body(c.ink)),
             if (d.status != 'no_data') ...[
@@ -270,7 +270,7 @@ class DailyAllowanceCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: space2),
-              Text('$basis${d.patternUsed ? ' · ajustado a tus hábitos por día de la semana' : ''}', style: CrText.caption(c.inkMuted)),
+              Text('$basis${d.patternUsed ? ' · ajustado a tus hábitos por día de la semana' : ''}'.toLowerCase(), style: CrText.mono(c.inkFaint, size: 11.5)),
             ],
           ],
         );
@@ -311,7 +311,7 @@ class _Fact extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: CrText.caption(c.inkMuted)),
+        Text(label.toLowerCase(), style: CrText.mono(c.inkFaint, size: 11.5)),
         Text(value, style: CrText.amountSm(c.ink)),
       ],
     );
@@ -358,12 +358,13 @@ class LifeHoursCard extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(formatHours(mq.data?.totalHours ?? 0), style: CrText.amountXl(c.ink)),
+                            Text(formatHours(mq.data?.totalHours ?? 0), style: CrText.display(c.ink, size: 44)),
                             Text('de trabajo se fueron en gastos este mes', style: CrText.label(c.inkMuted)),
                           ],
                         ),
                         if (top.isNotEmpty)
                           Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               for (var i = 0; i < top.length; i++)
                                 RowSplit(
@@ -376,7 +377,7 @@ class LifeHoursCard extends StatelessWidget {
                                 ),
                             ],
                           ),
-                        Text('Tu hora vale ${formatMoney(profile.hourlyRate, ref.displayCurrency)}', style: CrText.caption(c.inkMuted)),
+                        Text('tu hora vale ${formatMoney(profile.hourlyRate, ref.displayCurrency)}', style: CrText.mono(c.inkFaint, size: 11.5)),
                       ],
                     ),
             );

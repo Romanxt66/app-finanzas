@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'ribbons.dart';
 import 'theme.dart';
 
 /// Fondo con resplandores y "aurora" a la deriva detrás del vidrio (`.cr-backdrop`).
@@ -48,6 +49,8 @@ class _CrBackdropState extends State<CrBackdrop> with TickerProviderStateMixin {
       children: [
         Positioned.fill(child: ColoredBox(color: c.bg)),
         Positioned.fill(child: CustomPaint(painter: _GlowPainter(c.bgGlowBrand, c.bgGlowAlt))),
+        // Haz de fibras de luz (estilo «Relay») por encima de los resplandores y bajo el vidrio
+        const Positioned.fill(child: RibbonField()),
         Positioned.fill(
           child: IgnorePointer(
             child: LayoutBuilder(

@@ -66,6 +66,17 @@ flutter:
     - family: Manrope
       fonts:
         - asset: assets/fonts/Manrope.ttf
+    # Serif cursiva de las palabras destacadas de los titulares (SIL OFL, ver assets/fonts/OFL-*.txt)
+    - family: InstrumentSerif
+      fonts:
+        - asset: assets/fonts/InstrumentSerif-Italic.ttf
+          style: italic
+    # Monoespaciada de etiquetas, metadatos y cifras de sistema (SIL OFL)
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
     # Glifos que Manrope (subconjunto latino) no trae: evita descargar tipografías de respaldo de un CDN
     - family: SymbolsFallback
       fonts:

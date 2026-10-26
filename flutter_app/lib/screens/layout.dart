@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,9 +7,11 @@ import '../core/state.dart';
 import '../ui/buttons.dart';
 import '../ui/glass.dart';
 import '../ui/icons.dart';
+import '../ui/intro.dart';
 import '../ui/motion.dart';
 import '../ui/online.dart';
 import '../ui/theme.dart';
+import '../ui/widgets.dart' show CrTag;
 
 class NavItem {
   const NavItem(this.to, this.label, this.icon, {this.end = false});
@@ -72,7 +75,7 @@ class _AppLayoutState extends State<AppLayout> {
           children: [
             Column(
               children: [
-                _TopBar(location: location),
+                _TopBar(location: location, online: _online),
                 ValueListenableBuilder<bool>(
                   valueListenable: _online,
                   builder: (context, online, _) => online ? const SizedBox.shrink() : const _OfflineBanner(),
@@ -94,6 +97,7 @@ class _AppLayoutState extends State<AppLayout> {
                   ),
                 ),
               ),
+            const BrandIntro(),
           ],
         ),
       ),
@@ -135,7 +139,7 @@ class _OfflineBanner extends StatelessWidget {
 }
 
 class BrandMark extends StatelessWidget {
-  const BrandMark({super.key, this.size = 34});
+  const BrandMark({super.key, this.size = 30});
   final double size;
 
   @override
@@ -145,18 +149,19 @@ class BrandMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radiusSm),
-        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [c.brandFill, c.brandFill2]),
-        boxShadow: [c.shadowBrand],
+        borderRadius: BorderRadius.circular(size * 0.28),
+        color: c.neon,
+        boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 16)],
       ),
-      child: Center(child: CrIcon('wallet', size: 18, color: c.onBrand)),
+      child: Center(child: CrIcon('chevrons', size: size * 0.56, color: c.onNeon, stroke: 2.4)),
     );
   }
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.location});
+  const _TopBar({required this.location, required this.online});
   final String location;
+  final ValueListenable<bool> online;
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +169,7 @@ class _TopBar extends StatelessWidget {
     final c = context.c;
     final wide = context.isWide;
     final width = MediaQuery.sizeOf(context).width;
-    final labelsAll = width >= 1360;
+    final textNav = width >= 1180;
     final choiceLabel = switch (app.themeMode) {
       ThemeMode.system => 'automático',
       ThemeMode.light => 'claro',
@@ -174,30 +179,49 @@ class _TopBar extends StatelessWidget {
       bottom: false,
       child: Glass(
         blur: blurLg,
+        radius: 18,
         margin: const EdgeInsets.fromLTRB(space3, space3, space3, 0),
-        padding: const EdgeInsets.symmetric(horizontal: space4, vertical: space2),
+        padding: const EdgeInsets.symmetric(horizontal: space4, vertical: 10),
         child: Row(
           children: [
             const BrandMark(),
-            const SizedBox(width: space2),
+            const SizedBox(width: 10),
             Text(
               'Alvea',
               style: TextStyle(
                 fontFamily: fontFamily,
                 fontFamilyFallback: fontFallback,
-                fontSize: 18,
-                height: 24 / 18,
+                fontSize: 17,
+                height: 24 / 17,
                 fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
                 color: c.ink,
               ),
             ),
             if (wide) ...[
-              const SizedBox(width: space4),
-              for (final item in desktopNav)
-                _NavPill(item: item, active: _active(item, location), showLabel: labelsAll || _active(item, location)),
-            ],
-            const Spacer(),
-            if (wide) _UserLink(name: app.user?.fullName ?? '', showName: labelsAll, active: location == '/profile'),
+              const SizedBox(width: space5),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: textNav ? MainAxisAlignment.center : MainAxisAlignment.start,
+                  children: [
+                    for (final item in desktopNav) _NavLink(item: item, active: _active(item, location), text: textNav),
+                  ],
+                ),
+              ),
+            ] else
+              const Spacer(),
+            if (wide && width >= 1040)
+              Padding(
+                padding: const EdgeInsets.only(right: space2),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: online,
+                  builder: (context, on, _) => Semantics(
+                    liveRegion: true,
+                    child: CrTag(on ? 'en línea' : 'sin conexión', pulse: on, dotColor: on ? c.positive : c.amber),
+                  ),
+                ),
+              ),
+            if (wide) _UserLink(name: app.user?.fullName ?? '', showName: width >= 1360, active: location == '/profile'),
             CrButton(
               variant: CrButtonVariant.ghost,
               small: true,
@@ -206,7 +230,7 @@ class _TopBar extends StatelessWidget {
               onPressed: app.cycleTheme,
             ),
             const SizedBox(width: space1),
-            CrButton(variant: CrButtonVariant.ghost, small: true, icon: 'logout', label: 'Salir', onPressed: () => app.logout()),
+            CrButton(variant: CrButtonVariant.glass, small: true, icon: 'logout', label: 'Salir', onPressed: () => app.logout()),
           ],
         ),
       ),
@@ -214,64 +238,78 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-class _NavPill extends StatefulWidget {
-  const _NavPill({required this.item, required this.active, required this.showLabel});
+/// Enlace de navegación: texto (o icono en anchos medios) con un punto neón bajo el activo.
+class _NavLink extends StatefulWidget {
+  const _NavLink({required this.item, required this.active, required this.text});
   final NavItem item;
-  final bool active, showLabel;
+  final bool active, text;
 
   @override
-  State<_NavPill> createState() => _NavPillState();
+  State<_NavLink> createState() => _NavLinkState();
 }
 
-class _NavPillState extends State<_NavPill> {
+class _NavLinkState extends State<_NavLink> {
   bool _hover = false;
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
     final active = widget.active;
-    return Padding(
-      padding: const EdgeInsets.only(right: space1),
-      child: Semantics(
-        button: true,
-        selected: active,
-        label: widget.item.label,
-        child: Tooltip(
-          message: widget.item.label,
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            onEnter: (_) => setState(() => _hover = true),
-            onExit: (_) => setState(() => _hover = false),
-            child: GestureDetector(
-              onTap: () => context.go(widget.item.to),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 40,
-                padding: EdgeInsets.symmetric(horizontal: widget.showLabel ? space4 : space3),
-                decoration: BoxDecoration(
-                  color: active ? c.glassStrong : (_hover ? c.glass : Colors.transparent),
-                  borderRadius: BorderRadius.circular(radiusPill),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CrIcon(widget.item.icon, size: 18, color: active || _hover ? c.ink : c.inkMuted),
-                    if (widget.showLabel) ...[
-                      const SizedBox(width: space2),
-                      Text(
-                        widget.item.label,
-                        style: TextStyle(
-                          fontFamily: fontFamily,
-                          fontFamilyFallback: fontFallback,
-                          fontSize: 14,
-                          height: 1,
-                          fontWeight: FontWeight.w600,
-                          color: active || _hover ? c.ink : c.inkMuted,
+    final color = active || _hover ? c.ink : c.inkMuted;
+    final label = Text(
+      widget.item.label,
+      style: TextStyle(
+        fontFamily: fontFamily,
+        fontFamilyFallback: fontFallback,
+        fontSize: 14,
+        height: 1,
+        fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+        color: color,
+      ),
+    );
+    return Semantics(
+      button: true,
+      selected: active,
+      label: widget.item.label,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: widget.text ? '' : widget.item.label,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: GestureDetector(
+            onTap: () => context.go(widget.item.to),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              height: 40,
+              padding: EdgeInsets.symmetric(horizontal: widget.text ? 14 : 11),
+              decoration: BoxDecoration(
+                color: _hover && !active ? c.glass : Colors.transparent,
+                borderRadius: BorderRadius.circular(radiusPill),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  widget.text ? label : CrIcon(widget.item.icon, size: 18, color: color),
+                  Positioned(
+                    bottom: 2,
+                    child: AnimatedOpacity(
+                      opacity: active ? 1 : 0,
+                      duration: const Duration(milliseconds: 250),
+                      child: Container(
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: c.neon,
+                          shape: BoxShape.circle,
+                          boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 8, spreadRadius: 1)],
                         ),
                       ),
-                    ],
-                  ],
-                ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -356,7 +394,7 @@ class _Tab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    final color = active ? c.brand : c.inkFaint;
+    final color = active ? c.neon : c.inkFaint;
     return Semantics(
       button: true,
       selected: active,
@@ -371,6 +409,18 @@ class _Tab extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: crEase,
+                  width: active ? 18 : 0,
+                  height: 2,
+                  margin: const EdgeInsets.only(bottom: 5),
+                  decoration: BoxDecoration(
+                    color: c.neon,
+                    borderRadius: BorderRadius.circular(2),
+                    boxShadow: active ? [BoxShadow(color: c.neonGlow, blurRadius: 10, spreadRadius: 1)] : null,
+                  ),
+                ),
                 AnimatedSlide(
                   offset: active && !context.reduceMotion ? const Offset(0, -2 / 22) : Offset.zero,
                   duration: const Duration(milliseconds: 200),

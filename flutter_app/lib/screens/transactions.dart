@@ -87,6 +87,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           children: [
             PageHead(
               'Movimientos',
+              headline: 'Cada movimiento, *en su sitio*.',
               actions: [
                 Wrap(
                   spacing: space3,

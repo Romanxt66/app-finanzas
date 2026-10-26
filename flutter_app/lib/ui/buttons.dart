@@ -48,28 +48,20 @@ class _CrButtonState extends State<CrButton> {
     final iconOnly = widget.icon != null && widget.label == null;
     final hover = _hover && enabled;
     final fg = switch (v) {
-      CrButtonVariant.primary => c.onBrand,
+      CrButtonVariant.primary => c.onNeon,
       CrButtonVariant.glass => c.ink,
       CrButtonVariant.ghost => hover ? c.ink : c.inkMuted,
       CrButtonVariant.danger => c.negative,
     };
+    // Diseño «Relay»: píldoras; la principal es un relleno plano en neón con halo de luz.
     final bg = switch (v) {
-      CrButtonVariant.glass => c.glassStrong,
-      CrButtonVariant.ghost => hover ? c.glass : null,
+      CrButtonVariant.glass => hover ? c.glassStrong : c.panel.withValues(alpha: c.isDark ? 0.55 : 0.7),
+      // Con texto, el fantasma lleva un fondo oscuro tenue para leerse sobre el haz de luz
+      CrButtonVariant.ghost => hover ? c.glass : (widget.label != null ? c.panel.withValues(alpha: c.isDark ? 0.35 : 0.5) : null),
       CrButtonVariant.danger => hover ? c.negativeSoft : null,
-      CrButtonVariant.primary => null,
+      CrButtonVariant.primary => hover ? Color.lerp(c.neon, Colors.white, c.isDark ? 0.14 : 0.08) : c.neon,
     };
-    final shape = BorderRadius.circular(radiusSm);
-    var gradient = v == CrButtonVariant.primary
-        ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [c.brandFill, c.brandFill2])
-        : null;
-    if (gradient != null && hover) {
-      gradient = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color.lerp(c.brandFill, Colors.white, 0.12)!, Color.lerp(c.brandFill2, Colors.white, 0.12)!],
-      );
-    }
+    final shape = BorderRadius.circular(radiusPill);
     final content = Row(
       mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +79,8 @@ class _CrButtonState extends State<CrButton> {
                 fontFamilyFallback: fontFallback,
                 fontSize: widget.small ? 13 : 14,
                 height: 1,
-                fontWeight: FontWeight.w600,
+                fontWeight: v == CrButtonVariant.primary ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: -0.1,
                 color: fg,
               ),
             ),
@@ -107,13 +100,16 @@ class _CrButtonState extends State<CrButton> {
       duration: const Duration(milliseconds: 150),
       height: h,
       width: iconOnly ? 44 : null,
-      padding: iconOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: widget.small ? space4 : space5),
+      padding: iconOnly ? EdgeInsets.zero : EdgeInsets.symmetric(horizontal: widget.small ? space4 : 22),
       decoration: BoxDecoration(
         color: bg,
-        gradient: gradient,
         borderRadius: shape,
-        border: Border.all(color: v == CrButtonVariant.glass ? c.glassBorder : Colors.transparent),
-        boxShadow: v == CrButtonVariant.primary ? [c.shadowBrand] : null,
+        border: Border.all(
+          color: v == CrButtonVariant.glass ? (hover ? c.glassHighlight : c.glassBorder) : Colors.transparent,
+        ),
+        boxShadow: v == CrButtonVariant.primary
+            ? [BoxShadow(color: c.neonGlow, blurRadius: hover ? 28 : 18, offset: const Offset(0, 4))]
+            : null,
       ),
       foregroundDecoration: _focused
           ? BoxDecoration(
@@ -123,9 +119,6 @@ class _CrButtonState extends State<CrButton> {
           : null,
       child: Center(widthFactor: 1, child: content),
     );
-    if (v == CrButtonVariant.primary) {
-      btn = CustomPaint(foregroundPainter: _TopSheen(shape), child: btn);
-    }
     if (v == CrButtonVariant.glass) {
       btn = ClipRRect(
         borderRadius: shape,
@@ -155,22 +148,4 @@ class _CrButtonState extends State<CrButton> {
       child: widget.tooltip == null ? btn : Tooltip(message: widget.tooltip!, child: btn),
     );
   }
-}
-
-class _TopSheen extends CustomPainter {
-  _TopSheen(this.shape);
-  final BorderRadius shape;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rrect = shape.toRRect(Offset.zero & size);
-    canvas.clipRRect(rrect);
-    canvas.drawPath(
-      Path.combine(PathOperation.difference, Path()..addRRect(rrect), Path()..addRRect(rrect.shift(const Offset(0, 1)))),
-      Paint()..color = const Color.fromRGBO(255, 255, 255, 0.28),
-    );
-  }
-
-  @override
-  bool shouldRepaint(_TopSheen old) => false;
 }

@@ -138,7 +138,7 @@ class _ImportScreenState extends State<ImportScreen> {
 
     return PageScaffold(
       children: [
-        PageHead('Importar movimientos'),
+        PageHead('Importar movimientos', headline: 'Trae tu banco *en segundos*.'),
         CrCard(
           title: '1. Cuenta y archivo',
           child: Stack12(

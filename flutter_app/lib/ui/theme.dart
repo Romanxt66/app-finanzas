@@ -6,6 +6,12 @@ export 'tokens.g.dart';
 
 const fontFamily = 'Manrope';
 
+/// Serif cursiva para la palabra destacada de un titular («Tu dinero, *claro*.»).
+const serifFamily = 'InstrumentSerif';
+
+/// Monoespaciada para etiquetas, metadatos, horas y estados del sistema.
+const monoFamily = 'JetBrainsMono';
+
 /// Glifos que Manrope (subconjunto latino) no trae; van incluidos para no pedir tipografías a un CDN.
 const fontFallback = ['SymbolsFallback'];
 
@@ -19,6 +25,23 @@ class Cr extends ThemeExtension<Cr> {
 
   @override
   Cr lerp(Cr? other, double t) => t < 0.5 ? this : (other ?? this);
+}
+
+/// Acentos «neón» del diseño Relay, derivados de los fucsias de la paleta (no hay tonos nuevos).
+extension CrAccent on CrPalette {
+  bool get isDark => bg.computeLuminance() < 0.2;
+
+  /// Relleno de la acción principal: fucsia vivo en oscuro, fucsia profundo en claro.
+  Color get neon => isDark ? focus : brandFill;
+
+  /// Texto sobre [neon] (≥ 7:1 en ambos temas).
+  Color get onNeon => isDark ? const Color(0xFF1A0420) : onBrand;
+
+  /// Halo de luz bajo los elementos en neón.
+  Color get neonGlow => (isDark ? focus : brandFill).withValues(alpha: isDark ? 0.45 : 0.28);
+
+  /// Fondo de los paneles tipo «consola» (más opaco que el vidrio para leer datos).
+  Color get panel => isDark ? const Color(0xE60A070D) : const Color(0xEBFFFFFF);
 }
 
 extension CrContext on BuildContext {
@@ -49,8 +72,45 @@ class CrText {
   static TextStyle heading(Color c) => _s(16, 22, FontWeight.w600, c);
   static TextStyle body(Color c) => _s(15, 22, FontWeight.w500, c);
   static TextStyle label(Color c) => _s(13, 18, FontWeight.w500, c);
-  static TextStyle overline(Color c) => _s(11, 16, FontWeight.w600, c, 0.08);
-  static TextStyle caption(Color c) => _s(12, 16, FontWeight.w600, c, 0.02);
+  /// Etiqueta de sistema en monoespaciada y minúsculas (`last runs`, `estimate`…).
+  static TextStyle overline(Color c) => mono(c, size: 11.5);
+  /// Metadatos (fechas, notas, periodicidad): monoespaciada, como las líneas de sistema de «Relay».
+  static TextStyle caption(Color c) => mono(c, size: 11.5);
+
+  /// Titular grande, apretado (`The handoffs run`).
+  static TextStyle display(Color c, {double size = 40}) => TextStyle(
+    fontFamily: fontFamily,
+    fontFamilyFallback: fontFallback,
+    fontSize: size,
+    height: 1.08,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.035 * size,
+    color: c,
+  );
+
+  /// Palabra destacada en serif cursiva; algo mayor para igualar la altura de la sans.
+  static TextStyle serif(Color c, {double size = 40}) => TextStyle(
+    fontFamily: serifFamily,
+    fontFamilyFallback: const [fontFamily, ...fontFallback],
+    fontStyle: FontStyle.italic,
+    fontSize: size * 1.12,
+    height: 1.08 / 1.12,
+    fontWeight: FontWeight.w400,
+    letterSpacing: -0.01 * size,
+    color: c,
+  );
+
+  /// Texto de sistema en monoespaciada.
+  static TextStyle mono(Color c, {double size = 12, FontWeight weight = FontWeight.w400}) => TextStyle(
+    fontFamily: monoFamily,
+    fontFamilyFallback: const [fontFamily, ...fontFallback],
+    fontSize: size,
+    height: 1.4,
+    fontWeight: weight,
+    letterSpacing: 0,
+    color: c,
+    fontFeatures: _tab,
+  );
 }
 
 ThemeData buildTheme(Brightness brightness) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -8,13 +9,23 @@ import 'theme.dart';
 const crEase = Cubic(0.2, 0.7, 0.2, 1);
 const crPopEase = Cubic(0.2, 0.8, 0.2, 1);
 
-/// `cr-rise`: sube 10 px mientras aparece (0,42 s). Se escalona con [delay].
+/// Entrada de módulo: sube, aparece y se enfoca (0,52 s). Se escalona con [delay].
 class Rise extends StatefulWidget {
-  const Rise({super.key, required this.child, this.delay = Duration.zero, this.duration = const Duration(milliseconds: 420), this.dy = 10});
+  const Rise({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 520),
+    this.dy = 14,
+    this.blur = 6,
+  });
   final Widget child;
   final Duration delay;
   final Duration duration;
   final double dy;
+
+  /// Desenfoque inicial (píxeles); 0 lo desactiva.
+  final double blur;
 
   @override
   State<Rise> createState() => _RiseState();
@@ -53,10 +64,16 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
     return AnimatedBuilder(
       animation: curved,
       child: widget.child,
-      builder: (context, child) => Opacity(
-        opacity: curved.value.clamp(0.0, 1.0),
-        child: Transform.translate(offset: Offset(0, widget.dy * (1 - curved.value)), child: child),
-      ),
+      builder: (context, child) {
+        final v = curved.value.clamp(0.0, 1.0);
+        Widget out = Transform.translate(offset: Offset(0, widget.dy * (1 - v)), child: child);
+        // Aparece desenfocado y se aclara, como los titulares del diseño «Relay»
+        if (widget.blur > 0 && v < 1) {
+          final sigma = widget.blur * (1 - v);
+          out = ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma), child: out);
+        }
+        return Opacity(opacity: v, child: out);
+      },
     );
   }
 }
@@ -116,10 +133,13 @@ class _FadeInState extends State<FadeIn> with SingleTickerProviderStateMixin {
 
 /// Barra de progreso que crece desde cero (`cr-fill`: 0,7 s, retardo 0,15 s).
 class GrowBar extends StatelessWidget {
-  const GrowBar({super.key, required this.ratio, required this.color, this.height = 8});
+  const GrowBar({super.key, required this.ratio, required this.color, this.height = 8, this.glow = false});
   final double ratio;
   final Color color;
   final double height;
+
+  /// Halo de luz del mismo color alrededor de la barra.
+  final bool glow;
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +153,11 @@ class GrowBar extends StatelessWidget {
         widthFactor: v,
         child: Container(
           height: height,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(radiusPill)),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(radiusPill),
+            boxShadow: glow ? [BoxShadow(color: color.withValues(alpha: 0.55), blurRadius: 10)] : null,
+          ),
         ),
       ),
     );

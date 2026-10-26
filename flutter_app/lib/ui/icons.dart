@@ -37,6 +37,8 @@ const _paths = <String, String>{
   'key': 'M15 8a4 4 0 1 1-1.2 2.8L4 20v-3h3v-3h3l1.8-1.8M16.5 7.5h.01',
   'search': 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.3-4.3',
   'chevron': 'M6 9l6 6 6-6',
+  'chevrons': 'M6 7l5 5-5 5M13 7l5 5-5 5',
+  'play': 'M8 5.5v13l10-6.5z',
   'calendar': 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
 };
 

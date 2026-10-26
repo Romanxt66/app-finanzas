@@ -66,7 +66,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     const kinds = {'expense': 'Gastos', 'income': 'Ingresos'};
     return PageScaffold(
       children: [
-        PageHead('Categorías'),
+        PageHead('Categorías', headline: 'Ordena tu dinero *a tu manera*.'),
         CrCard(
           title: 'Nueva categoría',
           child: Stack12(

@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path_drawing/path_drawing.dart';
 
 import '../core/password.dart';
 import '../core/state.dart';
@@ -65,7 +64,7 @@ class _AuthShell extends StatelessWidget {
     final c = context.c;
     final wide = context.isWide;
     final width = MediaQuery.sizeOf(context).width;
-    final titleSize = (width * 0.08).clamp(30.0, 52.0);
+    final titleSize = (width * 0.085).clamp(34.0, 60.0);
     final hero = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -82,9 +81,10 @@ class _AuthShell extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: fontFamily,
                   fontFamilyFallback: fontFallback,
-                  fontSize: 20,
-                  height: 24 / 20,
+                  fontSize: 19,
+                  height: 24 / 19,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
                   color: c.ink,
                 ),
               ),
@@ -92,41 +92,25 @@ class _AuthShell extends StatelessWidget {
           ),
         ),
         const SizedBox(height: space4),
+        const SizedBox(height: space2),
         Rise(
-          delay: const Duration(milliseconds: 80),
+          delay: const Duration(milliseconds: 60),
           duration: const Duration(milliseconds: 600),
+          child: const CrTag('acceso seguro / tus datos, solo tuyos', pulse: true),
+        ),
+        const SizedBox(height: space5),
+        Rise(
+          delay: const Duration(milliseconds: 120),
+          duration: const Duration(milliseconds: 700),
+          blur: 10,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: titleSize * 11),
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  const TextSpan(text: 'Tu dinero, '),
-                  TextSpan(
-                    text: 'claro',
-                    style: TextStyle(
-                      foreground: Paint()
-                        ..shader = LinearGradient(colors: [c.brand, const Color(0xFFE879F9)])
-                            .createShader(Rect.fromLTWH(0, 0, titleSize * 3, titleSize)),
-                    ),
-                  ),
-                  const TextSpan(text: ' como el cristal.'),
-                ],
-              ),
-              style: TextStyle(
-                fontFamily: fontFamily,
-                fontFamilyFallback: fontFallback,
-                fontSize: titleSize,
-                height: 1.06,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.025 * titleSize,
-                color: c.ink,
-              ),
-            ),
+            child: CrHeadline('Tu dinero, *claro* como el cristal.', size: titleSize, accentColor: c.brand),
           ),
         ),
         const SizedBox(height: space4),
         Rise(
-          delay: const Duration(milliseconds: 160),
+          delay: const Duration(milliseconds: 200),
           duration: const Duration(milliseconds: 600),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 28 * 15.0),
@@ -135,17 +119,24 @@ class _AuthShell extends StatelessWidget {
               style: TextStyle(
                 fontFamily: fontFamily,
                 fontFamilyFallback: fontFallback,
-                fontSize: 15,
-                height: 24 / 15,
+                fontSize: 16,
+                height: 26 / 16,
                 fontWeight: FontWeight.w500,
                 color: c.inkMuted,
               ),
             ),
           ),
         ),
+        const SizedBox(height: space4),
+        Rise(
+          delay: const Duration(milliseconds: 260),
+          duration: const Duration(milliseconds: 600),
+          child: Text('gratis / sin anuncios / sin letra pequeña', style: CrText.mono(c.inkFaint, size: 12)),
+        ),
         if (wide) ...[
           const SizedBox(height: space5),
-          Rise(delay: const Duration(milliseconds: 240), duration: const Duration(milliseconds: 600), child: const _HeroArt()),
+          const SizedBox(height: space3),
+          Rise(delay: const Duration(milliseconds: 320), duration: const Duration(milliseconds: 800), blur: 12, child: const _FlowPanel()),
         ],
       ],
     );
@@ -166,15 +157,7 @@ class _AuthShell extends StatelessWidget {
                 header: true,
                 child: Text(
                   title,
-                  style: TextStyle(
-                    fontFamily: fontFamily,
-                    fontFamilyFallback: fontFallback,
-                    fontSize: 24,
-                    height: 30 / 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.01 * 24,
-                    color: c.ink,
-                  ),
+                  style: CrText.display(c.ink, size: 28),
                 ),
               ),
               const SizedBox(height: space3),
@@ -232,19 +215,18 @@ class _AuthShell extends StatelessWidget {
   }
 }
 
-/// Adorno de la columna izquierda: formas de vidrio flotantes sin cifras reales.
-class _HeroArt extends StatefulWidget {
-  const _HeroArt();
+/// Adorno de la columna izquierda: un panel «consola» inclinado en perspectiva con el flujo de
+/// tu dinero (nodos y conexiones con pulsos de luz). Decorativo y sin cifras.
+class _FlowPanel extends StatefulWidget {
+  const _FlowPanel();
 
   @override
-  State<_HeroArt> createState() => _HeroArtState();
+  State<_FlowPanel> createState() => _FlowPanelState();
 }
 
-class _HeroArtState extends State<_HeroArt> with TickerProviderStateMixin {
-  late final AnimationController _a = AnimationController(vsync: this, duration: const Duration(seconds: 7));
-  late final AnimationController _b = AnimationController(vsync: this, duration: const Duration(seconds: 8));
-  late final AnimationController _shimmer = AnimationController(vsync: this, duration: const Duration(seconds: 4));
-  late final AnimationController _draw = AnimationController(vsync: this, duration: const Duration(milliseconds: 2200));
+class _FlowPanelState extends State<_FlowPanel> with TickerProviderStateMixin {
+  late final AnimationController _float = AnimationController(vsync: this, duration: const Duration(seconds: 7));
+  late final AnimationController _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 2600));
   bool _started = false;
 
   @override
@@ -252,178 +234,192 @@ class _HeroArtState extends State<_HeroArt> with TickerProviderStateMixin {
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (context.reduceMotion) {
-      _draw.value = 1;
-    } else {
-      _a.repeat(reverse: true);
-      _b.repeat(reverse: true);
-      _shimmer.repeat();
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (mounted) _draw.forward();
-      });
+    if (!context.reduceMotion) {
+      _float.repeat(reverse: true);
+      _pulse.repeat();
     }
   }
 
   @override
   void dispose() {
-    _a.dispose();
-    _b.dispose();
-    _shimmer.dispose();
-    _draw.dispose();
+    _float.dispose();
+    _pulse.dispose();
     super.dispose();
   }
+
+  static const _w = 600.0;
+  static const _h = 330.0;
 
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    return ExcludeSemantics(
-      child: SizedBox(
-        height: 220,
+    Widget node(String title, String sub, {bool active = false}) => Container(
+      width: 140,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: c.panel,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: active ? c.neon.withValues(alpha: 0.6) : c.glassBorder),
+        boxShadow: active ? [BoxShadow(color: c.neonGlow, blurRadius: 18)] : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(title, style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(sub, style: CrText.mono(c.inkFaint, size: 10.5)),
+        ],
+      ),
+    );
+    Widget chip(String text) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(color: c.panel, borderRadius: BorderRadius.circular(5), border: Border.all(color: c.glassBorder)),
+      child: Text(text, style: CrText.mono(c.inkMuted, size: 10)),
+    );
+    Widget event(String what, String when) => Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Container(width: 4, height: 4, decoration: BoxDecoration(color: c.neon, shape: BoxShape.circle)),
+          const SizedBox(width: 10),
+          Expanded(child: Text(what, style: CrText.mono(c.inkMuted, size: 11))),
+          Text(when, style: CrText.mono(c.inkFaint, size: 11)),
+        ],
+      ),
+    );
+
+    final panel = SizedBox(
+      width: _w,
+      height: _h,
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.panel.withValues(alpha: c.isDark ? 0.78 : 0.85),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: c.glassBorder),
+          boxShadow: [c.shadowLift],
+        ),
         child: Stack(
           children: [
+            // Cabecera del panel
             Positioned(
-              left: 0,
-              top: 8,
-              child: AnimatedBuilder(
-                animation: _a,
-                builder: (context, child) {
-                  final t = Curves.easeInOut.transform(_a.value);
-                  return Transform.translate(
-                    offset: Offset(0, -8 * t),
-                    child: Transform.rotate(angle: (-4 + t) * math.pi / 180, child: child),
-                  );
-                },
-                child: SizedBox(
-                  width: 250,
-                  child: Glass(
-                    radius: radiusMd,
-                    padding: const EdgeInsets.all(space4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Saldo total',
-                          style: TextStyle(
-                            fontFamily: fontFamily,
-                            fontFamilyFallback: fontFallback,
-                            fontSize: 12,
-                            height: 16 / 12,
-                            fontWeight: FontWeight.w500,
-                            color: c.inkMuted,
-                          ),
-                        ),
-                        const SizedBox(height: space2),
-                        AnimatedBuilder(
-                          animation: _shimmer,
-                          builder: (context, _) => Container(
-                            width: 250 * 0.7 - 12,
-                            height: 22,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(radiusPill),
-                              gradient: LinearGradient(
-                                begin: Alignment(-3 + 6 * _shimmer.value, 0),
-                                end: Alignment(-1 + 6 * _shimmer.value, 0),
-                                colors: [c.brandSoft, c.glassStrong, c.brandSoft],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: space2),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 32,
-                          child: AnimatedBuilder(
-                            animation: _draw,
-                            builder: (context, _) => CustomPaint(painter: _SparkDraw(_draw.value, c.brand)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              left: 20,
+              right: 20,
+              top: 16,
+              child: Row(
+                children: [
+                  Text('tu mes', style: CrText.mono(c.inkMuted, size: 11.5)),
+                  Container(width: 1, height: 12, margin: const EdgeInsets.symmetric(horizontal: 10), color: c.hairline),
+                  Text('3 pasos / 1 rama', style: CrText.mono(c.ink, size: 11.5)),
+                  const Spacer(),
+                  Text('en vivo', style: CrText.mono(c.neon, size: 11.5)),
+                ],
               ),
             ),
-            Positioned(
-              left: 150,
-              top: 118,
+            // Conexiones con pulsos de luz
+            Positioned.fill(
               child: AnimatedBuilder(
-                animation: _b,
-                builder: (context, child) {
-                  final t = Curves.easeInOut.transform(_b.value);
-                  return Transform.translate(
-                    offset: Offset(0, 7 * t),
-                    child: Transform.rotate(angle: (3 - t) * math.pi / 180, child: child),
-                  );
-                },
-                child: Glass(
-                  radius: radiusMd,
-                  padding: const EdgeInsets.symmetric(horizontal: space4, vertical: space3),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CrChip('shield', tone: Tone.brand),
-                      const SizedBox(width: space3),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Sesión protegida',
-                            style: TextStyle(
-                              fontFamily: fontFamily,
-                              fontFamilyFallback: fontFallback,
-                              fontSize: 13,
-                              height: 18 / 13,
-                              fontWeight: FontWeight.w700,
-                              color: c.ink,
-                            ),
-                          ),
-                          Text(
-                            'Tus datos son solo tuyos',
-                            style: TextStyle(
-                              fontFamily: fontFamily,
-                              fontFamilyFallback: fontFallback,
-                              fontSize: 12,
-                              height: 16 / 12,
-                              fontWeight: FontWeight.w500,
-                              color: c.inkMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                animation: _pulse,
+                builder: (context, _) => CustomPaint(painter: _FlowLinesPainter(_pulse.value, c.neon, c.glassHighlight)),
+              ),
+            ),
+            Positioned(left: 20, top: 120, child: node('Ingreso registrado', 'nómina', active: true)),
+            Positioned(left: 220, top: 62, child: node('¿Supera el presupuesto?', 'condición')),
+            Positioned(left: 220, top: 172, child: node('Aparta al ahorro', 'meta de ahorro')),
+            Positioned(left: 172, top: 92, child: chip('sí')),
+            Positioned(left: 172, top: 188, child: chip('no')),
+            Positioned(right: 18, top: 117, child: node('Disponible hoy', 'se recalcula')),
+            // Últimos eventos
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('últimos eventos', style: CrText.mono(c.inkFaint, size: 10.5)),
+                  const SizedBox(height: 8),
+                  event('suscripción detectada', 'hace 2 min'),
+                  event('presupuesto de ocio al 80 %', 'hoy'),
+                ],
               ),
             ),
           ],
         ),
       ),
     );
+
+    return ExcludeSemantics(
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final scale = math.min(1.0, box.maxWidth / (_w + 40));
+          return SizedBox(
+            height: _h * scale + 30,
+            child: AnimatedBuilder(
+              animation: _float,
+              builder: (context, child) {
+                final t = Curves.easeInOut.transform(_float.value);
+                return Transform(
+                  alignment: Alignment.centerLeft,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.0011)
+                    ..rotateY(-0.30 + 0.04 * t)
+                    ..rotateX(0.06)
+                    ..translateByDouble(0, -6 * t, 0, 1),
+                  child: child,
+                );
+              },
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Transform.scale(scale: scale, alignment: Alignment.topLeft, child: panel),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 
-class _SparkDraw extends CustomPainter {
-  _SparkDraw(this.t, this.color);
+/// Curvas entre nodos del panel; un punto de luz recorre cada una.
+class _FlowLinesPainter extends CustomPainter {
+  _FlowLinesPainter(this.t, this.neon, this.line);
   final double t;
-  final Color color;
+  final Color neon, line;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final path = parseSvgPathData('M2 26 C18 24 22 12 38 15 S62 28 78 14 S104 6 118 4');
-    canvas.translate((size.width - 120) / 2, 0);
-    final paint = Paint()
+    Path curve(Offset a, Offset b) => Path()
+      ..moveTo(a.dx, a.dy)
+      ..cubicTo(a.dx + (b.dx - a.dx) * 0.5, a.dy, a.dx + (b.dx - a.dx) * 0.5, b.dy, b.dx, b.dy);
+    final right = size.width - 18 - 140;
+    const out = Offset(160, 143);
+    const midTop = Offset(220, 89), midBot = Offset(220, 199);
+    const midTopOut = Offset(360, 89), midBotOut = Offset(360, 199);
+    final target = Offset(right, 140);
+    final paths = [curve(out, midTop), curve(out, midBot), curve(midTopOut, target), curve(midBotOut, target)];
+    final stroke = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round
-      ..color = color;
-    for (final m in path.computeMetrics()) {
-      canvas.drawPath(m.extractPath(0, m.length * Curves.ease.transform(t)), paint);
+      ..strokeWidth = 1.2
+      ..color = neon.withValues(alpha: 0.45);
+    for (var i = 0; i < paths.length; i++) {
+      canvas.drawPath(paths[i], stroke);
+      for (final m in paths[i].computeMetrics()) {
+        final phase = (t + i * 0.22) % 1.0;
+        final pos = m.getTangentForOffset(m.length * phase)?.position;
+        if (pos == null) continue;
+        canvas.drawCircle(pos, 6, Paint()..color = neon.withValues(alpha: 0.25)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+        canvas.drawCircle(pos, 2.2, Paint()..color = Colors.white);
+      }
+    }
+    // Puntos de anclaje
+    for (final p in [out, midTop, midBot, midTopOut, midBotOut, target]) {
+      canvas.drawCircle(p, 2.5, Paint()..color = line);
     }
   }
 
   @override
-  bool shouldRepaint(_SparkDraw old) => old.t != t;
+  bool shouldRepaint(_FlowLinesPainter old) => old.t != t || old.neon != neon;
 }
 
 class LoginScreen extends StatefulWidget {
@@ -513,17 +509,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(child: Container(height: 1, color: c.hairline)),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: space3),
-              child: Text(
-                'o entra con',
-                style: TextStyle(
-                  fontFamily: fontFamily,
-                  fontFamilyFallback: fontFallback,
-                  fontSize: 12,
-                  height: 16 / 12,
-                  fontWeight: FontWeight.w600,
-                  color: c.inkMuted,
-                ),
-              ),
+              child: Text('o entra con', style: CrText.mono(c.inkFaint, size: 11.5)),
             ),
             Expanded(child: Container(height: 1, color: c.hairline)),
           ],
