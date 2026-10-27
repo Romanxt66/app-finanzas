@@ -63,7 +63,12 @@ export function renderApp(ui: ReactElement, { route = '/', authed = true } = {})
 }
 
 // Fábricas de datos de prueba (solo para tests)
-export const user: Schemas['UserOut'] = { id: 'u1', email: 'x@example.com', full_name: 'Ana Test' }
+export const user: Schemas['UserOut'] = {
+  id: 'u1',
+  email: 'x@example.com',
+  full_name: 'Ana Test',
+  two_factor_enabled: false,
+}
 
 export const account = (over: Partial<Schemas['AccountOut']> = {}): Schemas['AccountOut'] => ({
   id: 'a1',

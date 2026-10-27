@@ -10,7 +10,9 @@ COPY . .
 RUN npm run build
 
 FROM nginx:1.27-alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Plantilla: la imagen sustituye ${APP_REDIRECT_URL} al arrancar (las demás $variables son de nginx)
+ENV APP_REDIRECT_URL=""
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80

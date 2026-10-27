@@ -14,6 +14,16 @@ _SAFE_ID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 REQUEST_ID_HEADER = "X-Request-ID"
 
 
+def _capture_current_exception(request_id: str) -> None:
+    # El middleware convierte la excepción en un 500 y Sentry no llegaría a verla
+    import sentry_sdk
+
+    if sentry_sdk.is_initialized():
+        with sentry_sdk.new_scope() as scope:
+            scope.set_tag("request_id", request_id)
+            sentry_sdk.capture_exception()
+
+
 class RequestContextMiddleware(BaseHTTPMiddleware):
     """Asigna un id a cada petición, lo devuelve en la cabecera y registra una línea de acceso.
 
@@ -34,6 +44,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 request.method,
                 request.url.path,
             )
+            _capture_current_exception(request_id)
             response = JSONResponse(
                 {
                     "error": {
@@ -55,6 +66,22 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             elapsed_ms,
         )
         return response
+
+
+def init_sentry(dsn: str | None, environment: str) -> bool:
+    """Activa Sentry solo si hay DSN. Sin datos personales: ni cuerpos, ni cabeceras, ni IP."""
+    if not dsn:
+        return False
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=dsn,
+        environment=environment,
+        send_default_pii=False,
+        max_request_body_size="never",
+        traces_sample_rate=0.0,
+    )
+    return True
 
 
 def install_observability(app: FastAPI) -> None:

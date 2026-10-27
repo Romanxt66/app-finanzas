@@ -1,7 +1,7 @@
 import uuid
 from datetime import date
 from decimal import Decimal
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -78,3 +78,23 @@ class BulkCreate(BaseModel):
 class BulkResult(BaseModel):
     created: int
     skipped: int
+
+
+class CategorizeItem(BaseModel):
+    description: str = Field(default="", max_length=255)
+    # Con signo, como en BulkItem: positivo = ingreso, negativo = gasto
+    amount: Money
+
+
+class CategorizeIn(BaseModel):
+    items: list[CategorizeItem] = Field(min_length=1, max_length=1000)
+
+
+class CategorySuggestion(BaseModel):
+    category_id: uuid.UUID | None = None
+    # "history": así lo categorizaste antes; "keyword": por el nombre del comercio
+    source: Literal["history", "keyword"] | None = None
+
+
+class CategorizeOut(BaseModel):
+    suggestions: list[CategorySuggestion]
