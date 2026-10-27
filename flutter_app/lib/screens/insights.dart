@@ -17,7 +17,7 @@ import '../ui/widgets.dart';
 /// Ánimos que se pueden marcar al registrar un gasto (claves de la API).
 const spendingMoods = <String, ({String label, FaceExpression face})>{
   'happy': (label: 'Feliz', face: FaceExpression(color: Color(0xFFFACC15), smile: 0.85, eyeHappy: 0.9, blush: 0.6)),
-  'calm': (label: 'Tranquilo', face: FaceExpression(color: Color(0xFF86EFAC), smile: 0.35, lid: 0.25)),
+  'calm': (label: 'Tranquilo', face: FaceExpression(color: Color(0xFF86EFAC), smile: 0.4, eyeHappy: 0.85, blush: 0.3)),
   'stressed': (label: 'Estresado', face: FaceExpression(color: Color(0xFFFB923C), smile: -0.45, brow: 1, browShow: 1, sweat: 0.9)),
   'sad': (label: 'Triste', face: FaceExpression(color: Color(0xFF93C5FD), smile: -0.8, brow: -1, browShow: 1, tear: 1)),
   'bored': (label: 'Aburrido', face: FaceExpression(color: Color(0xFFC4B5FD), smile: -0.05, lid: 0.75)),
@@ -320,12 +320,16 @@ class FinanceMood {
     '¡Tus finanzas brillan! Ahorras y vas por debajo de tus límites.',
   ];
   static const faces = [
-    FaceExpression(color: Color(0xFFF87171), smile: -1, mouthOpen: 0.3, brow: -1, browShow: 1, tear: 0.9, sweat: 0.6),
-    FaceExpression(color: Color(0xFFFB923C), smile: -0.4, brow: -1, browShow: 1, sweat: 1),
-    FaceExpression(color: Color(0xFFFACC15), smile: 0.25, lid: 0.15),
-    FaceExpression(color: Color(0xFFC084FC), smile: 0.75, mouthOpen: 0.15, eyeHappy: 0.6, blush: 0.5),
-    FaceExpression(color: Color(0xFFF472D0), smile: 1, mouthOpen: 0.75, eyeHappy: 1, blush: 0.8, sparkle: 1),
+    FaceExpression(color: Color(0xFFF87171), smile: -1, mouthOpen: 0.3, brow: -1, browShow: 1, tear: 0.9, sweat: 0.6, shiver: 0.35),
+    FaceExpression(color: Color(0xFFFB923C), smile: -0.4, brow: -1, browShow: 1, sweat: 1, shiver: 1),
+    FaceExpression(color: Color(0xFF7DD3FC), smile: 0.35, blush: 0.25),
+    FaceExpression(color: Color(0xFFC084FC), smile: 0.8, mouthOpen: 0.35, blush: 0.7, bounce: 0.35),
+    FaceExpression(color: Color(0xFFF472D0), smile: 1, mouthOpen: 0.7, eyeHappy: 1, blush: 0.8, sparkle: 1, bounce: 1),
   ];
+
+  /// Lo que dice Alvi en su bocadillo, en primera persona.
+  static const speech = ['Uf… estoy agobiada', 'Estoy un poco preocupada', 'Todo tranqui por aquí', '¡Estoy contenta!', '¡Estoy radiante!'];
+  String get says => speech[level];
 
   String get title => titles[level];
   String get message => messages[level];
@@ -411,6 +415,8 @@ class FinanceMoodCard extends StatefulWidget {
 
 class _FinanceMoodCardState extends State<FinanceMoodCard> {
   final _face = GlobalKey<MoodFaceState>();
+
+  /// 0 = mensaje general; 1… = cada motivo, uno por toque.
   int _tip = 0;
 
   @override
@@ -431,84 +437,161 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
             budgets: bq.data ?? const [],
           );
           final wide = context.isWide;
-          final faceSize = wide ? 132.0 : 104.0;
-          final tip = mood.reasons.isEmpty ? null : mood.reasons[_tip % mood.reasons.length];
-          final face = Semantics(
+          final faceSize = wide ? 150.0 : 104.0;
+          final steps = mood.reasons.length + 1;
+          final step = _tip % steps;
+          final line = step == 0 ? mood.message : '${mood.reasons[step - 1][0].toUpperCase()}${mood.reasons[step - 1].substring(1)}.';
+          final alvi = Semantics(
             button: true,
-            label: '${mood.title}. Toca para ver por qué.',
-            child: GestureDetector(
-              onTap: () {
-                _face.currentState?.boing();
-                setState(() => _tip++);
-              },
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: MoodFace(key: _face, expression: mood.face, size: faceSize),
+            label: '${mood.title}. Toca para que te cuente por qué.',
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  _face.currentState?.boing();
+                  setState(() => _tip++);
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    MoodFace(key: _face, expression: mood.face, size: faceSize, followPointer: true),
+                    Text('alvi', style: CrText.mono(c.inkFaint, size: 11.5)),
+                  ],
+                ),
               ),
             ),
           );
-          final text = Column(
-            crossAxisAlignment: wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('tu ánimo financiero', style: CrText.overline(c.inkFaint)),
-              const SizedBox(height: space2),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  mood.title,
-                  key: ValueKey(mood.level),
-                  style: CrText.display(c.ink, size: wide ? 32 : 26),
-                  textAlign: wide ? TextAlign.start : TextAlign.center,
+          final bubble = _SpeechBubble(
+            color: mood.face.color,
+            tailY: faceSize * 0.45,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Text(
+                    mood.says,
+                    key: ValueKey(mood.level),
+                    style: CrText.display(c.ink, size: wide ? 28 : 21),
+                  ),
                 ),
-              ),
-              const SizedBox(height: space1),
-              Text(mood.message, style: CrText.body(c.inkMuted), textAlign: wide ? TextAlign.start : TextAlign.center),
-              const SizedBox(height: space3),
-              Wrap(
-                spacing: space2,
-                runSpacing: space2,
-                alignment: wide ? WrapAlignment.start : WrapAlignment.center,
-                children: [
-                  for (final r in mood.reasons)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(radiusPill),
-                        color: r == tip ? mood.face.color.withValues(alpha: 0.18) : c.panel.withValues(alpha: 0.5),
-                        border: Border.all(color: r == tip ? mood.face.color : c.glassBorder),
-                      ),
-                      child: Text(r, style: CrText.mono(c.ink, size: 11.5)),
+                const SizedBox(height: space1),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 280),
+                  transitionBuilder: (child, a) => FadeTransition(
+                    opacity: a,
+                    child: SlideTransition(
+                      position: Tween(begin: const Offset(0, 0.25), end: Offset.zero).animate(a),
+                      child: child,
                     ),
-                ],
-              ),
-            ],
-          );
-          return Glass(
-            strong: true,
-            padding: const EdgeInsets.all(space5),
-            borderColor: mood.face.color.withValues(alpha: 0.35),
-            child: wide
-                ? Row(
+                  ),
+                  child: Text(line, key: ValueKey('$step$line'), style: CrText.body(c.inkMuted)),
+                ),
+                if (wide && mood.reasons.isNotEmpty) ...[
+                  const SizedBox(height: space3),
+                  Wrap(
+                    spacing: space2,
+                    runSpacing: space2,
                     children: [
-                      face,
-                      const SizedBox(width: space5),
-                      Expanded(child: text),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      face,
-                      const SizedBox(height: space3),
-                      text,
+                      for (final (i, r) in mood.reasons.indexed)
+                        GestureDetector(
+                          onTap: () => setState(() => _tip = i + 1),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(radiusPill),
+                              color: step == i + 1 ? mood.face.color.withValues(alpha: 0.2) : c.panel.withValues(alpha: 0.5),
+                              border: Border.all(color: step == i + 1 ? mood.face.color : c.glassBorder),
+                            ),
+                            child: Text(r, style: CrText.mono(c.ink, size: 11.5)),
+                          ),
+                        ),
                     ],
                   ),
+                ],
+                const SizedBox(height: space2),
+                Text(wide ? 'toca a alvi para que te cuente más' : 'toca a alvi: te cuenta más', style: CrText.mono(c.inkFaint, size: 11)),
+              ],
+            ),
+          );
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              alvi,
+              SizedBox(width: wide ? space2 : space1),
+              Expanded(child: bubble),
+            ],
           );
         },
       ),
     );
   }
+}
+
+/// Bocadillo de cómic con la colita apuntando a Alvi (a la izquierda).
+class _SpeechBubble extends StatelessWidget {
+  const _SpeechBubble({required this.color, required this.tailY, required this.child});
+  final Color color;
+
+  /// Altura de la colita: a la altura de la cara de Alvi.
+  final double tailY;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return CustomPaint(
+      painter: _BubblePainter(
+        tailY: tailY,
+        fill: frosted(c, c.glassStrong, 0.9),
+        border: color.withValues(alpha: 0.55),
+        glow: color.withValues(alpha: 0.18),
+      ),
+      child: Padding(padding: const EdgeInsets.fromLTRB(space5 + _BubblePainter.tail, space4, space5, space4), child: child),
+    );
+  }
+}
+
+class _BubblePainter extends CustomPainter {
+  _BubblePainter({required this.tailY, required this.fill, required this.border, required this.glow});
+  final double tailY;
+  final Color fill, border, glow;
+  static const tail = 12.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final body = RRect.fromRectAndRadius(Rect.fromLTWH(tail, 0, size.width - tail, size.height), const Radius.circular(radiusLg));
+    // La colita apunta a la cara de Alvi
+    final y = tailY.clamp(radiusLg + 10, size.height - radiusLg - 10).toDouble();
+    final shape = Path.combine(
+      PathOperation.union,
+      Path()..addRRect(body),
+      Path()
+        ..moveTo(tail + 1, y - 10)
+        ..quadraticBezierTo(tail * 0.4, y - 2, 0, y + 6)
+        ..quadraticBezierTo(tail * 0.7, y + 6, tail + 1, y + 10)
+        ..close(),
+    );
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..color = glow
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+    );
+    canvas.drawPath(shape, Paint()..color = fill);
+    canvas.drawPath(
+      shape,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..color = border,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_BubblePainter old) => old.tailY != tailY || old.fill != fill || old.border != border || old.glow != glow;
 }
 
 // ─── Acceso a la sala de espera ─────────────────────────────────────────────────────────────────
