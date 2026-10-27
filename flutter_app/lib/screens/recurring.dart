@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
+import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
 import '../ui/inputs.dart';
 import '../ui/page.dart';
@@ -180,10 +181,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
             else if (rules == null || rules.isEmpty)
               const CrCard(child: CrEmpty('Aún no tienes movimientos recurrentes. Crea uno para tu sueldo, arriendo o suscripciones.'))
             else
-              GlassList(
-                label: 'Movimientos recurrentes',
-                children: [for (var i = 0; i < rules.length; i++) _row(context, rules[i], i, ref)],
-              ),
+              CardGrid(minWidth: 250, children: [for (final r in rules) _card(context, r, ref)]),
             ErrorText(_actionError),
           ],
         );
@@ -191,70 +189,63 @@ class _RecurringScreenState extends State<RecurringScreen> {
     );
   }
 
-  Widget _row(BuildContext context, Recurring r, int i, RefData ref) {
+  Widget _card(BuildContext context, Recurring r, RefData ref) {
+    final c = context.c;
     final account = ref.account(r.accountId);
     final category = r.categoryId != null ? ref.categoryName(r.categoryId) : null;
     final title = r.description.isNotEmpty ? r.description : (category ?? _typeLabels[r.type]!);
-    return TransactionRow(
-      first: i == 0,
-      index: i,
-      kind: txKind(r.type),
+    final color = txColor(c, r.type);
+    return DealCard(
+      avatar: initials(category ?? title),
+      accent: color,
       title: title,
-      detail: [
-        frequencyLabels[r.frequency],
-        r.active ? 'próximo: ${formatDate(r.nextDate)}' : 'pausado',
-        account?.name,
-      ].whereType<String>().join(' · '),
-      amount: r.amount,
-      currency: account?.currency,
-      actions: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!r.active)
-            const Padding(
-              padding: EdgeInsets.only(right: space2),
-              child: CrBadge('Pausado'),
-            ),
-          CrButton(
-            variant: CrButtonVariant.ghost,
-            small: true,
-            label: r.active ? 'Pausar' : 'Reanudar',
-            tooltip: '${r.active ? 'Pausar' : 'Reanudar'} $title',
-            onPressed: () async {
-              try {
-                setState(() => _actionError = null);
-                await context.app.data.patch('/recurring/${r.id}', {
-                  'active': !r.active,
-                }, r.active ? 'Recurrente pausado' : 'Recurrente actualizado');
-              } catch (e) {
-                if (mounted) setState(() => _actionError = e);
-              }
-            },
-          ),
-          CrButton(
-            variant: CrButtonVariant.danger,
-            small: true,
-            icon: 'trash',
-            tooltip: 'Eliminar',
-            onPressed: () async {
-              final data = context.app.data;
-              if (!await showConfirm(
-                context,
-                title: '¿Eliminar este movimiento recurrente?',
-                body: 'Los movimientos ya registrados se conservan; solo dejará de generar nuevos.',
-              )) {
-                return;
-              }
-              try {
-                setState(() => _actionError = null);
-                await data.delete('/recurring/${r.id}', 'Recurrente eliminado');
-              } catch (e) {
-                if (mounted) setState(() => _actionError = e);
-              }
-            },
-          ),
-        ],
-      ),
+      subtitle: account?.name,
+      eyebrow: '${_typeLabels[r.type]} · ${frequencyLabels[r.frequency]?.toLowerCase()}',
+      value: '${r.type == 'income' ? '+' : (r.type == 'expense' ? '−' : '')}${formatMoney(r.amount, account?.currency)}',
+      valueColor: r.type == 'income' ? c.positive : null,
+      dimmed: !r.active,
+      chips: [
+        if (r.active) DealChip('próximo ${formatDate(r.nextDate)}', icon: 'calendar') else const DealChip('pausado', icon: 'archive'),
+        if (category != null) DealChip(category, dot: true, color: color),
+      ],
+      actions: [
+        CardAction(
+          icon: r.active ? 'archive' : 'restore',
+          tooltip: '${r.active ? 'Pausar' : 'Reanudar'} $title',
+          onPressed: () async {
+            try {
+              setState(() => _actionError = null);
+              await context.app.data.patch('/recurring/${r.id}', {
+                'active': !r.active,
+              }, r.active ? 'Recurrente pausado' : 'Recurrente actualizado');
+            } catch (e) {
+              if (mounted) setState(() => _actionError = e);
+            }
+          },
+        ),
+        CardAction(
+          icon: 'trash',
+          tooltip: 'Eliminar',
+          danger: true,
+          onPressed: () async {
+            final data = context.app.data;
+            if (!await showConfirm(
+              context,
+              title: '¿Eliminar este movimiento recurrente?',
+              body: 'Los movimientos ya registrados se conservan; solo dejará de generar nuevos.',
+            )) {
+              return;
+            }
+            try {
+              setState(() => _actionError = null);
+              await data.delete('/recurring/${r.id}', 'Recurrente eliminado');
+            } catch (e) {
+              if (mounted) setState(() => _actionError = e);
+            }
+          },
+        ),
+      ],
+      semanticLabel: '$title, ${frequencyLabels[r.frequency]}, ${r.active ? 'próximo ${formatDate(r.nextDate)}' : 'pausado'}',
     );
   }
 }
