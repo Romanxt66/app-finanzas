@@ -542,44 +542,82 @@ class _SpeechBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.c;
-    return CustomPaint(
+    final frost = FrostScope.maybeOf(context);
+    Widget body = CustomPaint(
       painter: _BubblePainter(
         tailY: tailY,
-        fill: frosted(c, c.glassStrong, 0.9),
+        fill: frost?.image == null ? frosted(c, c.glassStrong, 0.9) : frostTint(c, frost!.dark, strong: true),
         border: color.withValues(alpha: 0.55),
-        glow: color.withValues(alpha: 0.18),
       ),
       child: Padding(padding: const EdgeInsets.fromLTRB(space5 + _BubblePainter.tail, space4, space5, space4), child: child),
+    );
+    // Cristal esmerilado recortado con la forma del bocadillo
+    if (frost?.image != null) {
+      body = ClipPath(
+        clipper: _BubbleClip(tailY),
+        child: Frost(image: frost!.image!, backdrop: frost.backdrop, child: body),
+      );
+    }
+    return CustomPaint(
+      painter: _BubbleGlow(tailY: tailY, color: color.withValues(alpha: 0.18)),
+      child: body,
     );
   }
 }
 
-class _BubblePainter extends CustomPainter {
-  _BubblePainter({required this.tailY, required this.fill, required this.border, required this.glow});
+/// Forma del bocadillo: rectángulo redondeado con la colita a la izquierda, a la altura [tailY].
+Path _bubbleShape(Size size, double tailY) {
+  const tail = _BubblePainter.tail;
+  final body = RRect.fromRectAndRadius(Rect.fromLTWH(tail, 0, size.width - tail, size.height), const Radius.circular(radiusLg));
+  final y = tailY.clamp(radiusLg + 10, size.height - radiusLg - 10).toDouble();
+  return Path.combine(
+    PathOperation.union,
+    Path()..addRRect(body),
+    Path()
+      ..moveTo(tail + 1, y - 10)
+      ..quadraticBezierTo(tail * 0.4, y - 2, 0, y + 6)
+      ..quadraticBezierTo(tail * 0.7, y + 6, tail + 1, y + 10)
+      ..close(),
+  );
+}
+
+class _BubbleClip extends CustomClipper<Path> {
+  _BubbleClip(this.tailY);
   final double tailY;
-  final Color fill, border, glow;
+
+  @override
+  Path getClip(Size size) => _bubbleShape(size, tailY);
+
+  @override
+  bool shouldReclip(_BubbleClip old) => old.tailY != tailY;
+}
+
+class _BubbleGlow extends CustomPainter {
+  _BubbleGlow({required this.tailY, required this.color});
+  final double tailY;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) => canvas.drawPath(
+    _bubbleShape(size, tailY),
+    Paint()
+      ..color = color
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
+  );
+
+  @override
+  bool shouldRepaint(_BubbleGlow old) => old.tailY != tailY || old.color != color;
+}
+
+class _BubblePainter extends CustomPainter {
+  _BubblePainter({required this.tailY, required this.fill, required this.border});
+  final double tailY;
+  final Color fill, border;
   static const tail = 12.0;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final body = RRect.fromRectAndRadius(Rect.fromLTWH(tail, 0, size.width - tail, size.height), const Radius.circular(radiusLg));
-    // La colita apunta a la cara de Alvi
-    final y = tailY.clamp(radiusLg + 10, size.height - radiusLg - 10).toDouble();
-    final shape = Path.combine(
-      PathOperation.union,
-      Path()..addRRect(body),
-      Path()
-        ..moveTo(tail + 1, y - 10)
-        ..quadraticBezierTo(tail * 0.4, y - 2, 0, y + 6)
-        ..quadraticBezierTo(tail * 0.7, y + 6, tail + 1, y + 10)
-        ..close(),
-    );
-    canvas.drawPath(
-      shape,
-      Paint()
-        ..color = glow
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
-    );
+    final shape = _bubbleShape(size, tailY);
     canvas.drawPath(shape, Paint()..color = fill);
     canvas.drawPath(
       shape,
@@ -591,7 +629,7 @@ class _BubblePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BubblePainter old) => old.tailY != tailY || old.fill != fill || old.border != border || old.glow != glow;
+  bool shouldRepaint(_BubblePainter old) => old.tailY != tailY || old.fill != fill || old.border != border;
 }
 
 // ─── Acceso a la sala de espera ─────────────────────────────────────────────────────────────────

@@ -70,7 +70,7 @@ class _CrBackdropState extends State<CrBackdrop> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: dark
-                            ? [c.bg.withValues(alpha: 0.45), c.bg.withValues(alpha: 0.72)]
+                            ? [c.bg.withValues(alpha: 0.30), c.bg.withValues(alpha: 0.55)]
                             : [c.bg.withValues(alpha: 0.70), c.bg.withValues(alpha: 0.84)],
                       ),
                     ),
@@ -107,14 +107,17 @@ class Frost extends SingleChildRenderObjectWidget {
   final ui.Image image;
   final GlobalKey backdrop;
 
+  // Muchas tarjetas van dentro de capas que Flutter mueve sin repintar al desplazar (p. ej. la
+  // opacidad de la animación de entrada): el cristal escucha el desplazamiento y se repinta solo.
   @override
-  RenderObject createRenderObject(BuildContext context) => RenderFrost(image, backdrop);
+  RenderObject createRenderObject(BuildContext context) => RenderFrost(image, backdrop)..position = Scrollable.maybeOf(context)?.position;
 
   @override
   void updateRenderObject(BuildContext context, RenderFrost renderObject) {
     renderObject
       ..image = image
-      ..backdrop = backdrop;
+      ..backdrop = backdrop
+      ..position = Scrollable.maybeOf(context)?.position;
   }
 }
 
@@ -122,6 +125,26 @@ class RenderFrost extends RenderProxyBox {
   RenderFrost(this._image, this.backdrop);
   ui.Image _image;
   GlobalKey backdrop;
+  ScrollPosition? _position;
+
+  set position(ScrollPosition? v) {
+    if (v == _position) return;
+    if (attached) _position?.removeListener(markNeedsPaint);
+    _position = v;
+    if (attached) _position?.addListener(markNeedsPaint);
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _position?.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _position?.removeListener(markNeedsPaint);
+    super.detach();
+  }
 
   set image(ui.Image v) {
     if (v == _image) return;
@@ -142,6 +165,15 @@ class RenderFrost extends RenderProxyBox {
       canvas.save();
       canvas.clipRect(offset & size);
       canvas.drawImageRect(_image, src, dst, Paint()..filterQuality = FilterQuality.low);
+      // Reflejo del cristal: un velo blanco muy tenue que se apaga hacia abajo
+      canvas.drawRect(
+        offset & size,
+        Paint()
+          ..shader = ui.Gradient.linear(offset, offset + Offset(size.width * 0.4, size.height), [
+            Colors.white.withValues(alpha: 0.07),
+            Colors.white.withValues(alpha: 0),
+          ]),
+      );
       canvas.restore();
     }
     super.paint(context, offset);
@@ -200,7 +232,7 @@ Widget _frosted(FrostScope? scope, Widget child) =>
 
 /// Tinte sobre el fondo desenfocado: deja ver el color de la imagen y mantiene el texto legible.
 Color frostTint(CrPalette c, bool dark, {bool strong = false}) =>
-    dark ? const Color(0xFF0B0612).withValues(alpha: strong ? 0.66 : 0.52) : Colors.white.withValues(alpha: strong ? 0.72 : 0.58);
+    dark ? const Color(0xFF0B0612).withValues(alpha: strong ? 0.46 : 0.34) : Colors.white.withValues(alpha: strong ? 0.62 : 0.48);
 
 /// Vidrio «esmerilado» sin desenfoque real: mezcla el tinte del vidrio con el fondo para que
 /// el contenido se lea bien. Desenfocar lo que hay detrás en cada fotograma es muy costoso
@@ -265,8 +297,9 @@ class _GlassState extends State<Glass> {
     if (widget.onTap != null) {
       body = GestureDetector(behavior: HitTestBehavior.opaque, onTap: widget.onTap, child: body);
     }
+    // Bajo el cristal transparente una sombra se vería a través: solo se pinta sin imagen de fondo
     Widget glass = DecoratedBox(
-      decoration: BoxDecoration(borderRadius: shape, boxShadow: [widget.strong ? c.shadowLift : c.shadowGlass]),
+      decoration: BoxDecoration(borderRadius: shape, boxShadow: frost != null ? null : [widget.strong ? c.shadowLift : c.shadowGlass]),
       child: ClipRRect(
         borderRadius: shape,
         child: _frosted(
