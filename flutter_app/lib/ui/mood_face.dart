@@ -87,7 +87,7 @@ class FaceExpression {
   int get hashCode => Object.hash(color, smile, mouthOpen, eyeHappy, lid, brow, browShow, blush, sweat, tear, sparkle, bounce, shiver);
 }
 
-/// Gotita animada (estilo kawaii): cambia de expresión con suavidad, respira como gelatina, parpadea,
+/// Gotita de malvavisco animada (estilo kawaii): cambia de expresión con suavidad, respira como gelatina, parpadea,
 /// mira a su alrededor y, según el ánimo, da saltitos o tiembla. Con [followPointer] sigue el puntero
 /// con los ojos; [MoodFaceState.boing] la hace saltar y soltar corazones o gotitas.
 /// Con «reducir movimiento» queda quieta.
@@ -202,94 +202,133 @@ class FacePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final r = size.shortestSide * 0.34; // radio de la panza
+    final r = size.shortestSide * 0.33; // radio de la panza
     final phase = t * math.pi * 2;
     final base = Offset(size.width / 2, size.height * 0.60);
+    // Tonos de malvavisco: el color del ánimo aclarado hacia crema
+    final soft = Color.lerp(f.color, const Color(0xFFFFF7FB), 0.38)!;
+    final deep = Color.lerp(f.color, const Color(0xFF6B2E7A), 0.22)!;
 
-    // Movimiento de cuerpo: respiración gelatinosa, saltitos de alegría, tembleque y salto al tocar
-    final breathe = math.sin(phase * 2) * 0.035;
+    // Movimiento de cuerpo: respiración blandita, saltitos de alegría, tembleque y salto al tocar
+    final breathe = math.sin(phase * 2) * 0.04;
     final hopPhase = (t * 3) % 1; // tres saltitos por ciclo
-    final hop = f.bounce * math.max(0.0, math.sin(hopPhase * math.pi)) * r * 0.22;
-    final land = f.bounce * (hopPhase < 0.12 ? (1 - hopPhase / 0.12) * 0.10 : 0.0);
-    final jumpUp = math.sin(jump * math.pi) * r * 0.55;
-    final jumpSquash = jump == 0 ? 0.0 : (jump < 0.15 ? jump / 0.15 * 0.14 : (jump > 0.85 ? (1 - jump) / 0.15 * 0.12 : -0.06));
+    final hop = f.bounce * math.max(0.0, math.sin(hopPhase * math.pi)) * r * 0.24;
+    final land = f.bounce * (hopPhase < 0.14 ? (1 - hopPhase / 0.14) * 0.13 : 0.0);
+    final jumpUp = math.sin(jump * math.pi) * r * 0.6;
+    final jumpSquash = jump == 0 ? 0.0 : (jump < 0.15 ? jump / 0.15 * 0.16 : (jump > 0.85 ? (1 - jump) / 0.15 * 0.14 : -0.07));
     final shake = f.shiver * math.sin(phase * 22) * r * 0.035;
     final sx = 1 + breathe + land + jumpSquash;
     final sy = 1 - breathe - land - jumpSquash;
-    final sway = math.sin(phase) * 0.05 * (1 - f.shiver * 0.5);
+    final sway = math.sin(phase) * 0.06 * (1 - f.shiver * 0.5);
 
-    // Sombra en el suelo: se encoge cuando la gotita sube
+    // Sombra en el suelo: se encoge cuando sube
     final lift = (hop + jumpUp) / (r * 0.8);
     canvas.drawOval(
       Rect.fromCenter(
-        center: Offset(size.width / 2, base.dy + r * 1.02),
-        width: r * 1.5 * (1 - lift * 0.35),
-        height: r * 0.22 * (1 - lift * 0.35),
+        center: Offset(size.width / 2, base.dy + r * 1.08),
+        width: r * 1.6 * (1 - lift * 0.35),
+        height: r * 0.24 * (1 - lift * 0.35),
       ),
       Paint()
-        ..color = f.color.withValues(alpha: 0.28 * (1 - lift * 0.5))
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.08),
+        ..color = deep.withValues(alpha: 0.30 * (1 - lift * 0.5))
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.1),
     );
 
     canvas.save();
     canvas.translate(base.dx + shake, base.dy - hop - jumpUp);
-    // Escala desde la base para que aplaste contra el suelo
     canvas.translate(0, r);
     canvas.scale(sx, sy);
     canvas.translate(0, -r);
 
+    // Piececitos que asoman por debajo
+    final step = math.sin(phase * 2) * r * 0.03;
+    for (final s in [-1, 1]) {
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset(s * r * 0.38, r * 0.93 + (s == 1 ? step : -step)), width: r * 0.42, height: r * 0.24),
+        Paint()..color = deep.withValues(alpha: 0.9),
+      );
+    }
+
+    // Bracitos: se balancean; saludan al tocarla o cuando está radiante
+    final wave = jump > 0 ? math.sin(jump * math.pi * 6) * 0.9 : f.bounce * math.sin(phase * 3) * 0.5;
+    for (final s in [-1, 1]) {
+      canvas.save();
+      canvas.translate(s * r * 0.98, r * 0.12);
+      canvas.rotate(s * (0.5 + math.sin(phase * 2 + s) * 0.12) - (s == 1 ? wave : 0));
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset(s * r * 0.16, 0), width: r * 0.46, height: r * 0.28),
+          Radius.circular(r * 0.14),
+        ),
+        Paint()..color = Color.lerp(soft, deep, 0.35)!,
+      );
+      canvas.restore();
+    }
+
     final body = _dropPath(r, sway);
-    // Halo suave
+    final bounds = Rect.fromCircle(center: Offset(0, -r * 0.25), radius: r * 1.35);
+    // Aura esponjosa
     canvas.drawPath(
       body,
       Paint()
-        ..color = f.color.withValues(alpha: 0.35)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.22),
+        ..color = f.color.withValues(alpha: 0.45)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.28),
     );
-    // Cuerpo con volumen de agua
-    final bounds = Rect.fromCircle(center: Offset(0, -r * 0.2), radius: r * 1.4);
+    // Cuerpo aterciopelado: crema arriba, color suave abajo
     canvas.drawPath(
       body,
       Paint()
-        ..shader = RadialGradient(
-          center: const Alignment(-0.3, -0.1),
-          radius: 0.85,
-          colors: [Color.lerp(f.color, Colors.white, 0.55)!, f.color, Color.lerp(f.color, Colors.black, 0.22)!],
-          stops: const [0, 0.55, 1],
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color.lerp(soft, Colors.white, 0.35)!, soft, Color.lerp(soft, deep, 0.25)!],
+          stops: const [0, 0.5, 1],
         ).createShader(bounds),
     );
-    // Contorno sutil
+    // Sombreado interior suave (volumen de malvavisco) y luz de borde
+    canvas.save();
+    canvas.clipPath(body);
     canvas.drawPath(
-      body,
+      body.shift(Offset(r * 0.10, r * 0.16)),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = r * 0.035
-        ..color = Color.lerp(f.color, Colors.black, 0.35)!.withValues(alpha: 0.35),
+        ..strokeWidth = r * 0.5
+        ..color = deep.withValues(alpha: 0.22)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.22),
     );
-    // Brillos de gota: una veta curva y un punto
-    final streak = Path()
-      ..moveTo(-r * 0.55, -r * 0.15)
-      ..quadraticBezierTo(-r * 0.62, -r * 0.62, -r * 0.22, -r * 1.05);
     canvas.drawPath(
-      streak,
+      body.shift(Offset(-r * 0.06, -r * 0.10)),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = r * 0.12
-        ..color = Colors.white.withValues(alpha: 0.55),
+        ..strokeWidth = r * 0.18
+        ..color = Colors.white.withValues(alpha: 0.45)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.12),
     );
-    canvas.drawCircle(Offset(-r * 0.52, r * 0.08), r * 0.06, Paint()..color = Colors.white.withValues(alpha: 0.6));
+    // Brillo mate, difuso, arriba a la izquierda
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(-r * 0.42, -r * 0.55), width: r * 0.45, height: r * 0.30),
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.75)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.08),
+    );
+    canvas.drawCircle(Offset(-r * 0.18, -r * 0.82), r * 0.05, Paint()..color = Colors.white.withValues(alpha: 0.8));
+    canvas.restore();
 
     _face(canvas, r, phase);
     canvas.restore();
 
     // Destellos alrededor (radiante)
     if (f.sparkle > 0.05) {
-      final star = Paint()..color = Colors.white.withValues(alpha: 0.9 * f.sparkle);
-      for (var i = 0; i < 3; i++) {
-        final a = phase + i * math.pi * 2 / 3;
-        final p = Offset(size.width / 2, base.dy - r * 0.35 - hop - jumpUp) + Offset(math.cos(a) * r * 1.45, math.sin(a) * r * 1.25);
-        _star(canvas, p, r * (0.11 + 0.05 * math.sin(phase * 3 + i)) * f.sparkle, star);
+      for (var i = 0; i < 4; i++) {
+        final a = phase + i * math.pi / 2;
+        final p = Offset(size.width / 2, base.dy - r * 0.35 - hop - jumpUp) + Offset(math.cos(a) * r * 1.5, math.sin(a) * r * 1.3);
+        final tint = i.isEven ? Colors.white : const Color(0xFFFFE08A);
+        _star(
+          canvas,
+          p,
+          r * (0.10 + 0.05 * math.sin(phase * 3 + i)) * f.sparkle,
+          Paint()..color = tint.withValues(alpha: 0.95 * f.sparkle),
+        );
       }
     }
 
@@ -298,9 +337,9 @@ class FacePainter extends CustomPainter {
       final happy = f.smile > 0.2;
       for (var i = 0; i < 6; i++) {
         final a = -math.pi / 2 + (i - 2.5) * 0.45;
-        final dist = r * (0.9 + jump * 1.1);
+        final dist = r * (0.95 + jump * 1.1);
         final p = Offset(size.width / 2, base.dy - r * 0.6) + Offset(math.cos(a) * dist, math.sin(a) * dist * 0.9);
-        final paint = Paint()..color = (happy ? const Color(0xFFFF6FAE) : const Color(0xFF7DD3FC)).withValues(alpha: (1 - jump) * 0.95);
+        final paint = Paint()..color = (happy ? const Color(0xFFFF8FC0) : const Color(0xFF9AD8FF)).withValues(alpha: (1 - jump) * 0.95);
         final k = r * 0.13 * (1 - jump * 0.4);
         if (happy) {
           _heart(canvas, p, k, paint);
@@ -311,47 +350,68 @@ class FacePainter extends CustomPainter {
     }
   }
 
-  /// Silueta de gota: punta arriba (que se mece con [sway]) y panza redonda centrada en el origen.
+  /// Silueta regordeta de gota: puntita corta y blandita (se mece con [sway]) y panza ancha.
   Path _dropPath(double r, double sway) {
-    final tip = Offset(sway * r * 2.2, -r * 1.75);
+    final tip = Offset(sway * r * 2.0, -r * 1.45);
     return Path()
       ..moveTo(tip.dx, tip.dy)
-      ..cubicTo(tip.dx + r * 0.25, -r * 1.25, r * 1.0, -r * 0.65, r * 1.0, 0)
-      ..cubicTo(r * 1.0, r * 0.58, r * 0.55, r * 1.0, 0, r * 1.0)
-      ..cubicTo(-r * 0.55, r * 1.0, -r * 1.0, r * 0.58, -r * 1.0, 0)
-      ..cubicTo(-r * 1.0, -r * 0.65, tip.dx - r * 0.25, -r * 1.25, tip.dx, tip.dy)
+      ..cubicTo(tip.dx + r * 0.32, -r * 1.22, r * 1.05, -r * 0.72, r * 1.05, -r * 0.02)
+      ..cubicTo(r * 1.05, r * 0.62, r * 0.6, r * 1.0, 0, r * 1.0)
+      ..cubicTo(-r * 0.6, r * 1.0, -r * 1.05, r * 0.62, -r * 1.05, -r * 0.02)
+      ..cubicTo(-r * 1.05, -r * 0.72, tip.dx - r * 0.32, -r * 1.22, tip.dx, tip.dy)
       ..close();
   }
 
   void _face(Canvas canvas, double r, double phase) {
     // Mirada: sigue el puntero o, si no hay, mira a su alrededor despacio
     final wander = look == Offset.zero ? Offset(math.sin(phase) * 0.6, math.sin(phase * 0.5) * 0.25) : look;
-    final gaze = Offset(wander.dx * r * 0.09, wander.dy * r * 0.06);
+    final gaze = Offset(wander.dx * r * 0.08, wander.dy * r * 0.05);
     final line = Paint()
       ..color = _ink
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = r * 0.085;
+      ..strokeWidth = r * 0.08;
 
-    // Mejillas
+    // Mejillas sonrosadas con rayitas
     if (f.blush > 0.01) {
-      final blush = Paint()..color = const Color(0xFFFF5C8A).withValues(alpha: 0.5 * f.blush);
+      final blush = Paint()
+        ..color = const Color(0xFFFF7FA8).withValues(alpha: 0.55 * f.blush)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.04);
+      final hatch = Paint()
+        ..color = const Color(0xFFFF5C8A).withValues(alpha: 0.7 * f.blush)
+        ..strokeWidth = r * 0.025
+        ..strokeCap = StrokeCap.round;
       for (final s in [-1, 1]) {
-        canvas.drawOval(Rect.fromCenter(center: Offset(s * r * 0.58, r * 0.30), width: r * 0.36, height: r * 0.20), blush);
+        final cheek = Offset(s * r * 0.60, r * 0.32) + gaze * 0.4;
+        canvas.drawOval(Rect.fromCenter(center: cheek, width: r * 0.36, height: r * 0.21), blush);
+        for (var k = -1; k <= 1; k++) {
+          final o = cheek + Offset(k * r * 0.08, 0);
+          canvas.drawLine(o + Offset(-r * 0.03, r * 0.04), o + Offset(r * 0.03, -r * 0.04), hatch);
+        }
       }
     }
 
     // Ojos grandes y brillantes; parpadeo cada ciclo
     final blink = (t > 0.90 && t < 0.96) ? 1 - math.sin((t - 0.90) / 0.06 * math.pi) : 1.0;
     for (final s in [-1, 1]) {
-      final eye = Offset(s * r * 0.38, r * 0.02) + gaze;
+      final eye = Offset(s * r * 0.36, r * 0.04) + gaze;
       final openness = (1 - f.eyeHappy) * blink * (1 - f.lid * 0.5);
       if (openness > 0.1) {
-        canvas.drawOval(Rect.fromCenter(center: eye, width: r * 0.30, height: r * 0.40 * openness), Paint()..color = _ink);
+        final rect = Rect.fromCenter(center: eye, width: r * 0.30, height: r * 0.38 * openness);
+        canvas.drawOval(
+          rect,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [_ink, Color.lerp(_ink, f.color, 0.45)!],
+            ).createShader(rect),
+        );
         if (openness > 0.45) {
-          // Reflejos kawaii: uno grande arriba y otro pequeño abajo
+          // Reflejos: uno grande, uno pequeño y una estrellita
           canvas.drawCircle(eye + Offset(-r * 0.05, -r * 0.08 * openness), r * 0.075, Paint()..color = Colors.white);
-          canvas.drawCircle(eye + Offset(r * 0.06, r * 0.08 * openness), r * 0.035, Paint()..color = Colors.white.withValues(alpha: 0.85));
+          canvas.drawCircle(eye + Offset(r * 0.06, r * 0.07 * openness), r * 0.03, Paint()..color = Colors.white.withValues(alpha: 0.9));
+          _star(canvas, eye + Offset(r * 0.06, -r * 0.03), r * 0.025, Paint()..color = Colors.white.withValues(alpha: 0.8));
         }
       } else if (f.eyeHappy <= 0.05) {
         canvas.drawLine(eye - Offset(r * 0.12, 0), eye + Offset(r * 0.12, 0), line);
@@ -364,24 +424,25 @@ class FacePainter extends CustomPainter {
       }
       // Párpado caído (aburrimiento)
       if (f.lid > 0.05 && f.eyeHappy < 0.5) {
-        final y = eye.dy - r * 0.20 + r * 0.16 * f.lid;
-        canvas.drawLine(Offset(eye.dx - r * 0.17, y), Offset(eye.dx + r * 0.17, y), Paint.from(line)..strokeWidth = r * 0.07);
+        final y = eye.dy - r * 0.19 + r * 0.15 * f.lid;
+        canvas.drawLine(Offset(eye.dx - r * 0.17, y), Offset(eye.dx + r * 0.17, y), Paint.from(line)..strokeWidth = r * 0.065);
       }
-      // Cejas: preocupación (interior alto) o enfado (interior bajo)
+      // Cejitas: preocupación (interior alto) o enfado (interior bajo)
       if (f.browShow > 0.05) {
-        final inner = eye + Offset(-s * r * 0.10, -r * 0.32 + f.brow * r * 0.09);
-        final outer = eye + Offset(s * r * 0.15, -r * 0.32 - f.brow * r * 0.06);
+        final inner = eye + Offset(-s * r * 0.09, -r * 0.31 + f.brow * r * 0.08);
+        final outer = eye + Offset(s * r * 0.14, -r * 0.31 - f.brow * r * 0.05);
         canvas.drawLine(inner, outer, Paint.from(line)..color = _ink.withValues(alpha: f.browShow.clamp(0.0, 1.0)));
       }
     }
 
-    // Boquita pequeña, centrada entre los ojos
+    // Boquita: «ω» gatuna cuando sonríe, curva pequeña si no, abierta al reír o asustarse
     final mouthY = r * 0.30 + gaze.dy * 0.5;
-    final half = r * (0.13 + 0.05 * f.smile.abs() + 0.06 * f.mouthOpen);
-    final curve = f.smile * r * 0.16;
     final cx = gaze.dx * 0.6;
+    final mouthLine = Paint.from(line)..strokeWidth = r * 0.06;
     if (f.mouthOpen > 0.05) {
-      final drop = r * 0.24 * f.mouthOpen;
+      final half = r * (0.12 + 0.05 * f.mouthOpen);
+      final curve = f.smile * r * 0.12;
+      final drop = r * 0.22 * f.mouthOpen;
       final mouth = Path()
         ..moveTo(cx - half, mouthY - curve * 0.2)
         ..quadraticBezierTo(cx, mouthY + curve * 0.3 - drop * 0.15, cx + half, mouthY - curve * 0.2)
@@ -390,30 +451,40 @@ class FacePainter extends CustomPainter {
       canvas.drawPath(mouth, Paint()..color = _ink);
       canvas.save();
       canvas.clipPath(mouth);
-      canvas.drawCircle(Offset(cx, mouthY + curve + drop * 0.9), r * 0.14, Paint()..color = const Color(0xFFFF6B8F));
+      canvas.drawCircle(Offset(cx, mouthY + curve + drop * 0.9), r * 0.13, Paint()..color = const Color(0xFFFF7FA0));
       canvas.restore();
+    } else if (f.smile > 0.2) {
+      final w = r * 0.08;
+      final h = r * 0.06 * f.smile;
+      final omega = Path()
+        ..moveTo(cx - w * 2, mouthY - h * 0.2)
+        ..quadraticBezierTo(cx - w, mouthY + h * 1.6, cx, mouthY)
+        ..quadraticBezierTo(cx + w, mouthY + h * 1.6, cx + w * 2, mouthY - h * 0.2);
+      canvas.drawPath(omega, mouthLine);
     } else {
+      final half = r * (0.10 + 0.05 * f.smile.abs());
+      final curve = f.smile * r * 0.14;
       final mouth = Path()
         ..moveTo(cx - half, mouthY - curve * 0.2)
         ..quadraticBezierTo(cx, mouthY + curve, cx + half, mouthY - curve * 0.2);
-      canvas.drawPath(mouth, Paint.from(line)..strokeWidth = r * 0.075);
+      canvas.drawPath(mouth, mouthLine);
     }
 
-    // Gota de sudor que resbala por la sien
+    // Gotita de sudor por la sien
     if (f.sweat > 0.05) {
       final slide = (t * 2) % 1;
-      final p = Offset(r * 0.78, -r * 0.55 + slide * r * 0.35);
+      final p = Offset(r * 0.80, -r * 0.55 + slide * r * 0.35);
       canvas.drawPath(
-        _dropPath(r * 0.10, 0).shift(p),
-        Paint()..color = const Color(0xFFBAE6FD).withValues(alpha: f.sweat * (1 - slide * 0.6)),
+        _dropPath(r * 0.11, 0).shift(p),
+        Paint()..color = const Color(0xFFCDEBFF).withValues(alpha: f.sweat * (1 - slide * 0.6)),
       );
     }
 
     // Lágrima que cae desde el ojo
     if (f.tear > 0.05) {
       final fall = (t * 1.5) % 1;
-      final p = Offset(-r * 0.40, r * 0.20 + fall * r * 0.55);
-      canvas.drawPath(_dropPath(r * 0.08, 0).shift(p), Paint()..color = const Color(0xFFBAE6FD).withValues(alpha: f.tear * (1 - fall)));
+      final p = Offset(-r * 0.40, r * 0.22 + fall * r * 0.55);
+      canvas.drawPath(_dropPath(r * 0.09, 0).shift(p), Paint()..color = const Color(0xFFCDEBFF).withValues(alpha: f.tear * (1 - fall)));
     }
   }
 
