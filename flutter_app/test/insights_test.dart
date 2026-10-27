@@ -43,6 +43,7 @@ void main() {
         final m = FinanceMood(level, 0, const []);
         expect(m.title, startsWith('Alvi está'));
         expect(m.message, isNotEmpty);
+        expect(m.says, isNotEmpty);
         expect(m.face, isA<FaceExpression>());
       }
     });

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -465,6 +463,7 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
           );
           final bubble = _SpeechBubble(
             color: mood.face.color,
+            tailY: faceSize * 0.45,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -489,7 +488,7 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
                   ),
                   child: Text(line, key: ValueKey('$step$line'), style: CrText.body(c.inkMuted)),
                 ),
-                if (mood.reasons.isNotEmpty) ...[
+                if (wide && mood.reasons.isNotEmpty) ...[
                   const SizedBox(height: space3),
                   Wrap(
                     spacing: space2,
@@ -513,12 +512,12 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
                   ),
                 ],
                 const SizedBox(height: space2),
-                Text('toca a alvi para que te cuente más', style: CrText.mono(c.inkFaint, size: 11)),
+                Text(wide ? 'toca a alvi para que te cuente más' : 'toca a alvi: te cuenta más', style: CrText.mono(c.inkFaint, size: 11)),
               ],
             ),
           );
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               alvi,
               SizedBox(width: wide ? space2 : space1),
@@ -533,8 +532,11 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
 
 /// Bocadillo de cómic con la colita apuntando a Alvi (a la izquierda).
 class _SpeechBubble extends StatelessWidget {
-  const _SpeechBubble({required this.color, required this.child});
+  const _SpeechBubble({required this.color, required this.tailY, required this.child});
   final Color color;
+
+  /// Altura de la colita: a la altura de la cara de Alvi.
+  final double tailY;
   final Widget child;
 
   @override
@@ -542,6 +544,7 @@ class _SpeechBubble extends StatelessWidget {
     final c = context.c;
     return CustomPaint(
       painter: _BubblePainter(
+        tailY: tailY,
         fill: frosted(c, c.glassStrong, 0.9),
         border: color.withValues(alpha: 0.55),
         glow: color.withValues(alpha: 0.18),
@@ -552,15 +555,16 @@ class _SpeechBubble extends StatelessWidget {
 }
 
 class _BubblePainter extends CustomPainter {
-  _BubblePainter({required this.fill, required this.border, required this.glow});
+  _BubblePainter({required this.tailY, required this.fill, required this.border, required this.glow});
+  final double tailY;
   final Color fill, border, glow;
   static const tail = 12.0;
 
   @override
   void paint(Canvas canvas, Size size) {
     final body = RRect.fromRectAndRadius(Rect.fromLTWH(tail, 0, size.width - tail, size.height), const Radius.circular(radiusLg));
-    // La colita apunta a la cara de Alvi, cerca del borde superior
-    final y = math.min(size.height * 0.42, 64.0);
+    // La colita apunta a la cara de Alvi
+    final y = tailY.clamp(radiusLg + 10, size.height - radiusLg - 10).toDouble();
     final shape = Path.combine(
       PathOperation.union,
       Path()..addRRect(body),
@@ -587,7 +591,7 @@ class _BubblePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BubblePainter old) => old.fill != fill || old.border != border || old.glow != glow;
+  bool shouldRepaint(_BubblePainter old) => old.tailY != tailY || old.fill != fill || old.border != border || old.glow != glow;
 }
 
 // ─── Acceso a la sala de espera ─────────────────────────────────────────────────────────────────
