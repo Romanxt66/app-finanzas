@@ -77,6 +77,7 @@ class DealCard extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.avatar,
+    this.leading,
     this.accent,
     this.eyebrow,
     this.value,
@@ -95,6 +96,9 @@ class DealCard extends StatelessWidget {
 
   /// Texto del avatar (iniciales); null = sin avatar.
   final String? avatar;
+
+  /// Sustituye al avatar de iniciales (p. ej. el logo de un banco).
+  final Widget? leading;
   final Color? accent;
   final String? eyebrow;
   final String? value;
@@ -123,7 +127,13 @@ class DealCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (avatar != null) ...[DealAvatar(avatar!, color: color), const SizedBox(width: space3)],
+              if (leading != null) ...[
+                leading!,
+                const SizedBox(width: space3),
+              ] else if (avatar != null) ...[
+                DealAvatar(avatar!, color: color),
+                const SizedBox(width: space3),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -134,7 +144,6 @@ class DealCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (actions.isNotEmpty) Row(mainAxisSize: MainAxisSize.min, children: actions),
             ],
           ),
           if (value != null) ...[
@@ -163,6 +172,11 @@ class DealCard extends StatelessWidget {
                       height: 30,
                       child: MiniSpark(data: spark!, color: color),
                     ),
+                  )
+                else if (trailing != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: space2, bottom: 6),
+                    child: Text(trailing!, style: CrText.mono(c.inkFaint, size: 11)),
                   ),
               ],
             ),
@@ -171,12 +185,15 @@ class DealCard extends StatelessWidget {
             const SizedBox(height: space3),
             GrowBar(ratio: progress!.clamp(0, 1), color: color, height: 3, glow: true),
           ],
-          if (chips.isNotEmpty || trailing != null) ...[
+          // Chips a la izquierda y acciones discretas a la derecha (no le quitan sitio al título)
+          if (chips.isNotEmpty || actions.isNotEmpty || (trailing != null && value == null)) ...[
             const SizedBox(height: space3),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(child: Wrap(spacing: 6, runSpacing: 6, children: [for (final ch in chips) _ChipView(ch)])),
-                if (trailing != null) Text(trailing!, style: CrText.mono(c.inkFaint, size: 11)),
+                if (trailing != null && value == null) Text(trailing!, style: CrText.mono(c.inkFaint, size: 11)),
+                if (actions.isNotEmpty) Row(mainAxisSize: MainAxisSize.min, children: actions),
               ],
             ),
           ],
