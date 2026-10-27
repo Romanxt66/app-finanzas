@@ -9,11 +9,13 @@ from app.models import Transaction, TransactionType
 from app.schemas.transaction import (
     BulkCreate,
     BulkResult,
+    CategorizeIn,
+    CategorizeOut,
     TransactionCreate,
     TransactionOut,
     TransactionPage,
 )
-from app.services import export, transactions
+from app.services import categorize, export, transactions
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -84,6 +86,14 @@ async def export_transactions(
 async def bulk_import(data: BulkCreate, user: CurrentUser, session: SessionDep) -> BulkResult:
     """Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes."""
     return await transactions.bulk_create(session, user.id, data)
+
+
+@router.post("/categorize", response_model=CategorizeOut)
+async def categorize_items(
+    data: CategorizeIn, user: CurrentUser, session: SessionDep
+) -> CategorizeOut:
+    """Sugiere la categoría de cada movimiento por su descripción, antes de importarlo."""
+    return CategorizeOut(suggestions=await categorize.suggest(session, user.id, data.items))
 
 
 @router.post("", response_model=TransactionOut, status_code=status.HTTP_201_CREATED)

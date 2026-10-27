@@ -8,12 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
-from app.core.observability import install_observability
+from app.core.observability import init_sentry, install_observability
 from app.db.session import get_session
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    init_sentry(settings.sentry_dsn, settings.environment)
     app = FastAPI(title="App de Finanzas", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,
