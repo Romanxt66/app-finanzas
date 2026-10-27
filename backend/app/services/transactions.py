@@ -110,7 +110,12 @@ async def update_transaction(
 ) -> Transaction:
     tx = await get_owned(session, user_id, transaction_id)
     await validate(session, user_id, data)
-    for field, value in data.model_dump().items():
+    values = data.model_dump()
+    if "mood" not in data.model_fields_set:
+        values.pop("mood")
+    if data.type != TransactionType.expense:
+        values["mood"] = None
+    for field, value in values.items():
         setattr(tx, field, value)
     await session.commit()
     return tx
