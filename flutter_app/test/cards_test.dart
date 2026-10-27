@@ -1,7 +1,11 @@
 import 'package:alvea_app/core/models.dart';
 import 'package:alvea_app/screens/accounts.dart';
 import 'package:alvea_app/screens/flow_chart.dart';
+
+import 'dart:ui' as ui;
+
 import 'package:alvea_app/ui/deal_card.dart';
+import 'package:alvea_app/ui/glass.dart';
 import 'package:alvea_app/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -93,5 +97,56 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.textContaining('631,48'), findsOneWidget);
+  });
+
+  testWidgets('el cristal se repinta al desplazar aunque esté dentro de una capa de opacidad', (tester) async {
+    late ui.Image img;
+    await tester.runAsync(() async {
+      final rec = ui.PictureRecorder();
+      Canvas(rec).drawColor(Colors.purple, BlendMode.src);
+      img = await rec.endRecording().toImage(8, 8);
+    });
+    final scroll = ScrollController();
+    final backdrop = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(Brightness.dark),
+        home: FrostScope(
+          image: img,
+          backdrop: backdrop,
+          dark: true,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: RepaintBoundary(
+                  key: backdrop,
+                  child: const ColoredBox(color: Colors.black),
+                ),
+              ),
+              SingleChildScrollView(
+                controller: scroll,
+                child: Column(
+                  children: const [
+                    // La opacidad (como la de la animación de entrada) es una capa que no se repinta al desplazar
+                    Opacity(
+                      opacity: 0.99,
+                      child: SizedBox(height: 200, child: Glass(child: SizedBox.expand())),
+                    ),
+                    SizedBox(height: 2000),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final frost = tester.renderObject<RenderFrost>(find.byType(Frost));
+    expect(frost.debugNeedsPaint, isFalse);
+    scroll.jumpTo(120);
+    expect(frost.debugNeedsPaint, isTrue);
+    await tester.pump();
+    expect(frost.debugNeedsPaint, isFalse);
   });
 }
