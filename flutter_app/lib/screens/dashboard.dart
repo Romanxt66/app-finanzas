@@ -16,6 +16,7 @@ import '../ui/query.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'features.dart';
+import 'insights.dart';
 
 /// Variación % frente al mes anterior; null si no hay base de comparación.
 double? change(double current, double? previous) => (previous != null && previous != 0) ? (current - previous) / previous * 100 : null;
@@ -90,6 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       hasCategories: ref.categories.isNotEmpty,
                       hasTransactions: (recent.total) > 0,
                     ),
+                  FinanceMoodCard(month: _month, income: income, expense: expense, balance: total),
                   BalanceCard(
                     label: 'Saldo total',
                     value: total,
@@ -156,6 +158,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const GhostTeaser(),
                     ],
                   ),
+                  const GridCols(children: [PersonalInflationCard(), SpendingMoodCard()]),
+                  const WaitingTeaser(),
                   if (upcoming.isNotEmpty)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

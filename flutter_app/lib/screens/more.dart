@@ -9,6 +9,7 @@ import '../ui/widgets.dart';
 const _links = [
   ('/budgets', 'Presupuestos', 'target'),
   ('/recurring', 'Recurrentes', 'swap'),
+  ('/waiting', 'Sala de espera', 'target'),
   ('/subscriptions', 'Suscripciones', 'search'),
   ('/import', 'Importar CSV', 'download'),
   ('/categories', 'Categorías', 'tag'),

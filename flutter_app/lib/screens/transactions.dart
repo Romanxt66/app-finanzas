@@ -16,6 +16,7 @@ import '../ui/query.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'features.dart';
+import 'insights.dart';
 
 const pageSize = 20;
 const typeLabels = {'income': 'Ingreso', 'expense': 'Gasto', 'transfer': 'Transferencia'};
@@ -267,6 +268,7 @@ class _TransactionFormState extends State<TransactionForm> {
   );
   late final _desc = TextEditingController(text: widget.editing?.description ?? '');
   late String _date = widget.editing?.occurredOn ?? todayISO();
+  late String? _mood = widget.editing?.mood;
   bool _submitted = false;
   bool _busy = false;
   Object? _error;
@@ -295,6 +297,7 @@ class _TransactionFormState extends State<TransactionForm> {
       'amount': parseAmount(_amount.text),
       'description': _desc.text,
       'occurred_on': _date,
+      'mood': _type == 'expense' ? _mood : null,
     };
     try {
       if (widget.editing != null) {
@@ -364,6 +367,7 @@ class _TransactionFormState extends State<TransactionForm> {
               CrTextField(label: 'Descripción', controller: _desc, error: _descError, onChanged: (_) => setState(() {})),
             ],
           ),
+          if (_type == 'expense') MoodPicker(value: _mood, onChanged: (v) => setState(() => _mood = v)),
           Wrap(
             spacing: space3,
             runSpacing: space3,

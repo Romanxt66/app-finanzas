@@ -58,6 +58,14 @@ class Data {
     }
   }
 
+  Future<PersonalInflation> inflation() async =>
+      PersonalInflation.fromJson(await _api.get('/personal-inflation', query: {'today': todayISO()}) as Map<String, dynamic>);
+
+  Future<MoodReport> spendingMood() async =>
+      MoodReport.fromJson(await _api.get('/spending-mood', query: {'today': todayISO()}) as Map<String, dynamic>);
+
+  Future<WaitingRoom> waitingRoom() async => WaitingRoom.fromJson(await _api.get('/waiting-room') as Map<String, dynamic>);
+
   /// Ejecuta una escritura, avisa con un toast y recarga lo cargado.
   Future<T> mutate<T>(Future<T> Function() action, String message) async {
     final result = await action();
