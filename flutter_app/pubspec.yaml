@@ -65,6 +65,8 @@ flutter:
   assets:
     # Fondo de la app y su versión ya desenfocada para el cristal de las tarjetas
     - assets/backgrounds/
+    # Logos opcionales de bancos (ver assets/banks/README.md)
+    - assets/banks/
   fonts:
     - family: Manrope
       fonts:

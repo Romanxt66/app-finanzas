@@ -5,6 +5,7 @@ import '../core/format.dart';
 import '../core/models.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
+import '../ui/banks.dart';
 import '../ui/buttons.dart';
 import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
@@ -75,6 +76,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
   Object? _removeError;
   bool _formOpen = false;
 
+  /// Banco elegido en el formulario ('' = otro).
+  String _bank = '';
+
   /// Tipo de cuenta por el que se filtra ('' = todas).
   String _filter = '';
 
@@ -105,6 +109,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
       if (mounted) {
         setState(() {
           _formOpen = false;
+          _bank = '';
           _name.clear();
           _balance.text = '0';
           _type = 'bank';
@@ -157,7 +162,33 @@ class _AccountsScreenState extends State<AccountsScreen> {
               children: [
                 FormGrid(
                   children: [
-                    CrTextField(label: 'Nombre', controller: _name, error: _nameError, onChanged: (_) => setState(() {})),
+                    CrSelect<String>(
+                      label: 'Banco o billetera',
+                      value: _bank,
+                      options: [('', 'Otra (escribe el nombre)'), for (final b in bankBrands) (b.id, b.name)],
+                      onChanged: (v) => setState(() {
+                        final previous = bankBrands.where((b) => b.id == _bank).firstOrNull;
+                        _bank = v;
+                        final brand = bankBrands.where((b) => b.id == v).firstOrNull;
+                        // Rellena el nombre si está vacío o aún es el del banco elegido antes
+                        if (brand != null && (_name.text.trim().isEmpty || _name.text.trim() == previous?.name)) {
+                          _name.text = brand.name;
+                          _type = brand.type;
+                        }
+                      }),
+                    ),
+                    CrTextField(
+                      label: 'Nombre',
+                      controller: _name,
+                      error: _nameError,
+                      trailing: bankFor(_name.text) == null
+                          ? null
+                          : Padding(
+                              padding: const EdgeInsets.only(right: space2),
+                              child: BankLogo(name: _name.text, fallback: '', size: 24),
+                            ),
+                      onChanged: (_) => setState(() {}),
+                    ),
                     CrSelect<String>(
                       label: 'Tipo',
                       value: _type,
@@ -223,7 +254,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     final sameCurrency = all.where((x) => x.currency == a.currency && !x.archived);
     final total = sameCurrency.fold<double>(0, (t, x) => t + (x.balance > 0 ? x.balance : 0));
     return DealCard(
-      avatar: initials(a.name),
+      leading: BankLogo(name: a.name, fallback: initials(a.name), color: color),
       accent: color,
       title: a.name,
       subtitle: '${accountTypeLabels[a.type] ?? a.type} · ${a.currency}',
@@ -295,7 +326,7 @@ class _TypeSummary extends StatelessWidget {
     final currency = active.isEmpty ? null : active.first.currency;
     final grand = active.where((a) => a.currency == currency).fold<double>(0, (t, a) => t + (a.balance > 0 ? a.balance : 0));
     return CardGrid(
-      minWidth: 190,
+      minWidth: 150,
       children: [
         for (final e in accountTypeLabels.entries)
           if (active.any((a) => a.type == e.key))

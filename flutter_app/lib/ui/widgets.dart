@@ -934,16 +934,19 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
             for (var i = 0; i < widget.lines; i++)
               Padding(
                 padding: EdgeInsets.only(bottom: i == widget.lines - 1 ? 0 : space3),
-                child: Container(
-                  height: widget.height,
-                  constraints: const BoxConstraints(minHeight: 20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radiusMd),
-                    gradient: LinearGradient(
-                      begin: Alignment(-2 + 4 * _c.value - 1, 0),
-                      end: Alignment(-2 + 4 * _c.value + 1, 0),
-                      colors: [c.glass, c.glassStrong, c.glass],
-                      stops: const [0.3, 0.5, 0.7],
+                // Mismo cristal que las tarjetas, con un brillo que recorre la barra
+                child: Glass(
+                  radius: radiusMd,
+                  child: Container(
+                    height: widget.height,
+                    constraints: const BoxConstraints(minHeight: 20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment(-2 + 4 * _c.value - 1, 0),
+                        end: Alignment(-2 + 4 * _c.value + 1, 0),
+                        colors: [Colors.white.withValues(alpha: 0), Colors.white.withValues(alpha: c.isDark ? 0.07 : 0.25), Colors.white.withValues(alpha: 0)],
+                        stops: const [0.3, 0.5, 0.7],
+                      ),
                     ),
                   ),
                 ),
