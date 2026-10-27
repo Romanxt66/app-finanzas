@@ -2285,6 +2285,275 @@
         }
       }
     },
+    "/api/v1/personal-inflation": {
+      "get": {
+        "tags": ["insights"],
+        "summary": "Personal Inflation",
+        "description": "`today` permite al cliente fijar su fecha local; por defecto, la del servidor.",
+        "operationId": "personal_inflation_api_v1_personal_inflation_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "today",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Today"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonalInflation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/spending-mood": {
+      "get": {
+        "tags": ["insights"],
+        "summary": "Spending Mood",
+        "description": "`today` permite al cliente fijar su fecha local; por defecto, la del servidor.",
+        "operationId": "spending_mood_api_v1_spending_mood_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "today",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Today"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpendingMoodReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/waiting-room": {
+      "get": {
+        "tags": ["waiting-room"],
+        "summary": "Get Room",
+        "operationId": "get_room_api_v1_waiting_room_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitingRoom"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["waiting-room"],
+        "summary": "Add Item",
+        "operationId": "add_item_api_v1_waiting_room_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitingCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/waiting-room/{item_id}/decide": {
+      "post": {
+        "tags": ["waiting-room"],
+        "summary": "Decide",
+        "operationId": "decide_api_v1_waiting_room__item_id__decide_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitingDecide"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitingOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/waiting-room/{item_id}": {
+      "delete": {
+        "tags": ["waiting-room"],
+        "summary": "Delete Item",
+        "operationId": "delete_item_api_v1_waiting_room__item_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health"],
@@ -2841,6 +3110,11 @@
         "required": ["current_password", "new_password"],
         "title": "ChangePasswordIn"
       },
+      "Comparison": {
+        "type": "string",
+        "enum": ["year", "half_year"],
+        "title": "Comparison"
+      },
       "ContributionCreate": {
         "properties": {
           "amount": {
@@ -2990,6 +3264,11 @@
           "status"
         ],
         "title": "DailyAllowance"
+      },
+      "Decision": {
+        "type": "string",
+        "enum": ["bought", "skipped"],
+        "title": "Decision"
       },
       "Frequency": {
         "type": "string",
@@ -3190,6 +3469,77 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "InflationCategory": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "change_pct": {
+            "type": "string",
+            "title": "Change Pct"
+          },
+          "weight_pct": {
+            "type": "string",
+            "title": "Weight Pct"
+          }
+        },
+        "type": "object",
+        "required": ["category", "change_pct", "weight_pct"],
+        "title": "InflationCategory"
+      },
+      "InflationItem": {
+        "properties": {
+          "merchant": {
+            "type": "string",
+            "title": "Merchant"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "base_price": {
+            "type": "string",
+            "title": "Base Price"
+          },
+          "current_price": {
+            "type": "string",
+            "title": "Current Price"
+          },
+          "change_pct": {
+            "type": "string",
+            "title": "Change Pct"
+          },
+          "weight_pct": {
+            "type": "string",
+            "title": "Weight Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "merchant",
+          "category",
+          "base_price",
+          "current_price",
+          "change_pct",
+          "weight_pct"
+        ],
+        "title": "InflationItem"
+      },
       "LoginIn": {
         "properties": {
           "email": {
@@ -3271,6 +3621,166 @@
         "type": "object",
         "required": ["currency", "total"],
         "title": "MonthlyTotal"
+      },
+      "MoodHighlight": {
+        "properties": {
+          "mood": {
+            "$ref": "#/components/schemas/SpendingMood"
+          },
+          "average": {
+            "type": "string",
+            "title": "Average"
+          },
+          "baseline": {
+            "type": "string",
+            "title": "Baseline"
+          },
+          "change_pct": {
+            "type": "string",
+            "title": "Change Pct"
+          },
+          "top_weekday": {
+            "type": "integer",
+            "title": "Top Weekday"
+          }
+        },
+        "type": "object",
+        "required": ["mood", "average", "baseline", "change_pct", "top_weekday"],
+        "title": "MoodHighlight"
+      },
+      "MoodStat": {
+        "properties": {
+          "mood": {
+            "$ref": "#/components/schemas/SpendingMood"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "average": {
+            "type": "string",
+            "title": "Average"
+          },
+          "share_pct": {
+            "type": "string",
+            "title": "Share Pct"
+          }
+        },
+        "type": "object",
+        "required": ["mood", "count", "total", "average", "share_pct"],
+        "title": "MoodStat"
+      },
+      "PersonalInflation": {
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Comparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Current From"
+          },
+          "current_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Current To"
+          },
+          "base_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base From"
+          },
+          "base_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base To"
+          },
+          "index_pct": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Pct"
+          },
+          "coverage_pct": {
+            "type": "string",
+            "title": "Coverage Pct"
+          },
+          "matched": {
+            "type": "integer",
+            "title": "Matched"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InflationItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/InflationCategory"
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "comparison",
+          "current_from",
+          "current_to",
+          "base_from",
+          "base_to",
+          "index_pct",
+          "coverage_pct",
+          "matched",
+          "items",
+          "categories"
+        ],
+        "title": "PersonalInflation",
+        "description": "Cuánto se encareció lo que el usuario compra de verdad: precio medio por compra en los\nmismos comercios, ahora frente a un periodo anterior, ponderado por lo que gasta en cada uno."
       },
       "ProfileIn": {
         "properties": {
@@ -3607,6 +4117,88 @@
         "required": ["created"],
         "title": "RunResult"
       },
+      "SavedTotal": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": ["currency", "total"],
+        "title": "SavedTotal"
+      },
+      "SpendingMood": {
+        "type": "string",
+        "enum": ["happy", "calm", "stressed", "sad", "bored"],
+        "title": "SpendingMood",
+        "description": "Cómo se sentía el usuario al gastar (opcional, solo en gastos)."
+      },
+      "SpendingMoodReport": {
+        "properties": {
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Date From"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Date To"
+          },
+          "expenses": {
+            "type": "integer",
+            "title": "Expenses"
+          },
+          "tagged": {
+            "type": "integer",
+            "title": "Tagged"
+          },
+          "by_mood": {
+            "items": {
+              "$ref": "#/components/schemas/MoodStat"
+            },
+            "type": "array",
+            "title": "By Mood"
+          },
+          "highlight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MoodHighlight"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "currency",
+          "date_from",
+          "date_to",
+          "expenses",
+          "tagged",
+          "by_mood",
+          "highlight"
+        ],
+        "title": "SpendingMoodReport"
+      },
       "Status": {
         "type": "string",
         "enum": ["ok", "tight", "over", "no_data"],
@@ -3812,6 +4404,16 @@
             "type": "string",
             "format": "date",
             "title": "Occurred On"
+          },
+          "mood": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpendingMood"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -3874,6 +4476,16 @@
             "type": "string",
             "format": "date",
             "title": "Occurred On"
+          },
+          "mood": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpendingMood"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -3977,6 +4589,166 @@
         "type": "object",
         "required": ["loc", "msg", "type"],
         "title": "ValidationError"
+      },
+      "WaitingCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "maxLength": 3,
+            "minLength": 3,
+            "pattern": "^[A-Za-z]{3}$",
+            "title": "Currency"
+          },
+          "wait_hours": {
+            "type": "integer",
+            "maximum": 720.0,
+            "minimum": 1.0,
+            "title": "Wait Hours",
+            "default": 72
+          }
+        },
+        "type": "object",
+        "required": ["name", "amount", "currency"],
+        "title": "WaitingCreate"
+      },
+      "WaitingDecide": {
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/Decision"
+          }
+        },
+        "type": "object",
+        "required": ["decision"],
+        "title": "WaitingDecide"
+      },
+      "WaitingOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "wait_hours": {
+            "type": "integer",
+            "title": "Wait Hours"
+          },
+          "ready_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ready At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WaitingStatus"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "ready": {
+            "type": "boolean",
+            "title": "Ready"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "name",
+          "amount",
+          "currency",
+          "wait_hours",
+          "ready_at",
+          "status",
+          "decided_at",
+          "ready"
+        ],
+        "title": "WaitingOut"
+      },
+      "WaitingRoom": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WaitingOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "waiting": {
+            "type": "integer",
+            "title": "Waiting"
+          },
+          "ready": {
+            "type": "integer",
+            "title": "Ready"
+          },
+          "skipped": {
+            "type": "integer",
+            "title": "Skipped"
+          },
+          "bought": {
+            "type": "integer",
+            "title": "Bought"
+          },
+          "not_spent": {
+            "items": {
+              "$ref": "#/components/schemas/SavedTotal"
+            },
+            "type": "array",
+            "title": "Not Spent"
+          }
+        },
+        "type": "object",
+        "required": ["items", "waiting", "ready", "skipped", "bought", "not_spent"],
+        "title": "WaitingRoom",
+        "description": "Compras en espera y lo que el usuario dejó de gastar al descartarlas."
+      },
+      "WaitingStatus": {
+        "type": "string",
+        "enum": ["waiting", "bought", "skipped"],
+        "title": "WaitingStatus"
       }
     },
     "securitySchemes": {

@@ -572,6 +572,98 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/personal-inflation': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Personal Inflation
+     * @description `today` permite al cliente fijar su fecha local; por defecto, la del servidor.
+     */
+    get: operations['personal_inflation_api_v1_personal_inflation_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/spending-mood': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Spending Mood
+     * @description `today` permite al cliente fijar su fecha local; por defecto, la del servidor.
+     */
+    get: operations['spending_mood_api_v1_spending_mood_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/waiting-room': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Room */
+    get: operations['get_room_api_v1_waiting_room_get']
+    put?: never
+    /** Add Item */
+    post: operations['add_item_api_v1_waiting_room_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/waiting-room/{item_id}/decide': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Decide */
+    post: operations['decide_api_v1_waiting_room__item_id__decide_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/waiting-room/{item_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete Item */
+    delete: operations['delete_item_api_v1_waiting_room__item_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -847,6 +939,11 @@ export interface components {
       /** New Password */
       new_password: string
     }
+    /**
+     * Comparison
+     * @enum {string}
+     */
+    Comparison: 'year' | 'half_year'
     /** ContributionCreate */
     ContributionCreate: {
       /** Amount */
@@ -924,6 +1021,11 @@ export interface components {
       status: components['schemas']['Status']
     }
     /**
+     * Decision
+     * @enum {string}
+     */
+    Decision: 'bought' | 'skipped'
+    /**
      * Frequency
      * @enum {string}
      */
@@ -989,6 +1091,30 @@ export interface components {
       /** Detail */
       detail?: components['schemas']['ValidationError'][]
     }
+    /** InflationCategory */
+    InflationCategory: {
+      /** Category */
+      category: string | null
+      /** Change Pct */
+      change_pct: string
+      /** Weight Pct */
+      weight_pct: string
+    }
+    /** InflationItem */
+    InflationItem: {
+      /** Merchant */
+      merchant: string
+      /** Category */
+      category: string | null
+      /** Base Price */
+      base_price: string
+      /** Current Price */
+      current_price: string
+      /** Change Pct */
+      change_pct: string
+      /** Weight Pct */
+      weight_pct: string
+    }
     /** LoginIn */
     LoginIn: {
       /**
@@ -1033,6 +1159,64 @@ export interface components {
       currency: string
       /** Total */
       total: string
+    }
+    /** MoodHighlight */
+    MoodHighlight: {
+      mood: components['schemas']['SpendingMood']
+      /** Average */
+      average: string
+      /** Baseline */
+      baseline: string
+      /** Change Pct */
+      change_pct: string
+      /** Top Weekday */
+      top_weekday: number
+    }
+    /** MoodStat */
+    MoodStat: {
+      mood: components['schemas']['SpendingMood']
+      /** Count */
+      count: number
+      /** Total */
+      total: string
+      /** Average */
+      average: string
+      /** Share Pct */
+      share_pct: string
+    }
+    /**
+     * PersonalInflation
+     * @description Cuánto se encareció lo que el usuario compra de verdad: precio medio por compra en los
+     *     mismos comercios, ahora frente a un periodo anterior, ponderado por lo que gasta en cada uno.
+     */
+    PersonalInflation: {
+      /** Currency */
+      currency: string | null
+      comparison: components['schemas']['Comparison'] | null
+      /**
+       * Current From
+       * Format: date
+       */
+      current_from: string
+      /**
+       * Current To
+       * Format: date
+       */
+      current_to: string
+      /** Base From */
+      base_from: string | null
+      /** Base To */
+      base_to: string | null
+      /** Index Pct */
+      index_pct: string | null
+      /** Coverage Pct */
+      coverage_pct: string
+      /** Matched */
+      matched: number
+      /** Items */
+      items: components['schemas']['InflationItem'][]
+      /** Categories */
+      categories: components['schemas']['InflationCategory'][]
     }
     /** ProfileIn */
     ProfileIn: {
@@ -1153,6 +1337,41 @@ export interface components {
       /** Created */
       created: number
     }
+    /** SavedTotal */
+    SavedTotal: {
+      /** Currency */
+      currency: string
+      /** Total */
+      total: string
+    }
+    /**
+     * SpendingMood
+     * @description Cómo se sentía el usuario al gastar (opcional, solo en gastos).
+     * @enum {string}
+     */
+    SpendingMood: 'happy' | 'calm' | 'stressed' | 'sad' | 'bored'
+    /** SpendingMoodReport */
+    SpendingMoodReport: {
+      /** Currency */
+      currency: string | null
+      /**
+       * Date From
+       * Format: date
+       */
+      date_from: string
+      /**
+       * Date To
+       * Format: date
+       */
+      date_to: string
+      /** Expenses */
+      expenses: number
+      /** Tagged */
+      tagged: number
+      /** By Mood */
+      by_mood: components['schemas']['MoodStat'][]
+      highlight: components['schemas']['MoodHighlight'] | null
+    }
     /**
      * Status
      * @enum {string}
@@ -1244,6 +1463,7 @@ export interface components {
        * Format: date
        */
       occurred_on: string
+      mood?: components['schemas']['SpendingMood'] | null
     }
     /** TransactionOut */
     TransactionOut: {
@@ -1276,6 +1496,7 @@ export interface components {
        * Format: date
        */
       occurred_on: string
+      mood?: components['schemas']['SpendingMood'] | null
     }
     /** TransactionPage */
     TransactionPage: {
@@ -1321,6 +1542,78 @@ export interface components {
       /** Context */
       ctx?: Record<string, never>
     }
+    /** WaitingCreate */
+    WaitingCreate: {
+      /** Name */
+      name: string
+      /** Amount */
+      amount: number | string
+      /** Currency */
+      currency: string
+      /**
+       * Wait Hours
+       * @default 72
+       */
+      wait_hours: number
+    }
+    /** WaitingDecide */
+    WaitingDecide: {
+      decision: components['schemas']['Decision']
+    }
+    /** WaitingOut */
+    WaitingOut: {
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Name */
+      name: string
+      /** Amount */
+      amount: string
+      /** Currency */
+      currency: string
+      /** Wait Hours */
+      wait_hours: number
+      /**
+       * Ready At
+       * Format: date-time
+       */
+      ready_at: string
+      status: components['schemas']['WaitingStatus']
+      /** Decided At */
+      decided_at: string | null
+      /** Ready */
+      ready: boolean
+    }
+    /**
+     * WaitingRoom
+     * @description Compras en espera y lo que el usuario dejó de gastar al descartarlas.
+     */
+    WaitingRoom: {
+      /** Items */
+      items: components['schemas']['WaitingOut'][]
+      /** Waiting */
+      waiting: number
+      /** Ready */
+      ready: number
+      /** Skipped */
+      skipped: number
+      /** Bought */
+      bought: number
+      /** Not Spent */
+      not_spent: components['schemas']['SavedTotal'][]
+    }
+    /**
+     * WaitingStatus
+     * @enum {string}
+     */
+    WaitingStatus: 'waiting' | 'bought' | 'skipped'
   }
   responses: never
   parameters: never
@@ -2771,6 +3064,185 @@ export interface operations {
         content: {
           'application/json': components['schemas']['DailyAllowance']
         }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  personal_inflation_api_v1_personal_inflation_get: {
+    parameters: {
+      query?: {
+        today?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PersonalInflation']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  spending_mood_api_v1_spending_mood_get: {
+    parameters: {
+      query?: {
+        today?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SpendingMoodReport']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_room_api_v1_waiting_room_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WaitingRoom']
+        }
+      }
+    }
+  }
+  add_item_api_v1_waiting_room_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WaitingCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WaitingOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  decide_api_v1_waiting_room__item_id__decide_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        item_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WaitingDecide']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WaitingOut']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  delete_item_api_v1_waiting_room__item_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        item_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
       /** @description Validation Error */
       422: {

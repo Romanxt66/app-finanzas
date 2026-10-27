@@ -15,6 +15,16 @@ class TransactionType(enum.StrEnum):
     transfer = "transfer"
 
 
+class SpendingMood(enum.StrEnum):
+    """Cómo se sentía el usuario al gastar (opcional, solo en gastos)."""
+
+    happy = "happy"
+    calm = "calm"
+    stressed = "stressed"
+    sad = "sad"
+    bored = "bored"
+
+
 class Transaction(IdMixin, TimestampMixin, Base):
     __tablename__ = "transactions"
     __table_args__ = (
@@ -34,3 +44,4 @@ class Transaction(IdMixin, TimestampMixin, Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
     description: Mapped[str] = mapped_column(String(255), default="")
     occurred_on: Mapped[date] = mapped_column(Date)
+    mood: Mapped[SpendingMood | None] = mapped_column(String(12), nullable=True, default=None)

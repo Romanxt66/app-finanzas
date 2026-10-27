@@ -9,10 +9,12 @@ from app.api.v1 import (
     daily_allowance,
     ghost_subscriptions,
     goals,
+    insights,
     life_hours,
     recurring,
     reports,
     transactions,
+    waiting_room,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -29,5 +31,7 @@ for module in (
     currencies,
     ghost_subscriptions,
     daily_allowance,
+    insights,
+    waiting_room,
 ):
     api_router.include_router(module.router)

@@ -5,7 +5,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models.transaction import TransactionType
+from app.models.transaction import SpendingMood, TransactionType
 from app.schemas.common import Entity, Money, PositiveMoney
 
 
@@ -17,9 +17,13 @@ class TransactionCreate(BaseModel):
     amount: PositiveMoney
     description: str = Field(default="", max_length=255)
     occurred_on: date
+    # Si se omite al editar, se conserva el ánimo guardado (clientes que no lo conocen no lo borran)
+    mood: SpendingMood | None = None
 
     @model_validator(mode="after")
     def _check_shape(self) -> Self:
+        if self.mood is not None and self.type != TransactionType.expense:
+            raise ValueError("El ánimo solo se registra en gastos")
         if self.type == TransactionType.transfer:
             if self.transfer_account_id is None:
                 raise ValueError("Una transferencia requiere transfer_account_id")
@@ -40,6 +44,7 @@ class TransactionOut(Entity):
     amount: PositiveMoney
     description: str
     occurred_on: date
+    mood: SpendingMood | None = None
 
 
 class TransactionPage(BaseModel):

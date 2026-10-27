@@ -20,6 +20,9 @@
 | **Horas de vida**: cada gasto expresado en horas de trabajo | `/api/v1/life-hours` (perfil, conversión, resumen mensual), migración `0005` | tarjeta en el resumen, diálogo «¿Cuánto vale tu hora?» y «≈ X h de trabajo» junto a cada gasto |
 | **Suscripciones fantasma**: cobros recurrentes sin registrar, alzas silenciosas, duplicados y pruebas que pasan a pago | `/api/v1/ghost-subscriptions` (calculado al vuelo, sin tablas) | pantalla `/subscriptions` (desde «Más») y aviso en el resumen |
 | **Disponible hoy**: lo que queda del mes repartido entre los días que faltan, con peso por día de la semana | `/api/v1/daily-allowance` (presupuesto o ingresos + reglas recurrentes pendientes) | medidor animado en el resumen |
+| **Inflación personal**: cuánto se encareció lo que compras (mismos comercios, ahora frente a hace un año o seis meses) | `/api/v1/personal-inflation` (calculado al vuelo) | Flutter |
+| **Sala de espera**: aparcar una compra 72 h y sumar lo que no gastaste | `/api/v1/waiting-room`, tabla `waiting_items` (migración `0006`) | Flutter |
+| **Ánimo del gasto**: cómo te sentías al gastar y en qué ánimo gastas más | campo opcional `mood` en gastos (migración `0006`) y `/api/v1/spending-mood` | Flutter |
 | Moneda | `/api/v1/currencies`; cuentas y metas solo admiten las monedas de `backend/app/core/currencies.py` | selector `CurrencySelect` en cuentas y metas |
 | Tema | tokens `brand` (violeta) en `design/tokens.json`; `mint` pasó a llamarse `brand` | login rediseñado, menú desplegable de cristal (`design/Select.tsx`), aurora de fondo |
 
