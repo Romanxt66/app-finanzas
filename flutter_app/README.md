@@ -8,6 +8,11 @@ Paridad con la web React: mismas pantallas, mismas rutas (`/transactions`, `/bud
 - **Pantallas:** acceso y registro (héroe con tarjetas flotantes), Resumen (saldo, «Disponible hoy», KPIs, tendencia, dona por
   categoría, horas de vida, suscripciones fantasma, recientes), Movimientos (filtros, edición, exportar CSV), Cuentas, Categorías,
   Presupuestos, Metas, Recurrentes, Suscripciones, Importar CSV, Más y Perfil.
+- **Funciones propias:** «Alvi», carita animada del resumen que refleja la salud del mes (ahorro, ritmo diario, presupuestos y
+  saldo; `financeMood` en `lib/screens/insights.dart`); **inflación personal** (`/personal-inflation`); **ánimo del gasto**
+  (selector de caritas al registrar un gasto y resumen `/spending-mood`); y **Sala de espera** (`/waiting`, `/waiting-room`):
+  aparcar una compra 1–7 días y sumar lo que no gastaste, con opción de mandarlo a una meta. Las caritas se dibujan en
+  vectorial (`lib/ui/mood_face.dart`): sin emojis ni fuentes externas.
 - **Diseño "Cristal":** los colores, radios, sombras y desenfoques salen de `design/tokens.json`. `lib/ui/tokens.g.dart` se
   **genera**: `dart run tool/gen_tokens.dart` (el CI falla si está desactualizado). No editarlo a mano.
 - **Movimiento:** entrada escalonada de módulos (`cr-rise`) que, si empiezan fuera de pantalla, aparecen al desplazar hasta

@@ -20,6 +20,7 @@ import 'screens/profile.dart';
 import 'screens/recurring.dart';
 import 'screens/subscriptions.dart';
 import 'screens/transactions.dart';
+import 'screens/waiting_room.dart';
 import 'ui/buttons.dart';
 import 'ui/dialogs.dart';
 import 'ui/glass.dart';
@@ -158,6 +159,7 @@ GoRouter _buildRouter(AppState app) {
           GoRoute(path: '/subscriptions', pageBuilder: (c, s) => page(const SubscriptionsScreen(), s)),
           GoRoute(path: '/import', pageBuilder: (c, s) => page(const ImportScreen(), s)),
           GoRoute(path: '/profile', pageBuilder: (c, s) => page(const ProfileScreen(), s)),
+          GoRoute(path: '/waiting', pageBuilder: (c, s) => page(const WaitingRoomScreen(), s)),
           GoRoute(path: '/more', pageBuilder: (c, s) => page(const MoreScreen(), s)),
         ],
       ),

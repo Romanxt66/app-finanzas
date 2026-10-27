@@ -25,28 +25,44 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(vsync: this, duration: widget.duration);
   Timer? _timer;
   ScrollPosition? _watching;
-  bool _scheduled = false;
+  bool _started = false;
+  bool _firstCheck = true;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_c.status != AnimationStatus.dismissed || _timer != null || _scheduled) return;
+    if (_started) return;
     if (context.reduceMotion) {
+      _started = true;
       _c.value = 1;
       return;
     }
-    _scheduled = true;
-    // Se decide tras el primer fotograma, cuando ya se conoce la posición en pantalla
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (_inView()) {
-        _start(widget.delay);
-      } else {
-        _watching = Scrollable.maybeOf(context)?.position;
-        _watching?.addListener(_onScroll);
-        if (_watching == null) _start(widget.delay);
-      }
-    });
+    // La zona desplazable puede cambiar de posición (p. ej. al ajustarse la ventana): se vuelve a
+    // enganchar cada vez, porque este método se llama de nuevo cuando la posición cambia.
+    final position = Scrollable.maybeOf(context)?.position;
+    if (position != _watching) {
+      _watching?.removeListener(_check);
+      _watching = position?..addListener(_check);
+    }
+    // Se decide tras el fotograma, cuando ya se conoce la posición en pantalla
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  @override
+  void didUpdateWidget(Rise oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Al recargar la página el diseño puede encoger y traer el módulo a la vista sin desplazar
+    if (!_started) WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+  }
+
+  void _check() {
+    if (!mounted || _started) return;
+    final first = _firstCheck;
+    _firstCheck = false;
+    if (_watching != null && !_inView()) return;
+    _started = true;
+    _stopWatching();
+    _start(first ? widget.delay : Duration.zero);
   }
 
   /// Visible si su borde superior ya asoma por la parte baja de la zona desplazable.
@@ -59,14 +75,8 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
     return top < viewport.size.height - 24;
   }
 
-  void _onScroll() {
-    if (!mounted || !_inView()) return;
-    _stopWatching();
-    _start(Duration.zero);
-  }
-
   void _stopWatching() {
-    _watching?.removeListener(_onScroll);
+    _watching?.removeListener(_check);
     _watching = null;
   }
 
