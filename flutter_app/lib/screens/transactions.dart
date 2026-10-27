@@ -8,6 +8,7 @@ import '../core/models.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
+import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
 import '../ui/download.dart';
 import '../ui/inputs.dart';
@@ -153,7 +154,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             else if (data == null || data.items.isEmpty)
               const CrCard(child: CrEmpty('No hay transacciones.'))
             else
-              GlassList(label: 'Movimientos', children: [for (var i = 0; i < data.items.length; i++) _row(context, data.items[i], i, ref)]),
+              _board(context, data.items, ref),
             ErrorText(_removeError),
             Wrap(
               alignment: WrapAlignment.spaceBetween,
@@ -191,60 +192,105 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
-  Widget _row(BuildContext context, Transaction t, int i, RefData ref) {
+  /// Tablero por tipo en pantallas anchas (como un «pipeline»); cuadrícula de tarjetas en móvil o con
+  /// un tipo filtrado.
+  Widget _board(BuildContext context, List<Transaction> items, RefData ref) {
+    final c = context.c;
+    if (!context.isWide || _type.isNotEmpty) {
+      return CardGrid(minWidth: 250, children: [for (final t in items) _card(context, t, ref)]);
+    }
+    final columns = [
+      for (final type in const ['expense', 'income', 'transfer'])
+        if (items.any((t) => t.type == type)) type,
+    ];
+    if (columns.length < 2) {
+      return CardGrid(minWidth: 250, children: [for (final t in items) _card(context, t, ref)]);
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < columns.length; i++) ...[
+          if (i > 0) const SizedBox(width: space3),
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                final mine = items.where((t) => t.type == columns[i]).toList();
+                final currencies = {for (final t in mine) ref.currencyOf(t.accountId)};
+                final total = mine.fold<double>(0, (a, t) => a + t.amount);
+                return BoardColumn(
+                  title: const {'expense': 'Gastos', 'income': 'Ingresos', 'transfer': 'Transferencias'}[columns[i]]!,
+                  color: txColor(c, columns[i]),
+                  count: mine.length,
+                  total: currencies.length == 1 ? formatMoney(total, currencies.first) : null,
+                  children: [for (final t in mine) _card(context, t, ref)],
+                );
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _card(BuildContext context, Transaction t, RefData ref) {
+    final c = context.c;
     final account = ref.account(t.accountId);
     final category = t.categoryId != null ? ref.categoryName(t.categoryId) : null;
     final target = t.transferAccountId != null ? ref.account(t.transferAccountId!)?.name : null;
-    return TransactionRow(
-      first: i == 0,
-      index: i,
-      kind: txKind(t.type),
-      title: t.description.isNotEmpty ? t.description : (category ?? typeLabels[t.type]!),
-      detail: [
-        formatDate(t.occurredOn),
-        target != null ? '${account?.name} → $target' : account?.name,
-        category,
-        if (t.type == 'expense') lifeHoursNote(t.amount, ref.hourlyRate),
-      ].whereType<String>().join(' · '),
-      amount: t.amount,
-      currency: account?.currency,
-      actions: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CrButton(
-            variant: CrButtonVariant.ghost,
-            small: true,
-            icon: 'edit',
-            tooltip: 'Editar',
-            onPressed: () => setState(() {
-              _formOpen = true;
-              _editing = t;
-            }),
-          ),
-          CrButton(
-            variant: CrButtonVariant.danger,
-            small: true,
-            icon: 'trash',
-            tooltip: 'Eliminar',
-            onPressed: () async {
-              final app = context.app;
-              if (!await showConfirm(
-                context,
-                title: '¿Eliminar este movimiento?',
-                body: 'Se ajustará el saldo de la cuenta. Esta acción no se puede deshacer.',
-              )) {
-                return;
-              }
-              try {
-                setState(() => _removeError = null);
-                await app.data.delete('/transactions/${t.id}', 'Movimiento eliminado');
-              } catch (e) {
-                if (mounted) setState(() => _removeError = e);
-              }
-            },
-          ),
-        ],
-      ),
+    final title = t.description.isNotEmpty ? t.description : (category ?? typeLabels[t.type]!);
+    final color = txColor(c, t.type);
+    final sign = switch (t.type) {
+      'income' => '+',
+      'expense' => '−',
+      _ => '',
+    };
+    return DealCard(
+      avatar: initials(category ?? title),
+      accent: color,
+      title: title,
+      subtitle: target != null ? '${account?.name} → $target' : account?.name,
+      eyebrow: typeLabels[t.type],
+      value: '$sign${formatMoney(t.amount, account?.currency)}',
+      valueColor: t.type == 'income' ? c.positive : null,
+      chips: [
+        if (category != null) DealChip(category, dot: true, color: color),
+        DealChip(formatDate(t.occurredOn), icon: 'calendar'),
+        if (t.mood != null && spendingMoods[t.mood] != null)
+          DealChip(spendingMoods[t.mood]!.label.toLowerCase(), color: spendingMoods[t.mood]!.face.color, dot: true),
+      ],
+      trailing: t.type == 'expense' ? lifeHoursNote(t.amount, ref.hourlyRate)?.replaceFirst(' de trabajo', '') : null,
+      actions: [
+        CardAction(
+          icon: 'edit',
+          tooltip: 'Editar',
+          onPressed: () => setState(() {
+            _formOpen = true;
+            _editing = t;
+          }),
+        ),
+        CardAction(
+          icon: 'trash',
+          tooltip: 'Eliminar',
+          danger: true,
+          onPressed: () async {
+            final app = context.app;
+            if (!await showConfirm(
+              context,
+              title: '¿Eliminar este movimiento?',
+              body: 'Se ajustará el saldo de la cuenta. Esta acción no se puede deshacer.',
+            )) {
+              return;
+            }
+            try {
+              setState(() => _removeError = null);
+              await app.data.delete('/transactions/${t.id}', 'Movimiento eliminado');
+            } catch (e) {
+              if (mounted) setState(() => _removeError = e);
+            }
+          },
+        ),
+      ],
+      semanticLabel: '$title, ${typeLabels[t.type]} de ${formatMoney(t.amount, account?.currency)}, ${formatDate(t.occurredOn)}',
     );
   }
 }

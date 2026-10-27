@@ -62,6 +62,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    # Fondo de la app y su versión ya desenfocada para el cristal de las tarjetas
+    - assets/backgrounds/
   fonts:
     - family: Manrope
       fonts:

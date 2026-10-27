@@ -19,7 +19,13 @@ Paridad con la web React: mismas pantallas, mismas rutas (`/transactions`, `/bud
   ellos; titular con paralaje al desplazar (`ScrollParallax`), filas que aparecen (`cr-fade`), barras que crecen, cifras que
   cuentan hasta su valor, dona y medidor animados, menús y diálogos con "pop", avisos (toasts),
   esqueletos con brillo y elevación al pasar el puntero. Todo respeta «reducir movimiento».
-- **Estilo «Relay» (solo Flutter):** fondo oscuro estático (sin efectos que se repinten en cada fotograma), titulares con la palabra
+- **Fondo y cristal:** imagen de fondo (`assets/backgrounds/fondo.jpg`) con un velo para la legibilidad. Las tarjetas parecen
+  cristal esmerilado sin desenfoque en tiempo real: pintan el trozo de `fondo_esmerilado.jpg` (la misma imagen ya
+  desenfocada) que queda detrás de ellas (`Frost` en `lib/ui/glass.dart`). Para cambiar el fondo, sustituye ambos archivos.
+- **Tarjetas y gráficos:** tarjetas tipo «pipeline» (`DealCard`, `SummaryTile`, `CardGrid`, `BoardColumn` en
+  `lib/ui/deal_card.dart`) en Movimientos, Cuentas, Metas, Recurrentes y Categorías; flujo de ingresos y gastos con curvas
+  monótonas y reparto del gasto en barra segmentada (`lib/screens/flow_chart.dart`).
+- **Estilo «Relay» (solo Flutter):** fondo estático (sin efectos que se repinten en cada fotograma), titulares con la palabra
   destacada en serif cursiva (`CrHeadline`, marca con `*asteriscos*`), etiquetas y metadatos en monoespaciada (`CrTag`,
   `CrText.mono`), botones píldora en fucsia neón, barras isométricas en la tendencia, panel en perspectiva en el acceso y entrada
   de la app con el logo (`lib/ui/intro.dart`). **Logo:** `AlveaLogo` (`lib/ui/logo.dart`) lo dibuja en vectorial a partir de

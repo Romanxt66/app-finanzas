@@ -5,6 +5,7 @@ import '../core/format.dart';
 import '../core/models.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
+import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
 import '../ui/inputs.dart';
 import '../ui/page.dart';
@@ -133,25 +134,35 @@ class _GoalsScreenState extends State<GoalsScreen> {
             else if (goals == null || goals.isEmpty)
               const CrCard(child: CrEmpty('Aún no tienes metas. Crea una para empezar a ahorrar con un objetivo.'))
             else
-              LayoutBuilder(
-                builder: (context, box) {
-                  final cols = ((box.maxWidth + space3) / (280 + space3)).floor().clamp(1, 6);
-                  final width = (box.maxWidth - space3 * (cols - 1)) / cols;
-                  return Wrap(
-                    spacing: space3,
-                    runSpacing: space3,
-                    children: [
-                      for (final g in goals)
-                        SizedBox(
-                          width: width,
-                          child: ProgressCard(
-                            label: g.name,
-                            saved: g.saved,
-                            target: g.target,
-                            currency: g.currency,
-                            achieved: g.achieved,
-                            note: goalNote(g),
-                            actions: [
+              CardGrid(
+                minWidth: 260,
+                maxColumns: 3,
+                children: [
+                  for (final g in goals)
+                    Builder(
+                      builder: (context) {
+                        final c = context.c;
+                        final ratio = g.target > 0 ? g.saved / g.target : 0.0;
+                        final color = g.achieved ? c.positive : c.neon;
+                        return DealCard(
+                          avatar: initials(g.name),
+                          accent: color,
+                          title: g.name,
+                          subtitle: goalNote(g),
+                          eyebrow: 'ahorrado · ${(ratio * 100).clamp(0, 999).round()} %',
+                          value: formatMoney(g.saved, g.currency),
+                          trailing: 'de ${formatMoney(g.target, g.currency)}',
+                          progress: ratio,
+                          chips: [
+                            if (g.achieved) DealChip('lograda', icon: 'check', color: c.positive),
+                            if (g.deadline != null) DealChip(formatDate(g.deadline!), icon: 'calendar'),
+                            if (!g.achieved) DealChip('faltan ${formatMoney(g.remaining, g.currency)}', dot: true, color: c.amber),
+                          ],
+                          actions: [CardAction(icon: 'trash', tooltip: 'Eliminar ${g.name}', danger: true, onPressed: () => _delete(g))],
+                          footer: Wrap(
+                            spacing: space2,
+                            runSpacing: space2,
+                            children: [
                               CrButton(
                                 variant: CrButtonVariant.primary,
                                 small: true,
@@ -164,13 +175,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                 label: 'Retirar',
                                 onPressed: () => _contribution(g, true),
                               ),
-                              CrButton(variant: CrButtonVariant.danger, small: true, label: 'Eliminar', onPressed: () => _delete(g)),
                             ],
                           ),
-                        ),
-                    ],
-                  );
-                },
+                          semanticLabel: '${g.name}: ${formatMoney(g.saved, g.currency)} de ${formatMoney(g.target, g.currency)}',
+                        );
+                      },
+                    ),
+                ],
               ),
             ErrorText(_removeError),
           ],
