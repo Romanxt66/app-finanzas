@@ -25,8 +25,9 @@ _SEVERITY_ORDER = {"danger": 0, "warning": 1, "info": 2}
 
 
 def _money(amount: Decimal, currency: str) -> str:
-    whole = f"{amount:,.0f}" if amount == amount.to_integral() else f"{amount:,.2f}"
-    return f"{whole.replace(',', '.')} {currency}"
+    """Formato español: miles con punto y decimales con coma (44.900 COP, 1.234,56 EUR)."""
+    text = f"{amount:,.0f}" if amount == amount.to_integral() else f"{amount:,.2f}"
+    return f"{text.translate(str.maketrans(',.', '.,'))} {currency}"
 
 
 def _when(days: int) -> str:

@@ -13,6 +13,17 @@ const isoDay = (offsetDays: number, monthsBack = 0) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+// Prefijo «AAAA-MM-» del mes `monthsBack` meses atrás (desde el día 1: sin saltos en los días 29-31)
+const monthPrefix = (monthsBack: number) => {
+  const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() - monthsBack)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-`
+}
+// Día de cobro que ya pasó en todos los meses (≤ hoy y ≤ 28): con un día fijo, el cobro de este mes
+// quedaba en el futuro durante los primeros días y no se detectaba la subida de precio
+const chargeDay = String(Math.min(new Date().getDate(), 28)).padStart(2, '0')
+
 test.describe.configure({ mode: 'serial' })
 
 async function seed(page: Page) {
@@ -47,7 +58,7 @@ async function seed(page: Page) {
       account_id: account.id,
       category_id: fun.id,
       amount: i === 0 ? '12.99' : '10.99',
-      occurred_on: isoDay(0, i).slice(0, 8) + '05',
+      occurred_on: monthPrefix(i) + chargeDay,
       description: 'Plataforma de video',
     })
   }
