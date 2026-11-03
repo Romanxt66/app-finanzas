@@ -10,8 +10,8 @@ la compila en cada cambio (workflow `Android`, `.github/workflows/android.yml`).
 
 ## Instalar la última versión en el teléfono
 
-1. En el teléfono, abre <https://github.com/Romanxt66/app-finanzas/releases/tag/android-ultima> (con tu sesión de
-   GitHub, porque el repositorio es tuyo) y descarga `alvea.apk`.
+1. En el teléfono, abre <https://github.com/Romanxt66/app-finanzas/releases/tag/android-ultima> y descarga
+   `alvea.apk` (el repositorio es público: no hace falta iniciar sesión en GitHub).
 2. Ábrelo. Si Android lo pide, permite «Instalar apps desconocidas» para el navegador.
 3. Cada vez que se fusiona un cambio en `cli/flutter-app` se publica una versión nueva en ese mismo enlace.
 
@@ -67,8 +67,11 @@ de ejecución), así que siempre crece.
 - **Desbloqueo con huella o rostro.** En Perfil → Seguridad, con un PIN creado, activa «Desbloquear también con
   huella o rostro».
 - **Exportar CSV y descargar los códigos de recuperación.** Abre el diálogo «Guardar como» del sistema.
-- **Avisos.** Aparecen en la campana. Las notificaciones del sistema con la app cerrada llegarán en una versión
-  posterior.
+- **Recordatorios de cobro.** Antes de cada pago recurrente o suscripción detectada llega un aviso del sistema
+  (aunque la app esté cerrada) con la tarjeta de cobro y si te alcanza el saldo. Se ajustan en Perfil →
+  «Recordatorios de cobro» (cuándo, a qué hora, qué recordar y ocultar el contenido en la pantalla de bloqueo).
+  Android pide permiso para mostrar avisos la primera vez. Algunos fabricantes (Xiaomi, Huawei…) frenan las apps
+  en segundo plano: si no llegan, permite a Alvea funcionar en segundo plano en los ajustes del teléfono.
 - **Sin aviso de conexión.** Si no hay internet, cada pantalla muestra su error y permite reintentar.
 
 ## Compilar en tu PC (opcional)

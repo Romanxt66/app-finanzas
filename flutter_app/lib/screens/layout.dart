@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/format.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
@@ -14,6 +15,7 @@ import '../ui/notice_bell.dart';
 import '../ui/online.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart' show CrTag;
+import 'reminders.dart';
 
 class NavItem {
   const NavItem(this.to, this.label, this.icon, {this.end = false});
@@ -53,6 +55,27 @@ class AppLayout extends StatefulWidget {
 
 class _AppLayoutState extends State<AppLayout> {
   final _online = Online();
+  String? _chargesLink;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Un recordatorio de cobro (o la campana) pide la hoja de un día: /?cobros=AAAA-MM-DD
+    final uri = GoRouterState.of(context).uri;
+    final day = uri.queryParameters['cobros'];
+    if (day == null || '$uri' == _chargesLink) return;
+    _chargesLink = '$uri';
+    final rest = Map.of(uri.queryParameters)..remove('cobros');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      DateTime? date;
+      try {
+        date = parseIso(day);
+      } catch (_) {}
+      GoRouter.of(context).go(Uri(path: uri.path, queryParameters: rest.isEmpty ? null : rest).toString());
+      if (date != null) showChargesSheet(context, date);
+    });
+  }
 
   @override
   void initState() {

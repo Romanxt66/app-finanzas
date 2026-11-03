@@ -22,6 +22,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Los avisos programados (flutter_local_notifications) usan java.time también en Android antiguos
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -63,6 +65,7 @@ kotlin {
 dependencies {
     // Tema AppCompat del arranque: el diálogo de huella (local_auth) lo necesita en Android 8 o anterior
     implementation("androidx.appcompat:appcompat:1.7.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {

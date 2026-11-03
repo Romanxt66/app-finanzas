@@ -72,16 +72,26 @@ class _AlveaAppState extends State<AlveaApp> {
   void initState() {
     super.initState();
     widget.state.onToast = _toasts.success;
+    widget.state.reminders.onOpen = _openFromNotice;
     _boot();
   }
 
   Future<void> _boot() async {
     setState(() => _bootError = null);
     try {
+      await widget.state.reminders.init();
       await widget.state.boot();
+      // La app se abrió tocando un recordatorio de cobro: lleva a lo que pedía
+      final route = await widget.state.reminders.launchRoute();
+      if (route != null) _openFromNotice(route);
     } catch (e) {
       if (mounted) setState(() => _bootError = e);
     }
+  }
+
+  /// Ruta pedida por un aviso del sistema (solo con sesión iniciada).
+  void _openFromNotice(String route) {
+    if (widget.state.user != null) _router.go(route);
   }
 
   @override
@@ -92,8 +102,8 @@ class _AlveaAppState extends State<AlveaApp> {
       builder: (context, _) => MaterialApp.router(
         title: 'Alvea',
         debugShowCheckedModeBanner: false,
-        theme: buildTheme(Brightness.light),
-        darkTheme: buildTheme(Brightness.dark),
+        theme: buildTheme(Brightness.light, accent: widget.state.accent, glow: widget.state.glow),
+        darkTheme: buildTheme(Brightness.dark, accent: widget.state.accent, glow: widget.state.glow),
         themeMode: widget.state.themeMode,
         locale: const Locale('es', 'CO'),
         supportedLocales: const [Locale('es', 'CO'), Locale('es')],
@@ -180,7 +190,10 @@ GoRouter _buildRouter(AppState app) {
         builder: (context, state, child) => AppLayout(child: child),
         routes: [
           GoRoute(path: '/', pageBuilder: (c, s) => page(const DashboardScreen(), s)),
-          GoRoute(path: '/transactions', pageBuilder: (c, s) => page(const TransactionsScreen(), s)),
+          GoRoute(
+            path: '/transactions',
+            pageBuilder: (c, s) => page(TransactionsScreen(link: s.uri), s),
+          ),
           GoRoute(path: '/accounts', pageBuilder: (c, s) => page(const AccountsScreen(), s)),
           GoRoute(path: '/categories', pageBuilder: (c, s) => page(const CategoriesScreen(), s)),
           GoRoute(path: '/budgets', pageBuilder: (c, s) => page(const BudgetsScreen(), s)),

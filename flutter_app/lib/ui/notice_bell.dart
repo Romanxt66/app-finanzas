@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/format.dart';
 import '../core/notices.dart';
+import '../core/reminders.dart';
 import '../core/state.dart';
 import 'buttons.dart';
 import 'dialogs.dart';
@@ -100,7 +102,8 @@ Future<void> showNotices(BuildContext context) {
                   onTap: () {
                     center.markRead(n);
                     Navigator.of(ctx).pop();
-                    router.go(n.link);
+                    // Un cobro próximo abre la hoja de cobros de ese día; el resto, su pantalla
+                    router.go(n.kind == 'recurring_due' ? chargesRoute(parseIso(n.date)) : n.link);
                   },
                 ),
               ),

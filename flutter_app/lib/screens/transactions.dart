@@ -23,7 +23,10 @@ const pageSize = 20;
 const typeLabels = {'income': 'Ingreso', 'expense': 'Gasto', 'transfer': 'Transferencia'};
 
 class TransactionsScreen extends StatefulWidget {
-  const TransactionsScreen({super.key});
+  const TransactionsScreen({super.key, this.link});
+
+  /// Dirección con la que se abrió (p. ej. /transactions?mover=… desde un recordatorio de cobro).
+  final Uri? link;
 
   @override
   State<TransactionsScreen> createState() => _TransactionsScreenState();
@@ -40,11 +43,43 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   int _page = 0;
   bool _formOpen = false;
   Transaction? _editing;
+
+  /// Transferencia precargada («Mover dinero» de un recordatorio de cobro).
+  TransactionDraft? _draft;
+  String? _handledLink;
   bool _exporting = false;
   Object? _exportError;
   Object? _removeError;
 
   Map<String, Object?> get _filters => {'search': _searchText, 'type': _type, 'account_id': _account, 'date_from': _from, 'date_to': _to};
+
+  @override
+  void initState() {
+    super.initState();
+    _openLink(widget.link);
+  }
+
+  @override
+  void didUpdateWidget(TransactionsScreen old) {
+    super.didUpdateWidget(old);
+    if (widget.link != old.link) _openLink(widget.link);
+  }
+
+  /// `/transactions?mover=…&desde=…&monto=…&nota=…` abre una transferencia precargada (cuenta destino, origen, monto y nota).
+  void _openLink(Uri? uri) {
+    final q = uri?.queryParameters ?? const {};
+    if (q['mover'] == null || '$uri' == _handledLink) return;
+    _handledLink = '$uri';
+    _formOpen = true;
+    _editing = null;
+    _draft = TransactionDraft(
+      type: 'transfer',
+      account: q['desde'] ?? '',
+      transfer: q['mover'] ?? '',
+      amount: q['monto'] ?? '',
+      description: q['nota'] ?? '',
+    );
+  }
 
   @override
   void dispose() {
@@ -117,7 +152,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ),
             ErrorText(_exportError),
             if (_formOpen)
-              TransactionForm(key: ValueKey(_editing?.id ?? 'new'), editing: _editing, onDone: () => setState(() => _formOpen = false)),
+              TransactionForm(
+                key: ValueKey(_editing?.id ?? _handledLink ?? 'new'),
+                editing: _editing,
+                draft: _editing == null ? _draft : null,
+                onDone: () => setState(() {
+                  _formOpen = false;
+                  _draft = null;
+                }),
+              ),
             CrCard(
               title: 'Filtros',
               child: FormGrid(
@@ -295,9 +338,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 }
 
+/// Valores iniciales de una transacción nueva.
+class TransactionDraft {
+  const TransactionDraft({this.type = 'expense', this.account = '', this.transfer = '', this.amount = '', this.description = ''});
+  final String type, account, transfer, amount, description;
+}
+
 class TransactionForm extends StatefulWidget {
-  const TransactionForm({super.key, required this.editing, required this.onDone});
+  const TransactionForm({super.key, required this.editing, this.draft, required this.onDone});
   final Transaction? editing;
+  final TransactionDraft? draft;
   final VoidCallback onDone;
 
   @override
@@ -305,14 +355,16 @@ class TransactionForm extends StatefulWidget {
 }
 
 class _TransactionFormState extends State<TransactionForm> {
-  late String _type = widget.editing?.type ?? 'expense';
-  late String _account = widget.editing?.accountId ?? '';
-  late String _transfer = widget.editing?.transferAccountId ?? '';
+  late String _type = widget.editing?.type ?? widget.draft?.type ?? 'expense';
+  late String _account = widget.editing?.accountId ?? widget.draft?.account ?? '';
+  late String _transfer = widget.editing?.transferAccountId ?? widget.draft?.transfer ?? '';
   late String _category = widget.editing?.categoryId ?? '';
   late final _amount = TextEditingController(
-    text: widget.editing == null ? '' : '${double.parse(widget.editing!.amountRaw)}'.replaceAll(RegExp(r'\.0$'), ''),
+    text: widget.editing == null
+        ? widget.draft?.amount ?? ''
+        : '${double.parse(widget.editing!.amountRaw)}'.replaceAll(RegExp(r'\.0$'), ''),
   );
-  late final _desc = TextEditingController(text: widget.editing?.description ?? '');
+  late final _desc = TextEditingController(text: widget.editing?.description ?? widget.draft?.description ?? '');
   late String _date = widget.editing?.occurredOn ?? todayISO();
   late String? _mood = widget.editing?.mood;
   bool _submitted = false;
