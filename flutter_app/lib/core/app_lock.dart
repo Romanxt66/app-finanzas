@@ -17,6 +17,7 @@ class AppLock extends ChangeNotifier {
 
   static const _hashKey = 'pin_hash';
   static const _delayKey = 'pin_delay';
+  static const _biometricKey = 'pin_biometric';
   static const maxAttempts = 5;
   static const _iterations = 20000;
 
@@ -31,13 +32,38 @@ class AppLock extends ChangeNotifier {
   Duration delay = const Duration(minutes: 1);
   DateTime? _hiddenAt;
 
+  /// Diálogos del sistema abiertos (elegir archivo, huella…): la app pasa a segundo plano pero el
+  /// usuario no se ha ido, así que no se bloquea al volver.
+  int _away = 0;
+
   /// Se invoca al agotar los intentos (la app cierra la sesión).
   VoidCallback? onTooManyAttempts;
 
   bool get enabled => _prefs.getString(_hashKey) != null;
   int get attemptsLeft => maxAttempts - failures;
 
-  void _onHide() => _hiddenAt ??= DateTime.now();
+  /// Desbloquear también con la huella o el bloqueo del teléfono (solo app nativa).
+  bool get useBiometrics => enabled && _prefs.getBool(_biometricKey) == true;
+
+  Future<void> setUseBiometrics(bool value) async {
+    await _prefs.setBool(_biometricKey, value);
+    notifyListeners();
+  }
+
+  /// Ejecuta [action] (que abre un diálogo del sistema) sin que la salida momentánea bloquee la app.
+  Future<T> whileAway<T>(Future<T> Function() action) async {
+    _away++;
+    try {
+      return await action();
+    } finally {
+      _away--;
+      if (_away == 0) _hiddenAt = null;
+    }
+  }
+
+  void _onHide() {
+    if (_away == 0) _hiddenAt ??= DateTime.now();
+  }
 
   void _onShow() {
     final since = _hiddenAt;
@@ -48,6 +74,14 @@ class AppLock extends ChangeNotifier {
   void lock() {
     if (!enabled) return;
     locked = true;
+    notifyListeners();
+  }
+
+  /// La huella (o el bloqueo del teléfono) se verificó: se abre sin PIN.
+  void unlockWithBiometrics() {
+    failures = 0;
+    locked = false;
+    _hiddenAt = null;
     notifyListeners();
   }
 
@@ -115,6 +149,7 @@ class AppLock extends ChangeNotifier {
 
   Future<void> disable() async {
     await _prefs.remove(_hashKey);
+    await _prefs.remove(_biometricKey);
     locked = false;
     failures = 0;
     notifyListeners();

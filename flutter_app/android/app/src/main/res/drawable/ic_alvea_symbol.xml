@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Símbolo de Alvea (brand/alvea-icon.svg, caja de 108) sin fondo ni halos: arranque de la app -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:translateX="-3" android:translateY="1">
+        <path
+            android:pathData="M36,78 L54,32 L72,78"
+            android:strokeColor="#FF9B3BEA"
+            android:strokeWidth="11.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M36,78 L54,32 L72,78"
+            android:strokeWidth="8"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="0"
+                    android:startY="32"
+                    android:endX="0"
+                    android:endY="78"
+                    android:startColor="#FF2B1250"
+                    android:endColor="#FF0E0520" />
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M40,64 L51,57 L58,61 L74,48"
+            android:strokeColor="#FFC35BFF"
+            android:strokeWidth="7"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:fillColor="#FFC35BFF"
+            android:pathData="M72.5,45 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0" />
+        <path
+            android:fillColor="#FFF3DDFF"
+            android:pathData="M75.8,45 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0" />
+    </group>
+</vector>

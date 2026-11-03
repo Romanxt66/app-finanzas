@@ -71,6 +71,21 @@ void main() {
       lock.dispose();
     });
 
+    test('la huella solo cuenta con PIN y se olvida al quitarlo', () async {
+      final lock = AppLock(prefs);
+      await lock.setUseBiometrics(true);
+      expect(lock.useBiometrics, isFalse); // sin PIN no hay bloqueo
+      await lock.setPin('2468');
+      await lock.setUseBiometrics(true);
+      expect(lock.useBiometrics, isTrue);
+      lock.lock();
+      lock.unlockWithBiometrics();
+      expect(lock.locked, isFalse);
+      await lock.disable();
+      expect(lock.useBiometrics, isFalse);
+      lock.dispose();
+    });
+
     test('demasiados intentos avisan para cerrar la sesión', () async {
       final lock = AppLock(prefs);
       await lock.setPin('2468');
@@ -82,6 +97,25 @@ void main() {
       expect(out, 1);
       lock.dispose();
     });
+  });
+
+  testWidgets('salir a un diálogo del sistema no bloquea; salir de la app sí', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final lock = AppLock(await SharedPreferences.getInstance());
+    await lock.setPin('2468');
+    await lock.setDelay(Duration.zero);
+    void leaveAndReturn() {
+      for (final state in [AppLifecycleState.inactive, AppLifecycleState.hidden, AppLifecycleState.inactive, AppLifecycleState.resumed]) {
+        tester.binding.handleAppLifecycleStateChanged(state);
+      }
+    }
+
+    // Elegir un archivo o la huella abren una pantalla del sistema encima de la app
+    await lock.whileAway(() async => leaveAndReturn());
+    expect(lock.locked, isFalse);
+    leaveAndReturn();
+    expect(lock.locked, isTrue);
+    lock.dispose();
   });
 
   group('importación', () {

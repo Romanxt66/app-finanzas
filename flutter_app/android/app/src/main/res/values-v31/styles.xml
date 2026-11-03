@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: pantalla de arranque del sistema con el símbolo de Alvea -->
+    <style name="LaunchTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/alvea_launch</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_alvea_symbol</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+    </style>
+    <style name="NormalTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/alvea_launch</item>
+    </style>
+</resources>

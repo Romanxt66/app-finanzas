@@ -1,16 +1,16 @@
-import 'package:flutter/foundation.dart' show ValueListenable;
+import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/reference.dart';
 import '../core/state.dart';
-import '../ui/notice_bell.dart';
 import '../ui/buttons.dart';
 import '../ui/glass.dart';
 import '../ui/icons.dart';
 import '../ui/intro.dart';
 import '../ui/logo.dart';
 import '../ui/motion.dart';
+import '../ui/notice_bell.dart';
 import '../ui/online.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart' show CrTag;
@@ -70,6 +70,7 @@ class _AppLayoutState extends State<AppLayout> {
   Widget build(BuildContext context) {
     final wide = context.isWide;
     final location = GoRouterState.of(context).uri.path;
+    final keyboard = kIsWeb ? 0.0 : MediaQuery.viewInsetsOf(context).bottom;
     return RefLoader(
       child: Material(
         type: MaterialType.transparency,
@@ -83,11 +84,16 @@ class _AppLayoutState extends State<AppLayout> {
                   builder: (context, online, _) => online ? const SizedBox.shrink() : const _OfflineBanner(),
                 ),
                 Expanded(
-                  child: KeyedSubtree(key: ValueKey(location), child: widget.child),
+                  // App nativa: el teclado no encoge la ventana, así que el contenido deja su hueco
+                  // (en la web ya lo hace el navegador)
+                  child: Padding(
+                    padding: EdgeInsets.only(bottom: keyboard),
+                    child: KeyedSubtree(key: ValueKey(location), child: widget.child),
+                  ),
                 ),
               ],
             ),
-            if (!wide)
+            if (!wide && keyboard == 0)
               Positioned(
                 left: space3,
                 right: space3,
