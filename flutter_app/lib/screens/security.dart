@@ -127,12 +127,12 @@ class SecurityCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                          if (!kIsWeb) const _BiometricToggle(),
                         ],
                       )
                     : null,
               ),
-              // En la app de Android los avisos están en la campana (los del sistema llegarán más adelante)
+              if (!kIsWeb) const _BiometricOption(),
+              // En la app de Android los avisos del sistema se ajustan en «Recordatorios de cobro»
               if (kIsWeb) ...[
                 Container(height: 1, color: c.hairline),
                 _Option(
@@ -168,26 +168,27 @@ class SecurityCard extends StatelessWidget {
   }
 }
 
-/// Desbloquear con huella o rostro además del PIN (app nativa con biometría disponible).
-class _BiometricToggle extends StatefulWidget {
-  const _BiometricToggle();
+/// Abrir Alvea con la huella o el rostro (app nativa con biometría disponible). El PIN queda de
+/// respaldo: si aún no hay, se crea primero y la huella se activa al terminar.
+class _BiometricOption extends StatefulWidget {
+  const _BiometricOption();
 
   @override
-  State<_BiometricToggle> createState() => _BiometricToggleState();
+  State<_BiometricOption> createState() => _BiometricOptionState();
 }
 
-class _BiometricToggleState extends State<_BiometricToggle> {
+class _BiometricOptionState extends State<_BiometricOption> {
   late final Future<bool> _available = biometricAvailable();
 
   Future<void> _toggle(bool value) async {
     final app = context.app;
     final lock = app.lock;
-    if (value) {
-      // Se confirma una vez antes de activarla: así se sabe que funciona en este teléfono
-      final ok = await lock.whileAway(() => authenticateBiometric('Confirma para desbloquear Alvea con tu huella'));
-      if (!ok) return;
+    if (value && !lock.enabled) {
+      await showCrDialog<void>(context, title: 'PIN de respaldo', builder: (_) => const _PinForm(thenBiometric: true));
+      return;
     }
-    await lock.setUseBiometrics(value);
+    if (value && !await enableBiometrics(lock)) return;
+    if (!value) await lock.setUseBiometrics(false);
     app.onToast?.call(value ? 'Podrás abrir Alvea con tu huella' : 'Alvea pedirá solo el PIN');
   }
 
@@ -196,12 +197,43 @@ class _BiometricToggleState extends State<_BiometricToggle> {
     future: _available,
     builder: (context, snap) {
       if (snap.data != true) return const SizedBox.shrink();
-      return Padding(
-        padding: const EdgeInsets.only(top: space3),
-        child: CrCheckbox(value: context.app.lock.useBiometrics, onChanged: _toggle, label: 'Desbloquear también con huella o rostro'),
+      final c = context.c;
+      final lock = context.app.lock;
+      final on = lock.useBiometrics;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(height: 1, color: c.hairline),
+          const SizedBox(height: space3),
+          _Option(
+            icon: 'fingerprint',
+            title: 'Huella o rostro',
+            status: on ? 'Activado' : 'Desactivado',
+            on: on,
+            body: lock.enabled
+                ? 'Abre Alvea con la huella, el rostro o el bloqueo del teléfono. El PIN sigue sirviendo si la huella falla.'
+                : 'Abre Alvea con la huella, el rostro o el bloqueo del teléfono. Primero crearás un PIN de respaldo por si la huella falla.',
+            actions: [
+              CrButton(
+                variant: on ? CrButtonVariant.glass : CrButtonVariant.primary,
+                small: true,
+                icon: on ? null : 'fingerprint',
+                label: on ? 'Desactivar' : 'Activar huella',
+                onPressed: () => _toggle(!on),
+              ),
+            ],
+          ),
+        ],
       );
     },
   );
+}
+
+/// Confirma la huella una vez (así se sabe que funciona en este teléfono) y la activa.
+Future<bool> enableBiometrics(AppLock lock) async {
+  final ok = await lock.whileAway(() => authenticateBiometric('Confirma para abrir Alvea con tu huella'));
+  if (ok) await lock.setUseBiometrics(true);
+  return ok;
 }
 
 class _Option extends StatelessWidget {
@@ -544,8 +576,11 @@ class _RegenerateCodesState extends State<_RegenerateCodes> {
 
 /// Crear, cambiar o quitar el PIN de este dispositivo.
 class _PinForm extends StatefulWidget {
-  const _PinForm({this.remove = false});
+  const _PinForm({this.remove = false, this.thenBiometric = false});
   final bool remove;
+
+  /// Al guardar el PIN, activa también la huella (desde «Huella o rostro»).
+  final bool thenBiometric;
 
   @override
   State<_PinForm> createState() => _PinFormState();
@@ -588,8 +623,12 @@ class _PinFormState extends State<_PinForm> {
       return;
     }
     await lock.setPin(_pin.text);
-    app.onToast?.call('PIN guardado');
     nav.pop();
+    if (widget.thenBiometric && await enableBiometrics(lock)) {
+      app.onToast?.call('Listo: abre Alvea con tu huella (o con el PIN)');
+    } else {
+      app.onToast?.call('PIN guardado');
+    }
   }
 
   @override
