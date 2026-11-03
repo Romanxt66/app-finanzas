@@ -7,6 +7,32 @@ import '../ui/glass.dart';
 import '../ui/mood_face.dart';
 import '../ui/theme.dart';
 
+/// Muestra la [LockScreen] encima de la app mientras esté bloqueada. La app sigue montada debajo
+/// (no pierde lo que se estaba escribiendo), pero oculta e inerte.
+class LockGate extends StatelessWidget {
+  const LockGate({super.key, required this.state, required this.child});
+  final AppState state;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: state.lock,
+    child: child,
+    builder: (context, app) {
+      final locked = state.lock.locked && state.user != null;
+      // expand: con la app oculta, el Stack no puede medir 0×0 (la pantalla de bloqueo no se vería)
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          Visibility(visible: !locked, maintainState: true, child: app!),
+          // Overlay propio: la pantalla está por encima del Navigator y sus botones tienen tooltips
+          if (locked) Overlay.wrap(child: const LockScreen()),
+        ],
+      );
+    },
+  );
+}
+
 /// Pantalla de bloqueo: pide el PIN de este dispositivo para volver a la app.
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -203,7 +229,7 @@ class _Keypad extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: key('⌫', onBack, tooltip: 'Borrar'),
+              child: key('', onBack, tooltip: 'Borrar', icon: 'backspace'),
             ),
             Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: key('0', () => onDigit('0'))),
             Padding(

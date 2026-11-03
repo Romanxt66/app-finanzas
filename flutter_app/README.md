@@ -47,6 +47,19 @@ dart run tool/gen_tokens.dart   # tras cambiar design/tokens.json
 
 `API_URL` vacío (producción) = mismo origen: nginx reenvía `/api` al backend, sin CORS.
 
+### Revisión visual
+
+La CI (job `flutter`) compila la versión de producción, la sirve con este `nginx.conf` contra el backend de `main`
+(SQLite), crea datos de prueba (`tool/ci_seed.mjs`) y recorre todas las pantallas en escritorio y móvil
+(`tool/visual_check.mjs`). Sube las capturas como artefacto `capturas-flutter` y falla si la app registra errores
+(de página, de consola o los que reporta a `/api/v1/client-errors`). En local:
+
+```bash
+API_URL=http://localhost:8101 ALVEA_EMAIL=ci@example.com ALVEA_PASSWORD=una-clave-1 node tool/ci_seed.mjs
+APP_URL=http://localhost:8090 API_URL=http://localhost:8101 ALVEA_EMAIL=ci@example.com ALVEA_PASSWORD=una-clave-1 \
+  OUT=/tmp/capturas node tool/visual_check.mjs        # o una lista: node tool/visual_check.mjs /,/accounts
+```
+
 ## Despliegue (Coolify)
 
 `Dockerfile` (Flutter fijado por tag de git + nginx) y `docker-compose.yml` (servicio `alvea2-web`, unido a la red

@@ -101,3 +101,62 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build web --release --wasm --no-web-resources-cdn
+      # Revisión visual: la compilación de producción servida por el mismo nginx que en el despliegue,
+      # contra el backend de main (el que usa la app desplegada) con SQLite. Recorre las pantallas en
+      # escritorio y móvil, sube las capturas y falla si la app registra errores (de página, de consola
+      # o los que ella misma reporta a /api/v1/client-errors).
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-src
+      - uses: astral-sh/setup-uv@v5
+      - name: Backend de main con SQLite
+        working-directory: main-src/backend
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///${{ runner.temp }}/visual.db
+          SECRET_KEY: clave-solo-para-la-revision-visual-de-ci-0123456789
+        run: |
+          uv sync --frozen
+          uv run alembic upgrade head
+          nohup uv run uvicorn app.main:app --port 8101 > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 60); do curl -sf http://127.0.0.1:8101/health > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:8101/health
+      - name: Servir la compilación con el nginx de producción
+        run: |
+          command -v nginx || (sudo apt-get update && sudo apt-get install -y nginx)
+          sudo mkdir -p /srv/alvea && sudo cp -r build/web/. /srv/alvea/
+          API_UPSTREAM=http://127.0.0.1:8101 envsubst '${API_UPSTREAM}' < nginx.conf \
+            | sed 's#listen 80;#listen 8090;#; s#/usr/share/nginx/html#/srv/alvea#' > "$RUNNER_TEMP/site.conf"
+          printf 'pid %s/nginx.pid;\nerror_log %s/nginx-error.log;\nevents {}\nhttp {\n  access_log off;\n  include %s/site.conf;\n}\n' \
+            "$RUNNER_TEMP" "$RUNNER_TEMP" "$RUNNER_TEMP" > "$RUNNER_TEMP/nginx.conf"
+          sudo nginx -t -c "$RUNNER_TEMP/nginx.conf"
+          sudo nginx -c "$RUNNER_TEMP/nginx.conf"
+          curl -sf -o /dev/null http://127.0.0.1:8090/healthz
+          curl -sf -o /dev/null http://127.0.0.1:8090/api/v1/currencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Playwright (Chromium)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pw" --no-save --no-package-lock playwright@1.64.1
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Revisión visual (escritorio y móvil)
+        env:
+          APP_URL: http://127.0.0.1:8090
+          API_URL: http://127.0.0.1:8101
+          # Usuario desechable del backend de pruebas de este job (no es una cuenta real)
+          ALVEA_EMAIL: visual@example.com
+          ALVEA_PASSWORD: revision-visual-123
+          OUT: ${{ runner.temp }}/capturas
+        run: |
+          node tool/ci_seed.mjs
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" API_LOG="$RUNNER_TEMP/api.log" node tool/visual_check.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-flutter
+          path: ${{ runner.temp }}/capturas
+          if-no-files-found: ignore
+      - name: Log del backend (si algo falla)
+        if: failure()
+        run: tail -n 150 "$RUNNER_TEMP/api.log" || true

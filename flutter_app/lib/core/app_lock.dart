@@ -51,6 +51,14 @@ class AppLock extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Quien acaba de entrar con su contraseña no necesita además el PIN.
+  void unlockAfterLogin() {
+    if (!locked && failures == 0) return;
+    locked = false;
+    failures = 0;
+    notifyListeners();
+  }
+
   static String _derive(String pin, List<int> salt) {
     var digest = sha256.convert([...salt, ...utf8.encode(pin)]).bytes;
     for (var i = 1; i < _iterations; i++) {

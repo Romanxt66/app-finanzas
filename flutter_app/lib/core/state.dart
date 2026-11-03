@@ -85,6 +85,7 @@ class AppState extends ChangeNotifier {
       await api.post('/auth/login', body: {'email': email, 'password': password, 'otp': ?otp}, auth: false) as Map<String, dynamic>,
       remember: remember,
     );
+    lock.unlockAfterLogin(); // p. ej. la sesión caducó con la app bloqueada
     await _loadUser();
     notifyListeners();
     runDueRecurring();

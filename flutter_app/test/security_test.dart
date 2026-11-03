@@ -3,9 +3,13 @@ import 'dart:convert';
 import 'package:alvea_app/core/api.dart';
 import 'package:alvea_app/core/app_lock.dart';
 import 'package:alvea_app/core/csv.dart';
+import 'package:alvea_app/core/models.dart';
 import 'package:alvea_app/core/notices.dart';
+import 'package:alvea_app/core/state.dart';
+import 'package:alvea_app/screens/lock_screen.dart';
 import 'package:alvea_app/ui/qr_view.dart';
 import 'package:alvea_app/ui/theme.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -55,6 +59,18 @@ void main() {
       reopened.dispose();
     });
 
+    test('entrar con la contraseña desbloquea sin pedir además el PIN', () async {
+      final lock = AppLock(prefs);
+      await lock.setPin('2468');
+      lock.lock();
+      lock.unlock('0000');
+      lock.unlockAfterLogin();
+      expect(lock.locked, isFalse);
+      expect(lock.attemptsLeft, AppLock.maxAttempts);
+      expect(lock.enabled, isTrue);
+      lock.dispose();
+    });
+
     test('demasiados intentos avisan para cerrar la sesión', () async {
       final lock = AppLock(prefs);
       await lock.setPin('2468');
@@ -72,7 +88,7 @@ void main() {
     test('encuentra el encabezado tras las filas de datos de la cuenta', () {
       final rows = parseCsv(
         'Banco;Bancolombia\nCuenta;****1234\nDesde;01/10/2026\n'
-        'FECHA;DESCRIPCIÓN;SUCURSAL;VALOR;SALDO\n02/10/2026;COMPRA EXITO;Bogotá;-120.000,00;880.000,00\n',
+            'FECHA;DESCRIPCIÓN;SUCURSAL;VALOR;SALDO\n02/10/2026;COMPRA EXITO;Bogotá;-120.000,00;880.000,00\n',
         ';',
       );
       final header = findHeaderRow(rows);
@@ -145,5 +161,48 @@ void main() {
     );
     expect(find.bySemanticsLabel('Código QR'), findsOneWidget);
     expect(tester.getSize(find.byType(QrView)), const Size(180, 180));
+  });
+
+  testWidgets('con la app bloqueada, la pantalla del PIN ocupa toda la vista y la app queda oculta', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final state = AppState(await SharedPreferences.getInstance());
+    state.user = User.fromJson({'email': 'ana@example.com', 'full_name': 'Ana Pérez', 'two_factor_enabled': false});
+    await state.lock.setPin('2468');
+    state.lock.lock();
+    // Restricciones holgadas (como dentro del fondo de la app): antes el Stack medía 0×0
+    await tester.pumpWidget(
+      AppScope(
+        state: state,
+        child: MaterialApp(
+          theme: buildTheme(Brightness.dark),
+          // Como en la app: por encima del Navigator (sin su Overlay) y con restricciones holgadas
+          builder: (context, child) => Center(
+            child: LockGate(state: state, child: child!),
+          ),
+          home: const Text('contenido de la app'),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Alvea está bloqueada'), findsOneWidget);
+    expect(tester.getSize(find.byType(LockScreen)), tester.view.physicalSize / tester.view.devicePixelRatio);
+    expect(find.text('contenido de la app'), findsNothing);
+
+    for (final d in '2468'.split('')) {
+      await tester.tap(find.text(d));
+      await tester.pump();
+    }
+    // Los tooltips necesitan un Overlay aunque la pantalla esté por encima del Navigator
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: tester.getCenter(find.byTooltip('Borrar')));
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+    await gesture.removePointer();
+    await tester.tap(find.byTooltip('Desbloquear'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(state.lock.locked, isFalse);
+    expect(find.text('contenido de la app'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 }
