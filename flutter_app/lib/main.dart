@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:go_router/go_router.dart';
@@ -32,10 +33,14 @@ import 'ui/theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy(); // URLs como la web React (/transactions), no /#/transactions
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    // De borde a borde: la app ya respeta las zonas seguras (barra superior y barra de pestañas)
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
   await initializeDateFormatting('es');
   final state = AppState(await SharedPreferences.getInstance());
   var failed = false;
-  final reporter = ErrorReporter(route: () => Uri.base.path);
+  final reporter = ErrorReporter(route: () => kIsWeb ? Uri.base.path : '');
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     failed = true;
@@ -135,10 +140,19 @@ class _AlveaAppState extends State<AlveaApp> {
             final mq = MediaQuery.of(context);
             body = MediaQuery(data: mq.copyWith(disableAnimations: true), child: body);
           }
-          return DefaultTextStyle.merge(
-            style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()], fontFamilyFallback: ['SymbolsFallback']),
-            child: CrBackdrop(
-              child: ToastHost(controller: _toasts, child: body),
+          // Barras del sistema (Android) transparentes, con iconos claros u oscuros según el tema
+          final dark = Theme.of(context).brightness == Brightness.dark;
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value: (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark).copyWith(
+              statusBarColor: Colors.transparent,
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarContrastEnforced: false,
+            ),
+            child: DefaultTextStyle.merge(
+              style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()], fontFamilyFallback: ['SymbolsFallback']),
+              child: CrBackdrop(
+                child: ToastHost(controller: _toasts, child: body),
+              ),
             ),
           );
         },

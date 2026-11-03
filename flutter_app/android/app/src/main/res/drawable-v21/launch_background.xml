@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla de arranque (Android 11 o anterior): color de fondo y el símbolo de Alvea centrado -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/alvea_launch" />
+    <item
+        android:width="112dp"
+        android:height="112dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_alvea_symbol" />
+</layer-list>

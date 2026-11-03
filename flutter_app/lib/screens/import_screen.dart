@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../core/csv.dart';
@@ -64,7 +65,8 @@ class _ImportScreenState extends State<ImportScreen> {
       _result = null;
       _fileError = null;
     });
-    final file = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: const ['csv', 'txt']);
+    final lock = context.app.lock;
+    final file = await lock.whileAway(() => FilePicker.pickFile(type: FileType.custom, allowedExtensions: const ['csv', 'txt']));
     if (file == null) return;
     if ((await file.length() ?? 0) > _maxFileBytes) {
       setState(() => _fileError = 'El archivo supera los 2 MB');
@@ -269,7 +271,8 @@ class _ImportScreenState extends State<ImportScreen> {
                   ],
                 ),
               Text(
-                'El archivo se lee en tu navegador; solo se envían las filas que confirmes. Máximo 2 MB y 1000 filas por envío.',
+                'El archivo se lee en tu ${kIsWeb ? 'navegador' : 'teléfono'}; solo se envían las filas que confirmes. '
+                'Máximo 2 MB y 1000 filas por envío.',
                 style: CrText.caption(c.inkMuted),
               ),
             ],

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -75,7 +76,13 @@ class ApiClient {
     await _prefs.remove(_refreshKey);
   }
 
-  String get _base => _baseUrl ?? (_apiUrl.isNotEmpty ? _apiUrl : Uri.base.origin);
+  String get _base {
+    if (_baseUrl != null) return _baseUrl;
+    if (_apiUrl.isNotEmpty) return _apiUrl;
+    // La app nativa no tiene «mismo origen»: necesita la URL del servidor al compilar
+    if (!kIsWeb) throw StateError('Compila la app con --dart-define=API_URL=https://… (ver ANDROID.md)');
+    return Uri.base.origin;
+  }
 
   Uri _uri(String path, Map<String, Object?>? query) {
     final params = <String, String>{

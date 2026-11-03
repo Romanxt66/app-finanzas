@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/biometric.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
 import '../ui/glass.dart';
@@ -47,10 +48,29 @@ class _LockScreenState extends State<LockScreen> {
   String _pin = '';
   bool _wrong = false;
 
+  /// La huella está activada y el dispositivo la admite (solo app nativa).
+  bool _biometric = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _focus.requestFocus());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _focus.requestFocus();
+      if (context.app.lock.useBiometrics) {
+        biometricAvailable().then((ok) {
+          if (!mounted || !ok) return;
+          setState(() => _biometric = true);
+          _useBiometric(); // se ofrece directamente al abrir; si se cancela queda el teclado
+        });
+      }
+    });
+  }
+
+  Future<void> _useBiometric() async {
+    final lock = context.app.lock;
+    final ok = await lock.whileAway(() => authenticateBiometric('Desbloquea Alvea'));
+    if (ok && mounted) lock.unlockWithBiometrics();
   }
 
   @override
@@ -166,6 +186,10 @@ class _LockScreenState extends State<LockScreen> {
                       ),
                       const SizedBox(height: space4),
                       _Keypad(onDigit: _type, onBack: _back, onSubmit: _pin.length >= 4 ? _submit : null),
+                      if (_biometric) ...[
+                        const SizedBox(height: space3),
+                        CrButton(icon: 'fingerprint', label: 'Usar huella', onPressed: _useBiometric),
+                      ],
                       const SizedBox(height: space3),
                       CrButton(
                         variant: CrButtonVariant.ghost,

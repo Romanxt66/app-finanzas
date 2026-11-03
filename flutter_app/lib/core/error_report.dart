@@ -20,16 +20,19 @@ class ErrorReporter {
   final String Function()? route;
   final Set<String> _sent = {};
 
-  String get _base => _baseUrl ?? (_apiUrl.isNotEmpty ? _apiUrl : Uri.base.origin);
+  /// Servidor al que se reporta; null en la app nativa compilada sin API_URL (no hay a quién avisar).
+  String? get _base => _baseUrl ?? (_apiUrl.isNotEmpty ? _apiUrl : (kIsWeb ? Uri.base.origin : null));
 
   Future<void> report(Object error, StackTrace? stack) async {
+    final base = _base;
+    if (base == null) return;
     final message = error.toString();
     final key = message.length > 200 ? message.substring(0, 200) : message;
     if (_sent.length >= _maxPerSession || !_sent.add(key)) return;
     String cut(String s, int max) => s.length > max ? s.substring(0, max) : s;
     try {
       await _client.post(
-        Uri.parse('$_base/api/v1/client-errors'),
+        Uri.parse('$base/api/v1/client-errors'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'message': cut(message, 1000),

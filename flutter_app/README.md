@@ -1,6 +1,8 @@
-# Alvea 2 — frontend Flutter (web)
+# Alvea 2 — frontend Flutter (web y Android)
 
-Segundo frontend de Alvea, escrito en Flutter, que usa **el mismo backend** FastAPI (`/api/v1`).
+Segundo frontend de Alvea, escrito en Flutter, que usa **el mismo backend** FastAPI (`/api/v1`). Del mismo código sale la
+**app Android**: se compila sola en GitHub Actions y se instala desde la pre-release `android-ultima` (ver
+[`ANDROID.md`](ANDROID.md)).
 No hay cambios en la API: lo que ya consumía la web React lo consume esta app.
 
 Paridad con la web React: mismas pantallas, mismas rutas (`/transactions`, `/budgets`…), mismo diseño y mismas animaciones.

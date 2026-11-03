@@ -1,0 +1,86 @@
+name: Android
+
+# Compila la app Android de flutter_app/: un APK para instalar directamente en el teléfono y, si está
+# configurada la firma de publicación (secrets ANDROID_*), también el AAB para Google Play.
+# En la rama cli/flutter-app publica además el APK en la pre-release «android-ultima» (enlace fijo para
+# descargarlo desde el teléfono). Ver flutter_app/ANDROID.md.
+on:
+  push:
+    branches: [cli/flutter-app]
+    paths: ['flutter_app/**', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['flutter_app/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # publicar el APK en la pre-release
+    env:
+      # Servidor de la app: variable del repositorio ALVEA_API_URL o, si no existe, el de producción
+      API_URL: ${{ vars.ALVEA_API_URL || 'https://alvea2.softlane.click' }}
+      HAS_UPLOAD_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    defaults:
+      run:
+        working-directory: flutter_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.5
+          cache: true
+      - run: flutter pub get
+
+      - name: Firma de publicación (solo si están los secrets)
+        if: env.HAS_UPLOAD_KEY == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=${KEYSTORE_PASSWORD}
+          keyAlias=${KEY_ALIAS}
+          keyPassword=${KEY_PASSWORD}
+          EOF
+
+      # El número de ejecución sirve de versionCode: cada compilación es una actualización válida
+      - name: APK
+        run: flutter build apk --release --dart-define=API_URL="$API_URL" --build-number=${{ github.run_number }}
+      - name: App bundle para Google Play
+        if: env.HAS_UPLOAD_KEY == 'true'
+        run: flutter build appbundle --release --dart-define=API_URL="$API_URL" --build-number=${{ github.run_number }}
+
+      - name: Archivos con nombre claro
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/alvea.apk
+          if [ -f build/app/outputs/bundle/release/app-release.aab ]; then cp build/app/outputs/bundle/release/app-release.aab dist/alvea.aab; fi
+          ls -lh dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alvea-android
+          path: flutter_app/dist/
+
+      - name: Publicar el APK (pre-release «android-ultima»)
+        if: github.ref == 'refs/heads/cli/flutter-app' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$HAS_UPLOAD_KEY" = true ]; then firma="firmada con la clave de publicación"; else firma="firma de prueba: si ya tienes otra versión de prueba, desinstálala antes"; fi
+          gh release delete android-ultima --yes --cleanup-tag || true
+          gh release create android-ultima dist/alvea.apk --prerelease --target "$GITHUB_SHA" \
+            --title "Alvea para Android (última compilación)" \
+            --notes "Compilación ${{ github.run_number }} (${GITHUB_SHA::7}), ${firma}. Abre esta página en el teléfono, descarga alvea.apk e instálalo (permite «instalar apps desconocidas» para el navegador si te lo pide)."

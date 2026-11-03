@@ -66,7 +66,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     });
     try {
       final bytes = await app.api.bytes('/transactions/export', query: _filters);
-      saveFile(bytes, 'movimientos.csv');
+      await app.lock.whileAway(() => saveFile(bytes, 'movimientos.csv'));
     } catch (e) {
       if (mounted) setState(() => _exportError = e);
     } finally {

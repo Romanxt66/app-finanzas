@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../core/app_lock.dart';
+import '../core/biometric.dart';
 import '../core/notices.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
@@ -104,57 +106,102 @@ class SecurityCard extends StatelessWidget {
                     ),
                 ],
                 footer: lock.enabled
-                    ? Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: space3,
-                        runSpacing: space2,
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Volver a pedirlo tras', style: CrText.label(c.inkMuted)),
-                          CrSegmented<Duration>(
-                            options: const [
-                              (Duration.zero, 'Al salir'),
-                              (Duration(minutes: 1), '1 min'),
-                              (Duration(minutes: 5), '5 min'),
-                              (Duration(minutes: 15), '15 min'),
+                          Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: space3,
+                            runSpacing: space2,
+                            children: [
+                              Text('Volver a pedirlo tras', style: CrText.label(c.inkMuted)),
+                              CrSegmented<Duration>(
+                                options: const [
+                                  (Duration.zero, 'Al salir'),
+                                  (Duration(minutes: 1), '1 min'),
+                                  (Duration(minutes: 5), '5 min'),
+                                  (Duration(minutes: 15), '15 min'),
+                                ],
+                                value: lock.delay,
+                                onChanged: lock.setDelay,
+                              ),
                             ],
-                            value: lock.delay,
-                            onChanged: lock.setDelay,
                           ),
+                          if (!kIsWeb) const _BiometricToggle(),
                         ],
                       )
                     : null,
               ),
-              Container(height: 1, color: c.hairline),
-              _Option(
-                icon: 'bell',
-                title: 'Avisos del navegador',
-                status: app.notices.browserAlerts && permission == 'granted' ? 'Activados' : 'Desactivados',
-                on: app.notices.browserAlerts && permission == 'granted',
-                body: permission == 'unsupported'
-                    ? 'Este navegador no permite avisos. Los verás en la campana de la barra superior.'
-                    : permission == 'denied'
-                    ? 'Bloqueaste los avisos de Alvea en el navegador. Actívalos en la configuración del sitio (icono del candado).'
-                    : 'Un aviso del sistema cuando se acerque un cobro o te pases de un presupuesto (con Alvea abierta).',
-                actions: [
-                  if (permission != 'unsupported' && permission != 'denied')
-                    CrButton(
-                      small: true,
-                      label: app.notices.browserAlerts ? 'Desactivar' : 'Activar',
-                      onPressed: () async {
-                        final on = await app.notices.setBrowserAlerts(!app.notices.browserAlerts);
-                        if (!on && !app.notices.browserAlerts && NoticeCenter.browserPermission == 'denied') {
-                          app.onToast?.call('El navegador bloqueó los avisos');
-                        }
-                      },
-                    ),
-                ],
-              ),
+              // En la app de Android los avisos están en la campana (los del sistema llegarán más adelante)
+              if (kIsWeb) ...[
+                Container(height: 1, color: c.hairline),
+                _Option(
+                  icon: 'bell',
+                  title: 'Avisos del navegador',
+                  status: app.notices.browserAlerts && permission == 'granted' ? 'Activados' : 'Desactivados',
+                  on: app.notices.browserAlerts && permission == 'granted',
+                  body: permission == 'unsupported'
+                      ? 'Este navegador no permite avisos. Los verás en la campana de la barra superior.'
+                      : permission == 'denied'
+                      ? 'Bloqueaste los avisos de Alvea en el navegador. Actívalos en la configuración del sitio (icono del candado).'
+                      : 'Un aviso del sistema cuando se acerque un cobro o te pases de un presupuesto (con Alvea abierta).',
+                  actions: [
+                    if (permission != 'unsupported' && permission != 'denied')
+                      CrButton(
+                        small: true,
+                        label: app.notices.browserAlerts ? 'Desactivar' : 'Activar',
+                        onPressed: () async {
+                          final on = await app.notices.setBrowserAlerts(!app.notices.browserAlerts);
+                          if (!on && !app.notices.browserAlerts && NoticeCenter.browserPermission == 'denied') {
+                            app.onToast?.call('El navegador bloqueó los avisos');
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ],
             ],
           );
         },
       ),
     );
   }
+}
+
+/// Desbloquear con huella o rostro además del PIN (app nativa con biometría disponible).
+class _BiometricToggle extends StatefulWidget {
+  const _BiometricToggle();
+
+  @override
+  State<_BiometricToggle> createState() => _BiometricToggleState();
+}
+
+class _BiometricToggleState extends State<_BiometricToggle> {
+  late final Future<bool> _available = biometricAvailable();
+
+  Future<void> _toggle(bool value) async {
+    final app = context.app;
+    final lock = app.lock;
+    if (value) {
+      // Se confirma una vez antes de activarla: así se sabe que funciona en este teléfono
+      final ok = await lock.whileAway(() => authenticateBiometric('Confirma para desbloquear Alvea con tu huella'));
+      if (!ok) return;
+    }
+    await lock.setUseBiometrics(value);
+    app.onToast?.call(value ? 'Podrás abrir Alvea con tu huella' : 'Alvea pedirá solo el PIN');
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<bool>(
+    future: _available,
+    builder: (context, snap) {
+      if (snap.data != true) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(top: space3),
+        child: CrCheckbox(value: context.app.lock.useBiometrics, onChanged: _toggle, label: 'Desbloquear también con huella o rostro'),
+      );
+    },
+  );
 }
 
 class _Option extends StatelessWidget {
@@ -247,10 +294,12 @@ class _RecoveryCodes extends StatelessWidget {
               small: true,
               icon: 'download',
               label: 'Descargar',
-              onPressed: () => saveFile(
-                utf8.encode('Códigos de recuperación de Alvea (${app.user?.email ?? ''})\n\n$text\n'),
-                'alvea-codigos-recuperacion.txt',
-                mime: 'text/plain',
+              onPressed: () => app.lock.whileAway(
+                () => saveFile(
+                  utf8.encode('Códigos de recuperación de Alvea (${app.user?.email ?? ''})\n\n$text\n'),
+                  'alvea-codigos-recuperacion.txt',
+                  mime: 'text/plain',
+                ),
               ),
             ),
           ],

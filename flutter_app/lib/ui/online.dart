@@ -1,12 +1,5 @@
-import 'dart:js_interop';
+/// Estado de conexión. En el navegador sigue a `navigator.onLine`; en la app nativa se da por
+/// conectada (si falla la red, cada pantalla lo muestra con su propio error).
+library;
 
-import 'package:flutter/foundation.dart';
-import 'package:web/web.dart' as web;
-
-/// Estado de conexión del navegador (como `useOnline`).
-class Online extends ValueNotifier<bool> {
-  Online() : super(web.window.navigator.onLine) {
-    web.window.addEventListener('online', ((web.Event _) => value = true).toJS);
-    web.window.addEventListener('offline', ((web.Event _) => value = false).toJS);
-  }
-}
+export 'online_stub.dart' if (dart.library.js_interop) 'online_web.dart';

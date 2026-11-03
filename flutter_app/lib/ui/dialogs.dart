@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'buttons.dart';
@@ -19,10 +20,12 @@ Future<T?> showCrDialog<T>(BuildContext context, {required WidgetBuilder builder
     transitionDuration: const Duration(milliseconds: 250),
     pageBuilder: (ctx, _, _) {
       final c = ctx.c;
+      // App nativa: el diálogo sube por encima del teclado (en la web lo hace el navegador)
+      final keyboard = kIsWeb ? 0.0 : MediaQuery.viewInsetsOf(ctx).bottom;
       return SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(space4),
+            padding: const EdgeInsets.all(space4).copyWith(bottom: space4 + keyboard),
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxWidth),
               child: Material(
