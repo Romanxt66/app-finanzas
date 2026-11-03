@@ -5,12 +5,14 @@ from app.api.v1 import (
     auth,
     budgets,
     categories,
+    client_errors,
     currencies,
     daily_allowance,
     ghost_subscriptions,
     goals,
     insights,
     life_hours,
+    notifications,
     recurring,
     reports,
     transactions,
@@ -33,5 +35,7 @@ for module in (
     daily_allowance,
     insights,
     waiting_room,
+    notifications,
+    client_errors,
 ):
     api_router.include_router(module.router)

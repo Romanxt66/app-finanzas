@@ -19,6 +19,8 @@ services:
       ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-15}
       REFRESH_TOKEN_DAYS: ${REFRESH_TOKEN_DAYS:-7}
       CORS_ORIGINS: '[]'
+      # Opcional: errores del servidor y de la app a Sentry (vacío = desactivado)
+      SENTRY_DSN: ${SENTRY_DSN:-}
     networks:
       - default
       - coolify # alcanzar el Postgres (master-db-central)
@@ -29,6 +31,9 @@ services:
     build:
       context: ./frontend
     restart: unless-stopped
+    environment:
+      # Una sola app: URL de la app Flutter (alvea2) a la que redirigir esta versión. Vacío = no redirige.
+      APP_REDIRECT_URL: ${APP_REDIRECT_URL:-}
     depends_on:
       alvea-api:
         condition: service_healthy

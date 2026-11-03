@@ -87,3 +87,9 @@ def register_error_handlers(app: FastAPI) -> None:
 class TooManyRequestsError(AppError):
     status_code = 429
     code = "too_many_requests"
+
+
+class TwoFactorRequiredError(UnauthorizedError):
+    """La contraseña es correcta pero falta el código de verificación en dos pasos."""
+
+    code = "otp_required"

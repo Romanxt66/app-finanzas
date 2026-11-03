@@ -113,6 +113,83 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/auth/2fa/setup': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Two Factor Setup
+     * @description Genera el secreto y el enlace para el código QR. No se activa hasta confirmar un código.
+     */
+    post: operations['two_factor_setup_api_v1_auth_2fa_setup_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/2fa/enable': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Two Factor Enable
+     * @description Confirma el primer código y devuelve los códigos de recuperación (solo esta vez).
+     */
+    post: operations['two_factor_enable_api_v1_auth_2fa_enable_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/2fa/disable': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Two Factor Disable */
+    post: operations['two_factor_disable_api_v1_auth_2fa_disable_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/auth/2fa/recovery-codes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Two Factor Recovery Codes
+     * @description Sustituye los códigos de recuperación por otros nuevos (los anteriores dejan de valer).
+     */
+    post: operations['two_factor_recovery_codes_api_v1_auth_2fa_recovery_codes_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/accounts': {
     parameters: {
       query?: never
@@ -255,6 +332,26 @@ export interface paths {
      * @description Importa hasta 1000 movimientos de un extracto (monto con signo); omite los ya existentes.
      */
     post: operations['bulk_import_api_v1_transactions_bulk_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/transactions/categorize': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Categorize Items
+     * @description Sugiere la categoría de cada movimiento por su descripción, antes de importarlo.
+     */
+    post: operations['categorize_items_api_v1_transactions_categorize_post']
     delete?: never
     options?: never
     head?: never
@@ -664,6 +761,43 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/notifications': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Notifications
+     * @description Avisos pendientes, de más a menos urgentes.
+     */
+    get: operations['list_notifications_api_v1_notifications_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/client-errors': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Report */
+    post: operations['report_api_v1_client_errors_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -877,6 +1011,26 @@ export interface components {
      * @enum {string}
      */
     Cadence: 'weekly' | 'monthly' | 'yearly'
+    /** CategorizeIn */
+    CategorizeIn: {
+      /** Items */
+      items: components['schemas']['CategorizeItem'][]
+    }
+    /** CategorizeItem */
+    CategorizeItem: {
+      /**
+       * Description
+       * @default
+       */
+      description: string
+      /** Amount */
+      amount: number | string
+    }
+    /** CategorizeOut */
+    CategorizeOut: {
+      /** Suggestions */
+      suggestions: components['schemas']['CategorySuggestion'][]
+    }
     /** CategoryCreate */
     CategoryCreate: {
       /** Name */
@@ -913,6 +1067,13 @@ export interface components {
       name: string
       kind: components['schemas']['CategoryKind']
     }
+    /** CategorySuggestion */
+    CategorySuggestion: {
+      /** Category Id */
+      category_id?: string | null
+      /** Source */
+      source?: ('history' | 'keyword') | null
+    }
     /** CategorySuggestions */
     CategorySuggestions: {
       /** Expense */
@@ -938,6 +1099,31 @@ export interface components {
       current_password: string
       /** New Password */
       new_password: string
+    }
+    /** ClientError */
+    ClientError: {
+      /** Message */
+      message: string
+      /**
+       * Stack
+       * @default
+       */
+      stack: string
+      /**
+       * Route
+       * @default
+       */
+      route: string
+      /**
+       * Release
+       * @default
+       */
+      release: string
+      /**
+       * Platform
+       * @default
+       */
+      platform: string
     }
     /**
      * Comparison
@@ -1124,6 +1310,8 @@ export interface components {
       email: string
       /** Password */
       password: string
+      /** Otp */
+      otp?: string | null
     }
     /** MonthHours */
     MonthHours: {
@@ -1184,6 +1372,41 @@ export interface components {
       /** Share Pct */
       share_pct: string
     }
+    /** Notification */
+    Notification: {
+      /** Id */
+      id: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'recurring_due' | 'budget_warning' | 'budget_exceeded' | 'waiting_ready'
+      /**
+       * Severity
+       * @enum {string}
+       */
+      severity: 'info' | 'warning' | 'danger'
+      /** Title */
+      title: string
+      /** Body */
+      body: string
+      /** Link */
+      link: string
+      /**
+       * Date
+       * Format: date
+       */
+      date: string
+      /** Amount */
+      amount?: string | null
+      /** Currency */
+      currency?: string | null
+    }
+    /** NotificationList */
+    NotificationList: {
+      /** Items */
+      items: components['schemas']['Notification'][]
+    }
     /**
      * PersonalInflation
      * @description Cuánto se encareció lo que el usuario compra de verdad: precio medio por compra en los
@@ -1238,6 +1461,11 @@ export interface components {
     ProfileUpdate: {
       /** Full Name */
       full_name: string
+    }
+    /** RecoveryCodes */
+    RecoveryCodes: {
+      /** Recovery Codes */
+      recovery_codes: string[]
     }
     /** RecurringCreate */
     RecurringCreate: {
@@ -1514,6 +1742,25 @@ export interface components {
      * @enum {string}
      */
     TransactionType: 'income' | 'expense' | 'transfer'
+    /** TwoFactorCode */
+    TwoFactorCode: {
+      /** Code */
+      code: string
+    }
+    /** TwoFactorDisable */
+    TwoFactorDisable: {
+      /** Password */
+      password: string
+      /** Code */
+      code: string
+    }
+    /** TwoFactorSetup */
+    TwoFactorSetup: {
+      /** Secret */
+      secret: string
+      /** Otpauth Uri */
+      otpauth_uri: string
+    }
     /** UserOut */
     UserOut: {
       /**
@@ -1528,6 +1775,11 @@ export interface components {
       email: string
       /** Full Name */
       full_name: string
+      /**
+       * Two Factor Enabled
+       * @default false
+       */
+      two_factor_enabled: boolean
     }
     /** ValidationError */
     ValidationError: {
@@ -1823,6 +2075,123 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+    }
+  }
+  two_factor_setup_api_v1_auth_2fa_setup_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TwoFactorSetup']
+        }
+      }
+    }
+  }
+  two_factor_enable_api_v1_auth_2fa_enable_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TwoFactorCode']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RecoveryCodes']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  two_factor_disable_api_v1_auth_2fa_disable_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TwoFactorDisable']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  two_factor_recovery_codes_api_v1_auth_2fa_recovery_codes_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TwoFactorCode']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RecoveryCodes']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
       }
     }
   }
@@ -2249,6 +2618,39 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BulkResult']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  categorize_items_api_v1_transactions_categorize_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CategorizeIn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CategorizeOut']
         }
       }
       /** @description Validation Error */
@@ -3236,6 +3638,71 @@ export interface operations {
       cookie?: never
     }
     requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  list_notifications_api_v1_notifications_get: {
+    parameters: {
+      query?: {
+        /** @description Fecha local del usuario */
+        today?: string | null
+        /** @description Días de antelación de los cobros */
+        days?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NotificationList']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  report_api_v1_client_errors_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClientError']
+      }
+    }
     responses: {
       /** @description Successful Response */
       204: {

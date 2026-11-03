@@ -251,6 +251,158 @@
         ]
       }
     },
+    "/api/v1/auth/2fa/setup": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Two Factor Setup",
+        "description": "Genera el secreto y el enlace para el código QR. No se activa hasta confirmar un código.",
+        "operationId": "two_factor_setup_api_v1_auth_2fa_setup_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorSetup"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/2fa/enable": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Two Factor Enable",
+        "description": "Confirma el primer código y devuelve los códigos de recuperación (solo esta vez).",
+        "operationId": "two_factor_enable_api_v1_auth_2fa_enable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorCode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/2fa/disable": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Two Factor Disable",
+        "operationId": "two_factor_disable_api_v1_auth_2fa_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorDisable"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/2fa/recovery-codes": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Two Factor Recovery Codes",
+        "description": "Sustituye los códigos de recuperación por otros nuevos (los anteriores dejan de valer).",
+        "operationId": "two_factor_recovery_codes_api_v1_auth_2fa_recovery_codes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TwoFactorCode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodes"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/accounts": {
       "get": {
         "tags": ["accounts"],
@@ -1023,6 +1175,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BulkResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/transactions/categorize": {
+      "post": {
+        "tags": ["transactions"],
+        "summary": "Categorize Items",
+        "description": "Sugiere la categoría de cada movimiento por su descripción, antes de importarlo.",
+        "operationId": "categorize_items_api_v1_transactions_categorize_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategorizeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorizeOut"
                 }
               }
             }
@@ -2554,6 +2751,108 @@
         }
       }
     },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": ["notifications"],
+        "summary": "List Notifications",
+        "description": "Avisos pendientes, de más a menos urgentes.",
+        "operationId": "list_notifications_api_v1_notifications_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "today",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Fecha local del usuario",
+              "title": "Today"
+            },
+            "description": "Fecha local del usuario"
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 14,
+              "minimum": 0,
+              "description": "Días de antelación de los cobros",
+              "default": 3,
+              "title": "Days"
+            },
+            "description": "Días de antelación de los cobros"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationList"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/client-errors": {
+      "post": {
+        "tags": ["observability"],
+        "summary": "Report",
+        "operationId": "report_api_v1_client_errors_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientError"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health"],
@@ -2966,6 +3265,60 @@
         "enum": ["weekly", "monthly", "yearly"],
         "title": "Cadence"
       },
+      "CategorizeIn": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategorizeItem"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": ["items"],
+        "title": "CategorizeIn"
+      },
+      "CategorizeItem": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Description",
+            "default": ""
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": ["amount"],
+        "title": "CategorizeItem"
+      },
+      "CategorizeOut": {
+        "properties": {
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/CategorySuggestion"
+            },
+            "type": "array",
+            "title": "Suggestions"
+          }
+        },
+        "type": "object",
+        "required": ["suggestions"],
+        "title": "CategorizeOut"
+      },
       "CategoryCreate": {
         "properties": {
           "name": {
@@ -3038,6 +3391,36 @@
         "required": ["id", "created_at", "name", "kind"],
         "title": "CategoryOut"
       },
+      "CategorySuggestion": {
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["history", "keyword"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "title": "CategorySuggestion"
+      },
       "CategorySuggestions": {
         "properties": {
           "expense": {
@@ -3109,6 +3492,42 @@
         "type": "object",
         "required": ["current_password", "new_password"],
         "title": "ChangePasswordIn"
+      },
+      "ClientError": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Message"
+          },
+          "stack": {
+            "type": "string",
+            "maxLength": 8000,
+            "title": "Stack",
+            "default": ""
+          },
+          "route": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Route",
+            "default": ""
+          },
+          "release": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Release",
+            "default": ""
+          },
+          "platform": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Platform",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": ["message"],
+        "title": "ClientError"
       },
       "Comparison": {
         "type": "string",
@@ -3550,6 +3969,18 @@
           "password": {
             "type": "string",
             "title": "Password"
+          },
+          "otp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otp"
           }
         },
         "type": "object",
@@ -3673,6 +4104,80 @@
         "type": "object",
         "required": ["mood", "count", "total", "average", "share_pct"],
         "title": "MoodStat"
+      },
+      "Notification": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["recurring_due", "budget_warning", "budget_exceeded", "waiting_ready"],
+            "title": "Kind"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "warning", "danger"],
+            "title": "Severity"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "link": {
+            "type": "string",
+            "title": "Link"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": ["id", "kind", "severity", "title", "body", "link", "date"],
+        "title": "Notification"
+      },
+      "NotificationList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": ["items"],
+        "title": "NotificationList"
       },
       "PersonalInflation": {
         "properties": {
@@ -3845,6 +4350,20 @@
         "type": "object",
         "required": ["full_name"],
         "title": "ProfileUpdate"
+      },
+      "RecoveryCodes": {
+        "properties": {
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recovery Codes"
+          }
+        },
+        "type": "object",
+        "required": ["recovery_codes"],
+        "title": "RecoveryCodes"
       },
       "RecurringCreate": {
         "properties": {
@@ -4533,6 +5052,51 @@
         "enum": ["income", "expense", "transfer"],
         "title": "TransactionType"
       },
+      "TwoFactorCode": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 6,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": ["code"],
+        "title": "TwoFactorCode"
+      },
+      "TwoFactorDisable": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 6,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": ["password", "code"],
+        "title": "TwoFactorDisable"
+      },
+      "TwoFactorSetup": {
+        "properties": {
+          "secret": {
+            "type": "string",
+            "title": "Secret"
+          },
+          "otpauth_uri": {
+            "type": "string",
+            "title": "Otpauth Uri"
+          }
+        },
+        "type": "object",
+        "required": ["secret", "otpauth_uri"],
+        "title": "TwoFactorSetup"
+      },
       "UserOut": {
         "properties": {
           "id": {
@@ -4548,6 +5112,11 @@
           "full_name": {
             "type": "string",
             "title": "Full Name"
+          },
+          "two_factor_enabled": {
+            "type": "boolean",
+            "title": "Two Factor Enabled",
+            "default": false
           }
         },
         "type": "object",

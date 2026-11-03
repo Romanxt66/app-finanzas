@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import AliasChoices, BaseModel, EmailStr, Field, field_validator
 
 from app.schemas.common import ORMModel
 
@@ -35,6 +35,8 @@ class RegisterIn(BaseModel):
 class LoginIn(BaseModel):
     email: EmailStr
     password: str
+    # Código de la app de autenticación (o de recuperación) si la cuenta tiene 2 pasos activos
+    otp: str | None = Field(default=None, max_length=32)
 
 
 class RefreshIn(BaseModel):
@@ -51,6 +53,9 @@ class UserOut(ORMModel):
     id: uuid.UUID
     email: EmailStr
     full_name: str
+    two_factor_enabled: bool = Field(
+        default=False, validation_alias=AliasChoices("totp_enabled", "two_factor_enabled")
+    )
 
 
 class ProfileUpdate(BaseModel):
@@ -65,3 +70,21 @@ class ChangePasswordIn(BaseModel):
     @classmethod
     def _password_policy(cls, v: str) -> str:
         return check_password_policy(v)
+
+
+class TwoFactorSetup(BaseModel):
+    secret: str
+    otpauth_uri: str
+
+
+class TwoFactorCode(BaseModel):
+    code: str = Field(min_length=6, max_length=32)
+
+
+class TwoFactorDisable(BaseModel):
+    password: str
+    code: str = Field(min_length=6, max_length=32)
+
+
+class RecoveryCodes(BaseModel):
+    recovery_codes: list[str]
