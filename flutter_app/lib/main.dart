@@ -190,7 +190,10 @@ GoRouter _buildRouter(AppState app) {
         builder: (context, state, child) => AppLayout(child: child),
         routes: [
           GoRoute(path: '/', pageBuilder: (c, s) => page(const DashboardScreen(), s)),
-          GoRoute(path: '/transactions', pageBuilder: (c, s) => page(const TransactionsScreen(), s)),
+          GoRoute(
+            path: '/transactions',
+            pageBuilder: (c, s) => page(TransactionsScreen(link: s.uri), s),
+          ),
           GoRoute(path: '/accounts', pageBuilder: (c, s) => page(const AccountsScreen(), s)),
           GoRoute(path: '/categories', pageBuilder: (c, s) => page(const CategoriesScreen(), s)),
           GoRoute(path: '/budgets', pageBuilder: (c, s) => page(const BudgetsScreen(), s)),

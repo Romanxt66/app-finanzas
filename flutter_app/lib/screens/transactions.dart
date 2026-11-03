@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../core/data.dart';
 import '../core/format.dart';
@@ -24,7 +23,10 @@ const pageSize = 20;
 const typeLabels = {'income': 'Ingreso', 'expense': 'Gasto', 'transfer': 'Transferencia'};
 
 class TransactionsScreen extends StatefulWidget {
-  const TransactionsScreen({super.key});
+  const TransactionsScreen({super.key, this.link});
+
+  /// Dirección con la que se abrió (p. ej. /transactions?mover=… desde un recordatorio de cobro).
+  final Uri? link;
 
   @override
   State<TransactionsScreen> createState() => _TransactionsScreenState();
@@ -52,11 +54,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Map<String, Object?> get _filters => {'search': _searchText, 'type': _type, 'account_id': _account, 'date_from': _from, 'date_to': _to};
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // /transactions?mover=<cuenta destino>&desde=<origen>&monto=…&nota=…
-    final uri = GoRouterState.of(context).uri;
-    final q = uri.queryParameters;
+  void initState() {
+    super.initState();
+    _openLink(widget.link);
+  }
+
+  @override
+  void didUpdateWidget(TransactionsScreen old) {
+    super.didUpdateWidget(old);
+    if (widget.link != old.link) _openLink(widget.link);
+  }
+
+  /// `/transactions?mover=…&desde=…&monto=…&nota=…` abre una transferencia precargada (cuenta destino, origen, monto y nota).
+  void _openLink(Uri? uri) {
+    final q = uri?.queryParameters ?? const {};
     if (q['mover'] == null || '$uri' == _handledLink) return;
     _handledLink = '$uri';
     _formOpen = true;
