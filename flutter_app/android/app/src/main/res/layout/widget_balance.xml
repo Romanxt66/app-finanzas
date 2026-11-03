@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Saldo con Alvi: tocar la cifra la oculta o la muestra; tocar a Alvi abre la app -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter" />
+
+    <TextView
+        android:id="@+id/widget_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_empty_bg"
+        android:gravity="center"
+        android:padding="12dp"
+        android:text="@string/widget_empty"
+        android:textColor="#F4F2FA"
+        android:textSize="14sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/widget_left"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="6"
+            android:contentDescription="Mostrar u ocultar el saldo" />
+
+        <FrameLayout
+            android:id="@+id/widget_right"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="4"
+            android:contentDescription="Abrir Alvea" />
+    </LinearLayout>
+</FrameLayout>

@@ -9,4 +9,15 @@
     <style name="NormalTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@color/alvea_launch</item>
     </style>
+    <!-- Recuadro rápido: ventana transparente encima de lo que haya en pantalla (sin barra ni animación
+         de pantalla completa). AppCompat por el diálogo de huella. -->
+    <style name="QuickAddTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 </resources>

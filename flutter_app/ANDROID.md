@@ -72,6 +72,13 @@ de ejecución), así que siempre crece.
   «Recordatorios de cobro» (cuándo, a qué hora, qué recordar y ocultar el contenido en la pantalla de bloqueo).
   Android pide permiso para mostrar avisos la primera vez. Algunos fabricantes (Xiaomi, Huawei…) frenan las apps
   en segundo plano: si no llegan, permite a Alvea funcionar en segundo plano en los ajustes del teléfono.
+- **Botón rápido en el panel de notificaciones.** Baja la persiana, toca el lápiz de editar y arrastra
+  «Alvea · Gasto» al panel. Al tocarlo se abre un recuadro encima de lo que estés viendo para anotar un gasto o
+  un ingreso (monto, categoría y guardar) sin abrir la app. Sin internet se guarda y se envía al volver la
+  conexión; con PIN, primero pide desbloquear.
+- **Widgets del escritorio.** Mantén pulsado el escritorio → Widgets → Alvea: Gasto rápido, Disponible hoy, Saldo
+  con Alvi (toca la cifra para ocultarla), Próximos cobros y Meta de ahorro. Se actualizan al abrir la app o
+  guardar un movimiento, y siguen el color de acento de Apariencia.
 - **Sin aviso de conexión.** Si no hay internet, cada pantalla muestra su error y permite reintentar.
 
 ## Compilar en tu PC (opcional)

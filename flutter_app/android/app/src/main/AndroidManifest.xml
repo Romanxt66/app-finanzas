@@ -35,6 +35,52 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Recuadro rápido: gasto o ingreso sin abrir la app (desde el panel rápido o el widget) -->
+        <activity
+            android:name=".QuickAddActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="click.softlane.alvea.quickadd"
+            android:theme="@style/QuickAddTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize" />
+        <!-- Botón «Alvea · Gasto» del panel rápido, junto al wifi y el Bluetooth -->
+        <service
+            android:name=".QuickAddTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_stat_alvea"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+        <!-- Widgets del escritorio (Flutter los pinta como imagen; ver AlveaWidgets.kt) -->
+        <receiver android:name=".QuickWidget" android:exported="false" android:label="@string/widget_quick_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_quick_info" />
+        </receiver>
+        <receiver android:name=".TodayWidget" android:exported="false" android:label="@string/widget_today_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_today_info" />
+        </receiver>
+        <receiver android:name=".BalanceWidget" android:exported="false" android:label="@string/widget_balance_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="click.softlane.alvea.widget.TOGGLE_BALANCE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_balance_info" />
+        </receiver>
+        <receiver android:name=".ChargesWidget" android:exported="false" android:label="@string/widget_charges_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_charges_info" />
+        </receiver>
+        <receiver android:name=".GoalWidget" android:exported="false" android:label="@string/widget_goal_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_goal_info" />
+        </receiver>
         <!-- Recordatorios de cobro (flutter_local_notifications): avisos programados, su
              reprogramación al reiniciar o actualizar y las acciones («Recordar en 3 h») -->
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
