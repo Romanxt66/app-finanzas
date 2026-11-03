@@ -32,6 +32,17 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Alvea</title>
+  <!-- Arranque: lo que Flutter pediría al terminar de bajar el motor se descarga ya, en paralelo -->
+  <link rel="preload" href="main.dart.wasm" as="fetch" crossorigin>
+  <link rel="preload" href="canvaskit/skwasm.wasm" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/Manrope.ttf" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/JetBrainsMono-Regular.ttf" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/JetBrainsMono-Medium.ttf" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/InstrumentSerif-Italic.ttf" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/fonts/SymbolsFallback.ttf" as="fetch" crossorigin>
+  <link rel="preload" href="assets/fonts/fallback/Roboto-Regular.ttf" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/backgrounds/fondo_esmerilado.jpg" as="fetch" crossorigin>
+  <link rel="preload" href="assets/assets/backgrounds/fondo.jpg" as="fetch" crossorigin>
   <link rel="manifest" href="manifest.json">
   <style>
     html, body { margin: 0; height: 100%; background: #f7f2f9; }
