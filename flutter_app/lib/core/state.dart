@@ -6,6 +6,7 @@ import 'app_lock.dart';
 import 'format.dart';
 import 'models.dart';
 import 'notices.dart';
+import 'reminder_center.dart';
 
 /// Estado global: sesión, tema, preferencias y "revisión" de datos (invalida lo cargado tras un cambio).
 class AppState extends ChangeNotifier {
@@ -25,6 +26,9 @@ class AppState extends ChangeNotifier {
 
   /// Avisos (cobros próximos, presupuestos, Sala de espera); se recargan con cada cambio de datos.
   late final NoticeCenter notices = NoticeCenter(_prefs, api);
+
+  /// Recordatorios de cobro (avisos del sistema en Android, banner y hoja en la app).
+  late final ReminderCenter reminders = ReminderCenter(_prefs, api);
 
   /// Bloqueo con PIN de este dispositivo.
   late final AppLock lock = AppLock(_prefs)..onTooManyAttempts = _lockedOut;
@@ -64,6 +68,7 @@ class AppState extends ChangeNotifier {
   Future<void> _loadUser() async {
     user = User.fromJson(await api.get('/auth/me') as Map<String, dynamic>);
     notices.load();
+    reminders.refresh();
   }
 
   /// Vuelve a leer el usuario (p. ej. tras activar la verificación en dos pasos).
@@ -75,7 +80,10 @@ class AppState extends ChangeNotifier {
   void invalidate() {
     revision++;
     notifyListeners();
-    if (user != null) notices.load();
+    if (user != null) {
+      notices.load();
+      reminders.refresh();
+    }
   }
 
   /// [otp]: código de la app de autenticación o de recuperación, si la cuenta lo pide
@@ -101,9 +109,12 @@ class AppState extends ChangeNotifier {
     if (_ranRecurring || user == null) return;
     _ranRecurring = true;
     try {
+      // Los de hoy que se van a registrar se muestran luego como «pagados» en la hoja de cobros
+      final due = await reminders.dueToday();
       final res = await api.call('POST', '/recurring/run', query: {'today': todayISO()}) as Map<String, dynamic>;
       final created = res['created'] as int;
       if (created > 0) {
+        await reminders.markRegistered(due);
         onToast?.call(created == 1 ? 'Se registró 1 movimiento recurrente' : 'Se registraron $created movimientos recurrentes');
         invalidate();
       }
@@ -116,6 +127,7 @@ class AppState extends ChangeNotifier {
     await api.clearTokens();
     user = null;
     notices.clear();
+    await reminders.clear();
     await lock.disable(); // el PIN es de esta sesión: otra persona que entre no lo hereda
     _ranRecurring = false;
     revision++;

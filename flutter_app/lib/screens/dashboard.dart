@@ -17,6 +17,7 @@ import '../ui/widgets.dart';
 import 'features.dart';
 import 'flow_chart.dart';
 import 'insights.dart';
+import 'reminders.dart';
 
 /// Variación % frente al mes anterior; null si no hay base de comparación.
 double? change(double current, double? previous) => (previous != null && previous != 0) ? (current - previous) / previous * 100 : null;
@@ -84,6 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
+                  const ChargeAlertBanner(),
                   if (showGuide)
                     _GettingStarted(
                       hasAccounts: ref.allAccounts.isNotEmpty,
@@ -361,10 +363,8 @@ class _StepRowState extends State<_StepRow> {
                 Expanded(
                   child: Text(
                     widget.label,
-                    style: CrText.body(Colors.white.withValues(alpha: widget.done ? 0.55 : 1)).copyWith(
-                      decoration: widget.done ? TextDecoration.lineThrough : null,
-                      decorationColor: Colors.white54,
-                    ),
+                    style: CrText.body(Colors.white.withValues(alpha: widget.done ? 0.55 : 1))
+                        .copyWith(decoration: widget.done ? TextDecoration.lineThrough : null, decorationColor: Colors.white54),
                   ),
                 ),
                 AnimatedSlide(

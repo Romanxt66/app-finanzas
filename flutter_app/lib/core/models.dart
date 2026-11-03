@@ -81,9 +81,17 @@ class Recurring {
       description = j['description'] ?? '',
       frequency = j['frequency'],
       nextDate = j['next_date'],
+      transferAccountId = j['transfer_account_id'],
+      endDate = j['end_date'],
       active = j['active'];
   final String id, type, accountId, description, frequency, nextDate;
   final String? categoryId;
+
+  /// Cuenta destino de una transferencia recurrente.
+  final String? transferAccountId;
+
+  /// Último día en que se repite (null: sin fin).
+  final String? endDate;
   final double amount;
   final bool active;
 }

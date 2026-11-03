@@ -66,6 +66,10 @@ String formatMoney(num value, [String? currency, bool signed = false]) {
   return signed && n > 0 ? '+ $abs' : abs;
 }
 
+/// Monto con el código de la moneda detrás («44.900 COP»), como lo escriben los avisos del sistema.
+String formatMoneyCode(num value, String currency) =>
+    '${NumberFormat.decimalPatternDigits(locale: 'es_CO', decimalDigits: _decimals(currency)).format(value.abs())} $currency';
+
 /// 18.2 → «18,2» (hasta un decimal).
 String formatPercent(num value) => NumberFormat('#,##0.#', 'es_CO').format(value);
 

@@ -8,6 +8,7 @@ import '../ui/page.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'auth_screens.dart' show PasswordRules;
+import 'reminders.dart';
 import 'security.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -157,6 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SecurityCard(),
+        if (remindersOnDevice) const ReminderSettingsCard(),
         CrCard(
           title: 'Apariencia',
           child: Stack12(
