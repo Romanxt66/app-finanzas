@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api.dart';
 import 'core/error_report.dart';
+import 'core/native_app.dart';
 import 'core/state.dart';
 import 'screens/accounts.dart';
 import 'screens/auth_screens.dart';
@@ -25,10 +26,15 @@ import 'screens/recurring.dart';
 import 'screens/subscriptions.dart';
 import 'screens/transactions.dart';
 import 'screens/waiting_room.dart';
+import 'quick_add.dart';
 import 'ui/buttons.dart';
 import 'ui/dialogs.dart';
 import 'ui/glass.dart';
 import 'ui/theme.dart';
+
+/// Entrada del recuadro rápido (QuickAddActivity, Android): gasto o ingreso sin abrir la app.
+@pragma('vm:entry-point')
+Future<void> quickAddMain() => runQuickAdd();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +79,7 @@ class _AlveaAppState extends State<AlveaApp> {
     super.initState();
     widget.state.onToast = _toasts.success;
     widget.state.reminders.onOpen = _openFromNotice;
+    NativeApp.onOpen(_openFromNotice);
     _boot();
   }
 
@@ -84,7 +91,7 @@ class _AlveaAppState extends State<AlveaApp> {
       await widget.state.boot();
       await reminders;
       // La app se abrió tocando un recordatorio de cobro: lleva a lo que pedía
-      final route = await widget.state.reminders.launchRoute();
+      final route = await widget.state.reminders.launchRoute() ?? await NativeApp.initialRoute();
       if (route != null) _openFromNotice(route);
     } catch (e) {
       if (mounted) setState(() => _bootError = e);

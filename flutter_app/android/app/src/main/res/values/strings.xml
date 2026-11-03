@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tile_label">Alvea · Gasto</string>
+    <string name="tile_subtitle">Añadir sin abrir</string>
+    <string name="widget_empty">Abre Alvea para ver tus datos</string>
+    <string name="widget_quick_name">Gasto rápido</string>
+    <string name="widget_quick_description">Anota un gasto o un ingreso sin abrir la app</string>
+    <string name="widget_today_name">Disponible hoy</string>
+    <string name="widget_today_description">Lo que te queda para gastar hoy, con Alvi</string>
+    <string name="widget_balance_name">Saldo con Alvi</string>
+    <string name="widget_balance_description">Saldo total, entradas y salidas del mes. Toca la cifra para ocultarla</string>
+    <string name="widget_charges_name">Próximos cobros</string>
+    <string name="widget_charges_description">Los siguientes pagos recurrentes y si te alcanza el saldo</string>
+    <string name="widget_goal_name">Meta de ahorro</string>
+    <string name="widget_goal_description">Cuánto llevas de tu meta de ahorro</string>
+</resources>

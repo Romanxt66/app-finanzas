@@ -10,11 +10,14 @@ import 'app_lock.dart';
 import 'format.dart';
 import 'models.dart';
 import 'notices.dart';
+import 'pending.dart';
 import 'reminder_center.dart';
+import 'native_app.dart';
+import 'widget_sync.dart';
 
 /// Estado global: sesión, tema, preferencias y "revisión" de datos (invalida lo cargado tras un cambio).
 class AppState extends ChangeNotifier {
-  AppState(this._prefs, {ApiClient? client}) : api = client ?? ApiClient(_prefs) {
+  AppState(this._prefs, {ApiClient? client, this.quiet = false}) : api = client ?? ApiClient(_prefs) {
     api.onUnauthorized = () {
       user = null;
       _prefs.remove(_userCacheKey);
@@ -31,8 +34,18 @@ class AppState extends ChangeNotifier {
   final SharedPreferences _prefs;
   final ApiClient api;
 
+  /// Recuadro rápido (otra actividad con su propio motor): sin avisos, recordatorios ni widgets,
+  /// que ya los lleva la app principal.
+  final bool quiet;
+
   /// Avisos (cobros próximos, presupuestos, Sala de espera); se recargan con cada cambio de datos.
   late final NoticeCenter notices = NoticeCenter(_prefs, api);
+
+  /// Movimientos guardados sin conexión desde el recuadro rápido.
+  late final PendingQueue pending = PendingQueue(_prefs, api);
+
+  /// Widgets del escritorio de Android (imágenes al día con los datos).
+  late final WidgetSync widgets = WidgetSync(this);
 
   /// Recordatorios de cobro (avisos del sistema en Android, banner y hoja en la app).
   late final ReminderCenter reminders = ReminderCenter(_prefs, api);
@@ -75,8 +88,10 @@ class AppState extends ChangeNotifier {
         user = User.fromJson(jsonDecode(cached) as Map<String, dynamic>);
         booting = false;
         notifyListeners();
-        notices.load();
-        reminders.refresh();
+        if (!quiet) {
+          notices.load();
+          reminders.refresh();
+        }
         _loadUser().then((_) => notifyListeners(), onError: (Object _) {});
         return;
       } catch (_) {
@@ -103,8 +118,22 @@ class AppState extends ChangeNotifier {
     } else {
       await _prefs.remove(_userCacheKey);
     }
-    notices.load();
-    reminders.refresh();
+    if (!quiet) {
+      notices.load();
+      reminders.refresh();
+      widgets.schedule();
+    }
+    _sendPending();
+  }
+
+  /// Envía lo que el recuadro rápido guardó sin conexión.
+  Future<void> _sendPending() async {
+    if (pending.length == 0) return;
+    final sent = await pending.flush();
+    if (sent > 0) {
+      onToast?.call(sent == 1 ? 'Se guardó 1 movimiento que estaba pendiente' : 'Se guardaron $sent movimientos pendientes');
+      invalidate();
+    }
   }
 
   /// Vuelve a leer el usuario (p. ej. tras activar la verificación en dos pasos).
@@ -119,6 +148,7 @@ class AppState extends ChangeNotifier {
     if (user != null) {
       notices.load();
       reminders.refresh();
+      widgets.schedule();
     }
   }
 
@@ -165,6 +195,7 @@ class AppState extends ChangeNotifier {
     user = null;
     notices.clear();
     await reminders.clear();
+    await NativeApp.clearWidgets();
     await lock.disable(); // el PIN es de esta sesión: otra persona que entre no lo hereda
     _ranRecurring = false;
     revision++;
@@ -194,6 +225,7 @@ class AppState extends ChangeNotifier {
     accent = value;
     _prefs.setString('accent', value.id);
     notifyListeners();
+    widgets.schedule();
   }
 
   void setGlow(GlowLevel value) {
