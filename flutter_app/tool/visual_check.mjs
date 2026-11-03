@@ -30,47 +30,65 @@ const tokens = await login.json()
 
 const browser = await chromium.launch()
 const errors = []
+// Un solo arranque del motor (sin GPU tarda): la vista móvil se obtiene cambiando el tamaño de la
+// ventana en la misma página, como al girar o estrechar el navegador (la app es adaptable)
+// Idioma explícito: sin él, Chromium sin interfaz usa la configuración regional «C», que la app no admite
+const ctx = await browser.newContext({ viewport: { width: 1366, height: 860 }, colorScheme: 'dark', locale: 'es-CO' })
+const page = await ctx.newPage()
+let current = `escritorio ${routes[0]}`
+page.on('pageerror', (e) => errors.push(`[${current}] error de página: ${e.message}`))
+page.on('console', (m) => {
+  if (m.type() === 'error') errors.push(`[${current}] consola: ${m.text().slice(0, 300)}`)
+})
+// La app guarda la sesión en shared_preferences (localStorage con prefijo «flutter.»)
+await page.addInitScript((t) => {
+  localStorage.setItem('flutter.access_token', JSON.stringify(t.access_token))
+  localStorage.setItem('flutter.refresh_token', JSON.stringify(t.refresh_token))
+}, tokens)
+await page.goto(APP_URL + routes[0])
+// Se espera a que Flutter pinte (el lienzo vive dentro del shadow DOM de flt-glass-pane)
+await page.waitForFunction(() => document.querySelector('flutter-view flt-glass-pane')?.shadowRoot?.querySelector('canvas'), null, {
+  timeout: 120_000,
+})
+
+// Navegación dentro de la app (como el botón «atrás» del navegador): sin recargar el motor
+const go = (path) =>
+  page.evaluate((p) => {
+    history.pushState(null, '', p)
+    dispatchEvent(new PopStateEvent('popstate', { state: null }))
+  }, path)
+
+// Espera a que terminen las peticiones y a que pasen las animaciones de entrada
+async function settle(ms) {
+  await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {})
+  await page.waitForTimeout(ms)
+}
+
+// Sin GPU, un fotograma puede tardar: margen amplio y un reintento antes de darlo por fallido
+async function capture(path) {
+  try {
+    await page.screenshot({ path, timeout: 60_000 })
+  } catch {
+    await page.waitForTimeout(5000)
+    await page.screenshot({ path, timeout: 90_000 })
+  }
+}
+
 for (const [tag, viewport] of [
   ['escritorio', { width: 1366, height: 860 }],
   ['movil', { width: 390, height: 844 }],
 ]) {
-  // Idioma explícito: sin él, Chromium sin interfaz usa la configuración regional «C», que la app no admite
-  const ctx = await browser.newContext({ viewport, colorScheme: 'dark', locale: 'es-CO' })
-  const page = await ctx.newPage()
-  let current = routes[0]
-  page.on('pageerror', (e) => errors.push(`[${tag} ${current}] error de página: ${e.message}`))
-  page.on('console', (m) => {
-    if (m.type() === 'error') errors.push(`[${tag} ${current}] consola: ${m.text().slice(0, 300)}`)
-  })
-  // La app guarda la sesión en shared_preferences (localStorage con prefijo «flutter.»)
-  await page.addInitScript((t) => {
-    localStorage.setItem('flutter.access_token', JSON.stringify(t.access_token))
-    localStorage.setItem('flutter.refresh_token', JSON.stringify(t.refresh_token))
-  }, tokens)
-  await page.goto(APP_URL + routes[0])
-  // Sin GPU (CI) el motor tarda en arrancar: se espera a que Flutter pinte y se da margen a las animaciones
-  // (el lienzo vive dentro del shadow DOM de flt-glass-pane)
-  await page.waitForFunction(() => document.querySelector('flutter-view flt-glass-pane')?.shadowRoot?.querySelector('canvas'), null, {
-    timeout: 120_000,
-  })
-  await page.waitForTimeout(6000)
-  for (const route of routes) {
-    current = route
-    if (route !== routes[0]) {
-      // Navegación dentro de la app (como el botón «atrás» del navegador): sin recargar el motor
-      await page.evaluate((path) => {
-        history.pushState(null, '', path)
-        dispatchEvent(new PopStateEvent('popstate', { state: null }))
-      }, route)
-      await page.waitForTimeout(3500)
-    }
+  await page.setViewportSize(viewport)
+  for (const [i, route] of routes.entries()) {
+    current = `${tag} ${route}`
+    if (tag !== 'escritorio' || i > 0) await go(route)
+    await settle(i === 0 ? 6000 : 3000)
     const path = new URL(page.url()).pathname
-    if (path !== route) errors.push(`[${tag} ${route}] la app terminó en ${path}`)
+    if (path !== route) errors.push(`[${current}] la app terminó en ${path}`)
     const slug = route === '/' ? '_inicio' : route.replace(/\//g, '_')
-    await page.screenshot({ path: `${OUT}/${tag}${slug}.png` })
+    await capture(`${OUT}/${tag}${slug}.png`)
     console.log('captura', `${tag}${slug}.png`)
   }
-  await ctx.close()
 }
 await browser.close()
 
