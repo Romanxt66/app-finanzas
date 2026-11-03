@@ -223,3 +223,18 @@ Mapping guessMapping(List<String> header, DateFormatKind dateFormat) {
     dateFormat: dateFormat,
   );
 }
+
+/// Fila del encabezado dentro de las primeras filas: los extractos de algunos bancos empiezan con
+/// datos de la cuenta (titular, número, periodo…) antes de la tabla. -1 si no se encuentra.
+int findHeaderRow(List<List<String>> rows, {int maxScan = 15}) {
+  for (var i = 0; i < rows.length && i < maxScan; i++) {
+    final row = rows[i];
+    final hasDate = row.any(_names['date']!.hasMatch);
+    final hasMoney = row.any((c) => _names['amount']!.hasMatch(c) || _names['debit']!.hasMatch(c) || _names['credit']!.hasMatch(c));
+    if (hasDate && hasMoney && looksLikeHeader(row)) return i;
+  }
+  return -1;
+}
+
+/// Clave para agrupar movimientos iguales al asignar categorías (misma descripción y mismo signo).
+String categoryGroupKey(ImportItem item) => '${item.description.trim().toLowerCase()}|${item.amount.startsWith('-') ? '-' : '+'}';

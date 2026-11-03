@@ -105,6 +105,19 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
 
+    testWidgets('sin espacio no pinta (ni produce NaN)', (tester) async {
+      await tester.pumpWidget(
+        _app(
+          SizedBox.shrink(
+            child: OverflowBox(maxWidth: 0, maxHeight: 0, child: MoodFace(expression: FinanceMood.faces[2], size: 80)),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+
     test('lerp mezcla color y rasgos', () {
       const a = FaceExpression(color: Colors.black, smile: -1);
       const b = FaceExpression(color: Colors.white, smile: 1, sparkle: 1);

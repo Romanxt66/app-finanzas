@@ -311,7 +311,11 @@ class ErrorText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (error == null) return const SizedBox.shrink();
-    final msg = error is ApiError ? (error as ApiError).message : 'Error inesperado';
+    final msg = switch (error) {
+      final ApiError e => e.message,
+      final String s => s,
+      _ => 'Error inesperado',
+    };
     return Padding(
       padding: const EdgeInsets.only(top: space1),
       child: Semantics(
@@ -944,7 +948,11 @@ class _SkeletonState extends State<Skeleton> with SingleTickerProviderStateMixin
                       gradient: LinearGradient(
                         begin: Alignment(-2 + 4 * _c.value - 1, 0),
                         end: Alignment(-2 + 4 * _c.value + 1, 0),
-                        colors: [Colors.white.withValues(alpha: 0), Colors.white.withValues(alpha: c.isDark ? 0.07 : 0.25), Colors.white.withValues(alpha: 0)],
+                        colors: [
+                          Colors.white.withValues(alpha: 0),
+                          Colors.white.withValues(alpha: c.isDark ? 0.07 : 0.25),
+                          Colors.white.withValues(alpha: 0),
+                        ],
                         stops: const [0.3, 0.5, 0.7],
                       ),
                     ),

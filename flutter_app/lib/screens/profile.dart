@@ -8,6 +8,7 @@ import '../ui/page.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'auth_screens.dart' show PasswordRules;
+import 'security.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -155,15 +156,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+        const SecurityCard(),
         CrCard(
           title: 'Apariencia',
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: CrSegmented<ThemeMode>(
-              options: const [(ThemeMode.system, 'Automático'), (ThemeMode.light, 'Claro'), (ThemeMode.dark, 'Oscuro')],
-              value: app.themeMode,
-              onChanged: app.setTheme,
-            ),
+          child: Stack12(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: CrSegmented<ThemeMode>(
+                  options: const [(ThemeMode.system, 'Automático'), (ThemeMode.light, 'Claro'), (ThemeMode.dark, 'Oscuro')],
+                  value: app.themeMode,
+                  onChanged: app.setTheme,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: CrCheckbox(
+                  value: app.reduceMotion || MediaQuery.disableAnimationsOf(context),
+                  onChanged: app.setReduceMotion,
+                  label: 'Reducir animaciones',
+                ),
+              ),
+              if (View.of(context).platformDispatcher.accessibilityFeatures.disableAnimations)
+                Text('Tu sistema ya pide reducir el movimiento: Alvea lo respeta.', style: CrText.caption(c.inkMuted)),
+            ],
           ),
         ),
         Wrap(

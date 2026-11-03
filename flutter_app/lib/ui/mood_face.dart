@@ -202,6 +202,8 @@ class FacePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Sin espacio no hay carita: con tamaño 0 las proporciones darían NaN al pintar
+    if (size.isEmpty) return;
     final r = size.shortestSide * 0.33; // radio de la panza
     final phase = t * math.pi * 2;
     final base = Offset(size.width / 2, size.height * 0.60);

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/reference.dart';
 import '../core/state.dart';
+import '../ui/notice_bell.dart';
 import '../ui/buttons.dart';
 import '../ui/glass.dart';
 import '../ui/icons.dart';
@@ -209,6 +210,8 @@ class _TopBar extends StatelessWidget {
                 ),
               ),
             if (wide) _UserLink(name: app.user?.fullName ?? '', showName: width >= 1360, active: location == '/profile'),
+            const NoticeBell(),
+            const SizedBox(width: space1),
             CrButton(
               variant: CrButtonVariant.ghost,
               small: true,

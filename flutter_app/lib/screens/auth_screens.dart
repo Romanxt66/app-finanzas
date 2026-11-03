@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/api.dart';
 import '../core/password.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
@@ -439,6 +440,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _otp = TextEditingController();
+
+  /// La cuenta tiene verificación en dos pasos: se muestra el campo del código.
+  bool _needOtp = false;
   bool _remember = true;
   bool _busy = false;
   bool _submitted = false;
@@ -456,7 +461,19 @@ class _LoginScreenState extends State<LoginScreen> {
     final app = context.app;
     setState(() => _busy = true);
     try {
-      await app.login(_email.text.trim(), _password.text, remember: _remember);
+      final otp = _otp.text.replaceAll(RegExp(r'\s'), '');
+      await app.login(_email.text.trim(), _password.text, remember: _remember, otp: _needOtp && otp.isNotEmpty ? otp : null);
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (e.code == 'otp_required') {
+          // Contraseña correcta: falta el código (no es un error, es el segundo paso)
+          _error = _needOtp ? e : null;
+          _needOtp = true;
+        } else {
+          _error = e;
+        }
+      });
     } catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {
@@ -468,6 +485,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _otp.dispose();
     super.dispose();
   }
 
@@ -498,6 +516,23 @@ class _LoginScreenState extends State<LoginScreen> {
           onChanged: (_) => setState(() {}),
           onSubmitted: (_) => _submit(),
         ),
+        if (_needOtp) ...[
+          Text(
+            'Tu cuenta tiene verificación en dos pasos. Escribe el código de 6 dígitos de tu app de autenticación '
+            '(o uno de tus códigos de recuperación).',
+            style: CrText.caption(c.inkMuted),
+          ),
+          CrTextField(
+            label: 'Código de verificación',
+            controller: _otp,
+            icon: 'shield',
+            hint: '123 456',
+            autofocus: true,
+            keyboardType: TextInputType.visiblePassword,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
         Align(
           alignment: Alignment.centerLeft,
           child: CrCheckbox(value: _remember, onChanged: (v) => setState(() => _remember = v), label: 'Mantener sesión iniciada'),
