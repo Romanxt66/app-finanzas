@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'accent.dart';
 import 'tokens.g.dart';
 
 export 'tokens.g.dart';
@@ -17,8 +18,11 @@ const fontFallback = ['SymbolsFallback'];
 
 /// Paleta Cristal accesible desde el tema (`context.c`).
 class Cr extends ThemeExtension<Cr> {
-  const Cr(this.p);
+  const Cr(this.p, {this.backdrop});
   final CrPalette p;
+
+  /// Filtro de color del fondo y del cristal según el acento elegido (null: colores originales).
+  final ColorFilter? backdrop;
 
   @override
   Cr copyWith() => this;
@@ -72,8 +76,10 @@ class CrText {
   static TextStyle heading(Color c) => _s(16, 22, FontWeight.w600, c);
   static TextStyle body(Color c) => _s(15, 22, FontWeight.w500, c);
   static TextStyle label(Color c) => _s(13, 18, FontWeight.w500, c);
+
   /// Etiqueta de sistema en monoespaciada y minúsculas (`last runs`, `estimate`…).
   static TextStyle overline(Color c) => mono(c, size: 11.5);
+
   /// Metadatos (fechas, notas, periodicidad): monoespaciada, como las líneas de sistema de «Relay».
   static TextStyle caption(Color c) => mono(c, size: 11.5);
 
@@ -113,8 +119,8 @@ class CrText {
   );
 }
 
-ThemeData buildTheme(Brightness brightness) {
-  final p = brightness == Brightness.dark ? crPaletteDark : crPaletteLight;
+ThemeData buildTheme(Brightness brightness, {AccentChoice accent = fuchsiaAccent, GlowLevel glow = GlowLevel.normal}) {
+  final p = tintPalette(brightness == Brightness.dark ? crPaletteDark : crPaletteLight, accent, glow);
   final scheme = ColorScheme.fromSeed(
     seedColor: p.brandFill,
     brightness: brightness,
@@ -127,7 +133,7 @@ ThemeData buildTheme(Brightness brightness) {
     fontFamilyFallback: fontFallback,
     scaffoldBackgroundColor: Colors.transparent,
     canvasColor: p.surfaceSolid,
-    extensions: [Cr(p)],
+    extensions: [Cr(p, backdrop: backdropFilter(accent, glow))],
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
     hoverColor: Colors.transparent,

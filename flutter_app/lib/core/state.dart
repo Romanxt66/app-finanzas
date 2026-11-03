@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../ui/accent.dart';
+
 import 'api.dart';
 import 'app_lock.dart';
 import 'format.dart';
@@ -19,6 +21,8 @@ class AppState extends ChangeNotifier {
     themeMode = ThemeMode.values.where((m) => m.name == saved).firstOrNull ?? ThemeMode.system;
     balanceHidden = _prefs.getString('balance_hidden') == '1';
     reduceMotion = _prefs.getString('reduce_motion') == '1';
+    accent = accentById(_prefs.getString('accent'));
+    glow = glowById(_prefs.getString('glow'));
   }
 
   final SharedPreferences _prefs;
@@ -45,6 +49,10 @@ class AppState extends ChangeNotifier {
 
   /// Reducir animaciones aunque el sistema no lo pida (se suma a «reducir movimiento» del sistema).
   bool reduceMotion = false;
+
+  /// Color de acento y luz del fondo elegidos en Perfil → Apariencia (de este dispositivo).
+  AccentChoice accent = fuchsiaAccent;
+  GlowLevel glow = GlowLevel.normal;
 
   /// Sube con cada cambio de datos: las pantallas que dependen de ella se recargan.
   int revision = 0;
@@ -150,6 +158,18 @@ class AppState extends ChangeNotifier {
     ThemeMode.light => ThemeMode.dark,
     ThemeMode.dark => ThemeMode.system,
   });
+
+  void setAccent(AccentChoice value) {
+    accent = value;
+    _prefs.setString('accent', value.id);
+    notifyListeners();
+  }
+
+  void setGlow(GlowLevel value) {
+    glow = value;
+    _prefs.setString('glow', value.name);
+    notifyListeners();
+  }
 
   void setReduceMotion(bool value) {
     reduceMotion = value;

@@ -102,8 +102,8 @@ class _AlveaAppState extends State<AlveaApp> {
       builder: (context, _) => MaterialApp.router(
         title: 'Alvea',
         debugShowCheckedModeBanner: false,
-        theme: buildTheme(Brightness.light),
-        darkTheme: buildTheme(Brightness.dark),
+        theme: buildTheme(Brightness.light, accent: widget.state.accent, glow: widget.state.glow),
+        darkTheme: buildTheme(Brightness.dark, accent: widget.state.accent, glow: widget.state.glow),
         themeMode: widget.state.themeMode,
         locale: const Locale('es', 'CO'),
         supportedLocales: const [Locale('es', 'CO'), Locale('es')],

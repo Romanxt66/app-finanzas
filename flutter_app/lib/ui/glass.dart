@@ -49,10 +49,12 @@ class _CrBackdropState extends State<CrBackdrop> {
   Widget build(BuildContext context) {
     final c = context.c;
     final dark = c.bg.computeLuminance() < 0.2;
+    final filter = Theme.of(context).extension<Cr>()?.backdrop;
     return FrostScope(
       image: _frost,
       backdrop: _key,
       dark: dark,
+      filter: filter,
       child: Stack(
         children: [
           Positioned.fill(
@@ -62,7 +64,13 @@ class _CrBackdropState extends State<CrBackdrop> {
                 fit: StackFit.expand,
                 children: [
                   ColoredBox(color: c.bg),
-                  const Image(image: AssetImage(backgroundAsset), fit: BoxFit.cover, gaplessPlayback: true),
+                  if (filter == null)
+                    const Image(image: AssetImage(backgroundAsset), fit: BoxFit.cover, gaplessPlayback: true)
+                  else
+                    ColorFiltered(
+                      colorFilter: filter,
+                      child: const Image(image: AssetImage(backgroundAsset), fit: BoxFit.cover, gaplessPlayback: true),
+                    ),
                   // Velo: oscuro (o claro) y algo más denso abajo, donde va el contenido
                   DecoratedBox(
                     decoration: BoxDecoration(
@@ -89,15 +97,18 @@ class _CrBackdropState extends State<CrBackdrop> {
 
 /// Lo que necesita el cristal para pintar su trozo de fondo desenfocado.
 class FrostScope extends InheritedWidget {
-  const FrostScope({super.key, required this.image, required this.backdrop, required this.dark, required super.child});
+  const FrostScope({super.key, required this.image, required this.backdrop, required this.dark, this.filter, required super.child});
   final ui.Image? image;
   final GlobalKey backdrop;
   final bool dark;
 
+  /// Mismo filtro de color que el fondo (acento elegido), para que el cristal case con él.
+  final ColorFilter? filter;
+
   static FrostScope? maybeOf(BuildContext context) => context.dependOnInheritedWidgetOfExactType<FrostScope>();
 
   @override
-  bool updateShouldNotify(FrostScope old) => old.image != image || old.backdrop != backdrop || old.dark != dark;
+  bool updateShouldNotify(FrostScope old) => old.image != image || old.backdrop != backdrop || old.dark != dark || old.filter != filter;
 }
 
 /// Pinta, bajo su hijo, la porción del fondo desenfocado que queda justo detrás en pantalla.
@@ -110,14 +121,17 @@ class Frost extends SingleChildRenderObjectWidget {
   // Muchas tarjetas van dentro de capas que Flutter mueve sin repintar al desplazar (p. ej. la
   // opacidad de la animación de entrada): el cristal escucha el desplazamiento y se repinta solo.
   @override
-  RenderObject createRenderObject(BuildContext context) => RenderFrost(image, backdrop)..position = Scrollable.maybeOf(context)?.position;
+  RenderObject createRenderObject(BuildContext context) => RenderFrost(image, backdrop)
+    ..position = Scrollable.maybeOf(context)?.position
+    ..filter = FrostScope.maybeOf(context)?.filter;
 
   @override
   void updateRenderObject(BuildContext context, RenderFrost renderObject) {
     renderObject
       ..image = image
       ..backdrop = backdrop
-      ..position = Scrollable.maybeOf(context)?.position;
+      ..position = Scrollable.maybeOf(context)?.position
+      ..filter = FrostScope.maybeOf(context)?.filter;
   }
 }
 
@@ -146,6 +160,13 @@ class RenderFrost extends RenderProxyBox {
     super.detach();
   }
 
+  ColorFilter? _filter;
+  set filter(ColorFilter? v) {
+    if (v == _filter) return;
+    _filter = v;
+    markNeedsPaint();
+  }
+
   set image(ui.Image v) {
     if (v == _image) return;
     _image = v;
@@ -164,7 +185,14 @@ class RenderFrost extends RenderProxyBox {
       final canvas = context.canvas;
       canvas.save();
       canvas.clipRect(offset & size);
-      canvas.drawImageRect(_image, src, dst, Paint()..filterQuality = FilterQuality.low);
+      canvas.drawImageRect(
+        _image,
+        src,
+        dst,
+        Paint()
+          ..filterQuality = FilterQuality.low
+          ..colorFilter = _filter,
+      );
       // Reflejo del cristal: un velo blanco muy tenue que se apaga hacia abajo
       canvas.drawRect(
         offset & size,
