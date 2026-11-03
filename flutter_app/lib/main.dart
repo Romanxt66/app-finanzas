@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -6,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/api.dart';
+import 'core/error_report.dart';
 import 'core/state.dart';
 import 'screens/accounts.dart';
 import 'screens/auth_screens.dart';
@@ -33,9 +35,16 @@ Future<void> main() async {
   await initializeDateFormatting('es');
   final state = AppState(await SharedPreferences.getInstance());
   var failed = false;
+  final reporter = ErrorReporter(route: () => Uri.base.path);
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
     failed = true;
+    if (kReleaseMode) reporter.report(details.exception, details.stack);
+  };
+  // Errores asíncronos que nadie capturó (futuros, callbacks del navegador…)
+  PlatformDispatcher.instance.onError = (error, stack) {
+    if (kReleaseMode) reporter.report(error, stack);
+    return false; // además, que se registren como siempre en la consola
   };
   runApp(AlveaApp(state: state, didFail: () => failed));
 }
@@ -135,6 +144,11 @@ class _AlveaAppState extends State<AlveaApp> {
               );
             },
           );
+          // «Reducir animaciones» de la app se suma al ajuste del sistema (prefers-reduced-motion)
+          if (widget.state.reduceMotion) {
+            final mq = MediaQuery.of(context);
+            body = MediaQuery(data: mq.copyWith(disableAnimations: true), child: body);
+          }
           return DefaultTextStyle.merge(
             style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()], fontFamilyFallback: ['SymbolsFallback']),
             child: CrBackdrop(

@@ -470,7 +470,7 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
+                  duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 300),
                   child: Text(
                     mood.says,
                     key: ValueKey(mood.level),
@@ -479,7 +479,7 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
                 ),
                 const SizedBox(height: space1),
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 280),
+                  duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 280),
                   transitionBuilder: (child, a) => FadeTransition(
                     opacity: a,
                     child: SlideTransition(

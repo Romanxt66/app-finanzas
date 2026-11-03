@@ -1,10 +1,8 @@
-import 'dart:js_interop';
-
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web/web.dart' as web;
 
 import 'api.dart';
+import 'browser_notify_stub.dart' if (dart.library.js_interop) 'browser_notify_web.dart';
 import 'format.dart';
 
 /// Aviso calculado por el servidor (cobro próximo, presupuesto casi agotado, compra lista…).
@@ -85,21 +83,13 @@ class NoticeCenter extends ChangeNotifier {
   }
 
   /// Permiso del navegador para mostrar avisos del sistema ('granted', 'denied', 'default' o 'unsupported').
-  static String get browserPermission {
-    if (!kIsWeb) return 'unsupported';
-    try {
-      return web.Notification.permission;
-    } catch (_) {
-      return 'unsupported';
-    }
-  }
+  static String get browserPermission => kIsWeb ? notificationPermission() : 'unsupported';
 
   /// Activa o desactiva los avisos del navegador; al activar pide permiso. Devuelve si quedaron activos.
   Future<bool> setBrowserAlerts(bool on) async {
     if (on && browserPermission != 'granted') {
       if (browserPermission == 'unsupported') return false;
-      final result = (await web.Notification.requestPermission().toDart).toDart;
-      on = result == 'granted';
+      on = await requestNotificationPermission() == 'granted';
     }
     browserAlerts = on;
     await _prefs.setString(_browserKey, on ? '1' : '0');
@@ -114,9 +104,7 @@ class NoticeCenter extends ChangeNotifier {
     final shown = (_prefs.getStringList(_shownKey) ?? const []).toSet();
     final fresh = items.where((n) => n.urgent && !_read.contains(n.id) && !shown.contains(n.id)).take(3).toList();
     for (final n in fresh) {
-      try {
-        web.Notification(n.title, web.NotificationOptions(body: n.body, tag: n.id, icon: 'icons/Icon-192.png'));
-      } catch (_) {}
+      showNotification(n.title, n.body, n.id);
       shown.add(n.id);
     }
     if (fresh.isNotEmpty) {

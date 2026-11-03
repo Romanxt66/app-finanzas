@@ -17,6 +17,7 @@ class AppState extends ChangeNotifier {
     final saved = _prefs.getString('theme');
     themeMode = ThemeMode.values.where((m) => m.name == saved).firstOrNull ?? ThemeMode.system;
     balanceHidden = _prefs.getString('balance_hidden') == '1';
+    reduceMotion = _prefs.getString('reduce_motion') == '1';
   }
 
   final SharedPreferences _prefs;
@@ -37,6 +38,9 @@ class AppState extends ChangeNotifier {
   bool booting = true;
   ThemeMode themeMode = ThemeMode.system;
   bool balanceHidden = false;
+
+  /// Reducir animaciones aunque el sistema no lo pida (se suma a «reducir movimiento» del sistema).
+  bool reduceMotion = false;
 
   /// Sube con cada cambio de datos: las pantallas que dependen de ella se recargan.
   int revision = 0;
@@ -133,6 +137,12 @@ class AppState extends ChangeNotifier {
     ThemeMode.light => ThemeMode.dark,
     ThemeMode.dark => ThemeMode.system,
   });
+
+  void setReduceMotion(bool value) {
+    reduceMotion = value;
+    _prefs.setString('reduce_motion', value ? '1' : '0');
+    notifyListeners();
+  }
 
   void toggleBalanceHidden() {
     balanceHidden = !balanceHidden;

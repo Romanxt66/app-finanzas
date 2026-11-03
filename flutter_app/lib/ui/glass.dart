@@ -232,7 +232,9 @@ Widget _frosted(FrostScope? scope, Widget child) =>
 
 /// Tinte sobre el fondo desenfocado: deja ver el color de la imagen y mantiene el texto legible.
 Color frostTint(CrPalette c, bool dark, {bool strong = false}) =>
-    dark ? const Color(0xFF0B0612).withValues(alpha: strong ? 0.46 : 0.34) : Colors.white.withValues(alpha: strong ? 0.62 : 0.48);
+    // Medido sobre la imagen esmerilada (WCAG): con estos velos el texto secundario queda ≥ 4,5:1 en la
+    // mayor parte del cristal; en claro el vidrio es casi blanco porque la imagen de fondo es oscura.
+    dark ? const Color(0xFF0B0612).withValues(alpha: strong ? 0.54 : 0.42) : Colors.white.withValues(alpha: strong ? 0.88 : 0.80);
 
 /// Vidrio «esmerilado» sin desenfoque real: mezcla el tinte del vidrio con el fondo para que
 /// el contenido se lea bien. Desenfocar lo que hay detrás en cada fotograma es muy costoso
