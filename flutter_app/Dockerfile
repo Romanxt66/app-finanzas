@@ -20,7 +20,13 @@ RUN flutter pub get
 COPY . .
 # Sin API_URL: la app usa el mismo origen y nginx reenvía /api al backend (sin CORS).
 # --no-web-resources-cdn: CanvasKit y fuentes salen del propio origen (cumple la CSP).
-RUN flutter build web --release --no-web-resources-cdn --no-wasm-dry-run
+# --wasm: los navegadores con WasmGC (Chrome/Edge 119+, Firefox 120+, Safari 18.2+) cargan la versión
+# WebAssembly con el motor Skwasm (más rápida al arrancar y al desplazarse); el resto usa JavaScript.
+# Después se quitan los símbolos de depuración y se precomprime con gzip -9 (nginx: gzip_static).
+RUN flutter build web --release --wasm --no-web-resources-cdn \
+    && find build/web -name '*.symbols' -delete \
+    && find build/web -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.wasm' -o -name '*.json' \
+        -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name 'NOTICES' \) -exec gzip -9 -k {} +
 
 FROM nginx:1.27-alpine
 ENV API_UPSTREAM=http://alvea-api:8000

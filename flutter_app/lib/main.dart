@@ -15,6 +15,7 @@ import 'screens/dashboard.dart';
 import 'screens/goals.dart';
 import 'screens/import_screen.dart';
 import 'screens/layout.dart';
+import 'screens/lock_screen.dart';
 import 'screens/more.dart';
 import 'screens/profile.dart';
 import 'screens/recurring.dart';
@@ -119,6 +120,21 @@ class _AlveaAppState extends State<AlveaApp> {
               ),
             );
           }
+          // Bloqueo con PIN: la app sigue montada debajo (no pierde lo escrito), pero oculta e inerte
+          final lock = widget.state.lock;
+          body = ListenableBuilder(
+            listenable: lock,
+            child: body,
+            builder: (context, app) {
+              final locked = lock.locked && widget.state.user != null;
+              return Stack(
+                children: [
+                  Visibility(visible: !locked, maintainState: true, child: app!),
+                  if (locked) const Positioned.fill(child: LockScreen()),
+                ],
+              );
+            },
+          );
           return DefaultTextStyle.merge(
             style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()], fontFamilyFallback: ['SymbolsFallback']),
             child: CrBackdrop(

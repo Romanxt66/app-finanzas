@@ -45,6 +45,8 @@ dependencies:
   path_drawing: ^1.0.1
   file_picker: ^13.1.0
   web: ^1.1.2
+  qr: ^4.0.0
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:

@@ -100,4 +100,4 @@ jobs:
         run: git diff --exit-code -- lib/ui/tokens.g.dart
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build web --release --no-web-resources-cdn
+      - run: flutter build web --release --wasm --no-web-resources-cdn

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'api.dart';
+import 'app_lock.dart';
 import 'format.dart';
 import 'models.dart';
+import 'notices.dart';
 
 /// Estado global: sesión, tema, preferencias y "revisión" de datos (invalida lo cargado tras un cambio).
 class AppState extends ChangeNotifier {
@@ -19,6 +21,17 @@ class AppState extends ChangeNotifier {
 
   final SharedPreferences _prefs;
   final ApiClient api;
+
+  /// Avisos (cobros próximos, presupuestos, Sala de espera); se recargan con cada cambio de datos.
+  late final NoticeCenter notices = NoticeCenter(_prefs, api);
+
+  /// Bloqueo con PIN de este dispositivo.
+  late final AppLock lock = AppLock(_prefs)..onTooManyAttempts = _lockedOut;
+
+  Future<void> _lockedOut() async {
+    await logout();
+    onToast?.call('Demasiados intentos con el PIN: inicia sesión de nuevo');
+  }
 
   User? user;
   bool booting = true;
@@ -46,16 +59,26 @@ class AppState extends ChangeNotifier {
 
   Future<void> _loadUser() async {
     user = User.fromJson(await api.get('/auth/me') as Map<String, dynamic>);
+    notices.load();
+  }
+
+  /// Vuelve a leer el usuario (p. ej. tras activar la verificación en dos pasos).
+  Future<void> reloadUser() async {
+    await _loadUser();
+    notifyListeners();
   }
 
   void invalidate() {
     revision++;
     notifyListeners();
+    if (user != null) notices.load();
   }
 
-  Future<void> login(String email, String password, {bool remember = true}) async {
+  /// [otp]: código de la app de autenticación o de recuperación, si la cuenta lo pide
+  /// (el servidor responde `otp_required` cuando falta).
+  Future<void> login(String email, String password, {bool remember = true, String? otp}) async {
     await api.saveTokens(
-      await api.post('/auth/login', body: {'email': email, 'password': password}, auth: false) as Map<String, dynamic>,
+      await api.post('/auth/login', body: {'email': email, 'password': password, 'otp': ?otp}, auth: false) as Map<String, dynamic>,
       remember: remember,
     );
     await _loadUser();
@@ -87,6 +110,8 @@ class AppState extends ChangeNotifier {
   Future<void> logout() async {
     await api.clearTokens();
     user = null;
+    notices.clear();
+    await lock.disable(); // el PIN es de esta sesión: otra persona que entre no lo hereda
     _ranRecurring = false;
     revision++;
     notifyListeners();

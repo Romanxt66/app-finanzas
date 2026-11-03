@@ -106,8 +106,11 @@ class Summary {
 }
 
 class User {
-  User.fromJson(Map<String, dynamic> j) : email = j['email'], fullName = j['full_name'];
+  User.fromJson(Map<String, dynamic> j) : email = j['email'], fullName = j['full_name'], twoFactor = j['two_factor_enabled'] == true;
   final String email, fullName;
+
+  /// Verificación en dos pasos activada.
+  final bool twoFactor;
 }
 
 class LifeProfile {

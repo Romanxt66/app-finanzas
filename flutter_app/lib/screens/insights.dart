@@ -6,6 +6,7 @@ import '../core/format.dart';
 import '../core/models.dart';
 import '../core/state.dart';
 import '../ui/glass.dart';
+import '../ui/icons.dart';
 import '../ui/mood_face.dart';
 import '../ui/motion.dart';
 import '../ui/query.dart';
@@ -511,6 +512,55 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
                     ],
                   ),
                 ],
+                // Alvi también recuerda el aviso más importante (cobro próximo, presupuesto…)
+                ListenableBuilder(
+                  listenable: app.notices,
+                  builder: (context, _) {
+                    final top = app.notices.top;
+                    if (top == null) return const SizedBox.shrink();
+                    final tone = top.severity == 'danger' ? c.negative : (top.severity == 'warning' ? c.amber : c.neon);
+                    return Padding(
+                      padding: const EdgeInsets.only(top: space3),
+                      child: Semantics(
+                        button: true,
+                        label: 'Aviso: ${top.title}. Abrir',
+                        excludeSemantics: true,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () {
+                              app.notices.markRead(top);
+                              context.go(top.link);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(radiusPill),
+                                color: tone.withValues(alpha: 0.14),
+                                border: Border.all(color: tone.withValues(alpha: 0.6)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CrIcon('bell', size: 14, color: tone),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      top.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: CrText.mono(c.ink, size: 11.5),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: space2),
                 Text(wide ? 'toca a alvi para que te cuente más' : 'toca a alvi: te cuenta más', style: CrText.mono(c.inkFaint, size: 11)),
               ],

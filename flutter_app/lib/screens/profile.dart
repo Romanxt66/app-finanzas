@@ -8,6 +8,7 @@ import '../ui/page.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'auth_screens.dart' show PasswordRules;
+import 'security.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -155,6 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+        const SecurityCard(),
         CrCard(
           title: 'Apariencia',
           child: Align(
