@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +17,7 @@ class AppState extends ChangeNotifier {
   AppState(this._prefs, {ApiClient? client}) : api = client ?? ApiClient(_prefs) {
     api.onUnauthorized = () {
       user = null;
+      _prefs.remove(_userCacheKey);
       notifyListeners();
     };
     final saved = _prefs.getString('theme');
@@ -61,7 +64,25 @@ class AppState extends ChangeNotifier {
   /// Mensaje para avisos (toasts) emitidos desde el estado; lo conecta la raíz de la app.
   void Function(String message)? onToast;
 
+  static const _userCacheKey = 'user_cache';
+
   Future<void> boot() async {
+    // Sesión guardada: se entra al momento con el último usuario conocido y se confirma con el
+    // servidor en segundo plano (si la sesión ya no vale, el 401 la cierra como siempre)
+    final cached = api.hasSession ? _prefs.getString(_userCacheKey) : null;
+    if (cached != null) {
+      try {
+        user = User.fromJson(jsonDecode(cached) as Map<String, dynamic>);
+        booting = false;
+        notifyListeners();
+        notices.load();
+        reminders.refresh();
+        _loadUser().then((_) => notifyListeners(), onError: (Object _) {});
+        return;
+      } catch (_) {
+        user = null; // caché ilegible: se sigue por el camino normal
+      }
+    }
     if (api.hasSession) {
       try {
         await _loadUser();
@@ -74,7 +95,14 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _loadUser() async {
-    user = User.fromJson(await api.get('/auth/me') as Map<String, dynamic>);
+    final me = await api.get('/auth/me') as Map<String, dynamic>;
+    user = User.fromJson(me);
+    // Solo si la sesión se guarda en el dispositivo; sin «mantener sesión» no queda nada en disco
+    if (api.remembered) {
+      await _prefs.setString(_userCacheKey, jsonEncode(me));
+    } else {
+      await _prefs.remove(_userCacheKey);
+    }
     notices.load();
     reminders.refresh();
   }
@@ -133,6 +161,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> logout() async {
     await api.clearTokens();
+    await _prefs.remove(_userCacheKey);
     user = null;
     notices.clear();
     await reminders.clear();
@@ -143,7 +172,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> updateName(String name) async {
-    user = User.fromJson(await api.patch('/auth/me', body: {'full_name': name}) as Map<String, dynamic>);
+    final me = await api.patch('/auth/me', body: {'full_name': name}) as Map<String, dynamic>;
+    user = User.fromJson(me);
+    if (api.remembered) await _prefs.setString(_userCacheKey, jsonEncode(me));
     notifyListeners();
   }
 

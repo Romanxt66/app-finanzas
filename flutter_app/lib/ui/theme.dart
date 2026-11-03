@@ -119,7 +119,14 @@ class CrText {
   );
 }
 
-ThemeData buildTheme(Brightness brightness, {AccentChoice accent = fuchsiaAccent, GlowLevel glow = GlowLevel.normal}) {
+final _themes = <(Brightness, String, GlowLevel), ThemeData>{};
+
+/// Tema de la app. Se guarda ya construido: la raíz se reconstruye con cada cambio de datos y rehacer el
+/// tema (con su esquema de color) haría redibujar todas las pantallas sin necesidad.
+ThemeData buildTheme(Brightness brightness, {AccentChoice accent = fuchsiaAccent, GlowLevel glow = GlowLevel.normal}) =>
+    _themes.putIfAbsent((brightness, accent.id, glow), () => _buildTheme(brightness, accent, glow));
+
+ThemeData _buildTheme(Brightness brightness, AccentChoice accent, GlowLevel glow) {
   final p = tintPalette(brightness == Brightness.dark ? crPaletteDark : crPaletteLight, accent, glow);
   final scheme = ColorScheme.fromSeed(
     seedColor: p.brandFill,

@@ -22,7 +22,7 @@ class BrandIntro extends StatefulWidget {
 }
 
 class _BrandIntroState extends State<BrandIntro> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1250));
+  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
   bool _show = false;
 
   @override

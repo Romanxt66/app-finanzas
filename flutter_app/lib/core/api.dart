@@ -51,6 +51,14 @@ class ApiClient {
   String? get _refresh => _memRefresh ?? _prefs.getString(_refreshKey);
   bool get hasSession => _refresh != null;
 
+  /// La sesión está guardada en el dispositivo («mantener sesión»), no solo en memoria.
+  bool get remembered => _prefs.getString(_refreshKey) != null;
+
+  /// Lecturas recientes: las pantallas que piden lo mismo a la vez (o casi) comparten la respuesta.
+  /// Cualquier escritura las descarta, así que nunca se ve un dato anterior a un cambio propio.
+  final _recent = <String, (DateTime, Future<dynamic>)>{};
+  static const _reuseFor = Duration(seconds: 2);
+
   /// [remember] indefinido conserva el almacén actual (al renovar el token no cambia de lugar).
   Future<void> saveTokens(Map<String, dynamic> pair, {bool? remember}) async {
     final access = pair['access_token'] as String;
@@ -70,6 +78,7 @@ class ApiClient {
   }
 
   Future<void> clearTokens() async {
+    _recent.clear();
     _memAccess = null;
     _memRefresh = null;
     await _prefs.remove(_accessKey);
@@ -122,7 +131,26 @@ class ApiClient {
   }
 
   /// Petición JSON con renovación automática del token de acceso.
-  Future<dynamic> call(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) async {
+  Future<dynamic> call(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) {
+    if (method != 'GET' || !auth) {
+      _recent.clear();
+      return _call(method, path, body: body, query: query, auth: auth).whenComplete(_recent.clear);
+    }
+    final key = _uri(path, query).toString();
+    final now = DateTime.now();
+    final hit = _recent[key];
+    if (hit != null && now.difference(hit.$1) < _reuseFor) return hit.$2;
+    final future = _call(method, path, query: query, auth: auth);
+    _recent[key] = (now, future);
+    // Un error no se reutiliza: el siguiente intento vuelve a preguntar
+    future.catchError((Object _) {
+      if (_recent[key]?.$2 == future) _recent.remove(key);
+      return null;
+    });
+    return future;
+  }
+
+  Future<dynamic> _call(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) async {
     final uri = _uri(path, query);
     var res = await _send(method, uri, body, auth);
     if (res.statusCode == 401 && auth && _refresh != null) {

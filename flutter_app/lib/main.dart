@@ -79,8 +79,10 @@ class _AlveaAppState extends State<AlveaApp> {
   Future<void> _boot() async {
     setState(() => _bootError = null);
     try {
-      await widget.state.reminders.init();
+      // Los avisos del sistema se preparan a la vez que se entra (no retrasan el arranque)
+      final reminders = widget.state.reminders.init();
       await widget.state.boot();
+      await reminders;
       // La app se abrió tocando un recordatorio de cobro: lleva a lo que pedía
       final route = await widget.state.reminders.launchRoute();
       if (route != null) _openFromNotice(route);

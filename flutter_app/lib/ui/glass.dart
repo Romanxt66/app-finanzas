@@ -114,7 +114,10 @@ class FrostScope extends InheritedWidget {
 /// Pinta, bajo su hijo, la porción del fondo desenfocado que queda justo detrás en pantalla.
 /// Se recalcula en cada repintado (al desplazar, la zona desplazable repinta su contenido).
 class Frost extends SingleChildRenderObjectWidget {
-  const Frost({super.key, required this.image, required this.backdrop, super.child});
+  // El contenido va en su propia capa: al desplazar solo se repinta el trozo de fondo, no los textos
+  // ni los gráficos de la tarjeta
+  Frost({super.key, required this.image, required this.backdrop, Widget? child})
+    : super(child: child == null ? null : RepaintBoundary(child: child));
   final ui.Image image;
   final GlobalKey backdrop;
 
