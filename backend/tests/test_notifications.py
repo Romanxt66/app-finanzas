@@ -1,11 +1,13 @@
 import uuid
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 from httpx import AsyncClient
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from app.models import WaitingItem
+from app.services.notifications import _money
 
 H = dict[str, str]
 URL = "/api/v1/notifications"
@@ -42,6 +44,12 @@ async def _expense(c: AsyncClient, h: H, ids: dict[str, str], cat: str, amount: 
             "occurred_on": "2099-01-10",
         },
     )
+
+
+def test_money_uses_spanish_separators() -> None:
+    assert _money(Decimal("44900"), "COP") == "44.900 COP"
+    assert _money(Decimal("12.99"), "EUR") == "12,99 EUR"
+    assert _money(Decimal("1234.5"), "USD") == "1.234,50 USD"
 
 
 async def test_empty_when_nothing_pending(client: AsyncClient, auth: H) -> None:
