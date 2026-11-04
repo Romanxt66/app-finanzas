@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/data.dart';
 import '../core/format.dart';
@@ -9,9 +10,11 @@ import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
 import '../ui/deal_card.dart';
-import '../ui/dialogs.dart';
 import '../ui/download.dart';
+import '../ui/glass.dart';
+import '../ui/icons.dart';
 import '../ui/inputs.dart';
+import '../ui/motion.dart';
 import '../ui/page.dart';
 import '../ui/query.dart';
 import '../ui/theme.dart';
@@ -43,6 +46,97 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   int _page = 0;
   bool _formOpen = false;
   Transaction? _editing;
+
+  /// Filtros avanzados (tipo, cuenta, fechas) desplegados.
+  bool _filtersOpen = false;
+
+  int get _activeFilters => [_type, _account, _from, _to].where((v) => v.isNotEmpty).length;
+
+  /// Búsqueda siempre a mano y el resto de filtros tras un botón (con cuántos hay activos).
+  Widget _filterBar(BuildContext context, RefData ref) {
+    final active = _activeFilters;
+    return Glass(
+      lift: true,
+      padding: const EdgeInsets.all(space4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: CrTextField(
+                  label: 'Buscar',
+                  controller: _search,
+                  onChanged: (v) {
+                    _debounce?.cancel();
+                    _debounce = Timer(const Duration(milliseconds: 300), () => _setFilter(() => _searchText = v.trim()));
+                  },
+                ),
+              ),
+              const SizedBox(width: space3),
+              CrButton(
+                variant: _filtersOpen || active > 0 ? CrButtonVariant.primary : CrButtonVariant.glass,
+                icon: 'list',
+                label: active > 0 ? 'Filtros · $active' : 'Filtros',
+                onPressed: () => setState(() => _filtersOpen = !_filtersOpen),
+              ),
+            ],
+          ),
+          AnimatedSize(
+            duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 260),
+            curve: crEase,
+            alignment: Alignment.topCenter,
+            child: !_filtersOpen
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(top: space3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        FormGrid(
+                          children: [
+                            CrSelect<String>(
+                              label: 'Tipo',
+                              value: _type,
+                              options: [('', 'Todos'), for (final e in typeLabels.entries) (e.key, e.value)],
+                              onChanged: (v) => _setFilter(() => _type = v),
+                            ),
+                            CrSelect<String>(
+                              label: 'Cuenta',
+                              value: _account,
+                              options: [('', 'Todas'), for (final a in ref.allAccounts) (a.id, a.name)],
+                              onChanged: (v) => _setFilter(() => _account = v),
+                            ),
+                            CrDateField(label: 'Desde', value: _from, optional: true, onChanged: (v) => _setFilter(() => _from = v ?? '')),
+                            CrDateField(label: 'Hasta', value: _to, optional: true, onChanged: (v) => _setFilter(() => _to = v ?? '')),
+                          ],
+                        ),
+                        if (active > 0) ...[
+                          const SizedBox(height: space3),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: CrButton(
+                              variant: CrButtonVariant.ghost,
+                              small: true,
+                              label: 'Quitar filtros',
+                              onPressed: () => _setFilter(() {
+                                _type = '';
+                                _account = '';
+                                _from = '';
+                                _to = '';
+                              }),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
 
   /// Transferencia precargada («Mover dinero» de un recordatorio de cobro).
   TransactionDraft? _draft;
@@ -161,35 +255,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   _draft = null;
                 }),
               ),
-            CrCard(
-              title: 'Filtros',
-              child: FormGrid(
-                children: [
-                  CrTextField(
-                    label: 'Buscar',
-                    controller: _search,
-                    onChanged: (v) {
-                      _debounce?.cancel();
-                      _debounce = Timer(const Duration(milliseconds: 300), () => _setFilter(() => _searchText = v.trim()));
-                    },
-                  ),
-                  CrSelect<String>(
-                    label: 'Tipo',
-                    value: _type,
-                    options: [('', 'Todos'), for (final e in typeLabels.entries) (e.key, e.value)],
-                    onChanged: (v) => _setFilter(() => _type = v),
-                  ),
-                  CrSelect<String>(
-                    label: 'Cuenta',
-                    value: _account,
-                    options: [('', 'Todas'), for (final a in ref.allAccounts) (a.id, a.name)],
-                    onChanged: (v) => _setFilter(() => _account = v),
-                  ),
-                  CrDateField(label: 'Desde', value: _from, optional: true, onChanged: (v) => _setFilter(() => _from = v ?? '')),
-                  CrDateField(label: 'Hasta', value: _to, optional: true, onChanged: (v) => _setFilter(() => _to = v ?? '')),
-                ],
-              ),
-            ),
+            _filterBar(context, ref),
             if (q.loading)
               const Skeleton(lines: 4)
             else if (q.error != null && data == null)
@@ -240,14 +306,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget _board(BuildContext context, List<Transaction> items, RefData ref) {
     final c = context.c;
     if (!context.isWide || _type.isNotEmpty) {
-      return CardGrid(minWidth: 250, children: [for (final t in items) _card(context, t, ref)]);
+      return CardGrid(
+        minWidth: 250,
+        children: [
+          for (final t in items)
+            if (!_hidden.contains(t.id)) _swipeable(context, t, ref),
+        ],
+      );
     }
     final columns = [
       for (final type in const ['expense', 'income', 'transfer'])
         if (items.any((t) => t.type == type)) type,
     ];
     if (columns.length < 2) {
-      return CardGrid(minWidth: 250, children: [for (final t in items) _card(context, t, ref)]);
+      return CardGrid(
+        minWidth: 250,
+        children: [
+          for (final t in items)
+            if (!_hidden.contains(t.id)) _swipeable(context, t, ref),
+        ],
+      );
     }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,13 +343,102 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   color: txColor(c, columns[i]),
                   count: mine.length,
                   total: currencies.length == 1 ? formatMoney(total, currencies.first) : null,
-                  children: [for (final t in mine) _card(context, t, ref)],
+                  children: [
+                    for (final t in mine)
+                      if (!_hidden.contains(t.id)) _swipeable(context, t, ref),
+                  ],
                 );
               },
             ),
           ),
         ],
       ],
+    );
+  }
+
+  /// Eliminados al momento (antes de recargar la lista), para que la tarjeta desaparezca ya.
+  final _hidden = <String>{};
+
+  /// Elimina sin preguntar y ofrece «Deshacer» unos segundos (lo vuelve a crear igual).
+  Future<void> _remove(Transaction t) async {
+    final app = context.app;
+    setState(() {
+      _removeError = null;
+      _hidden.add(t.id);
+    });
+    try {
+      await app.api.delete('/transactions/${t.id}');
+      app.invalidate();
+      final body = {
+        'type': t.type,
+        'account_id': t.accountId,
+        'transfer_account_id': t.transferAccountId,
+        'category_id': t.type == 'transfer' ? null : t.categoryId,
+        'amount': t.amountRaw,
+        'description': t.description,
+        'occurred_on': t.occurredOn,
+        'mood': t.type == 'expense' ? t.mood : null,
+      };
+      Future<void> undo() async {
+        try {
+          await app.data.post('/transactions', body, 'Movimiento recuperado');
+        } catch (_) {
+          app.onToast?.call('No se pudo recuperar el movimiento');
+        }
+      }
+
+      if (app.onToastAction != null) {
+        app.onToastAction!('Movimiento eliminado', 'Deshacer', undo);
+      } else {
+        app.onToast?.call('Movimiento eliminado');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hidden.remove(t.id);
+          _removeError = e;
+        });
+      }
+    }
+  }
+
+  /// Abre el movimiento para editar y sube hasta el formulario.
+  void _edit(BuildContext context, Transaction t) {
+    setState(() {
+      _formOpen = true;
+      _editing = t;
+    });
+    Scrollable.maybeOf(context)?.position.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+  }
+
+  /// Deslizar la tarjeta a la izquierda la elimina (con «Deshacer»).
+  Widget _swipeable(BuildContext context, Transaction t, RefData ref) {
+    final c = context.c;
+    return Dismissible(
+      key: ValueKey('tx-${t.id}'),
+      direction: DismissDirection.endToStart,
+      dismissThresholds: const {DismissDirection.endToStart: 0.35},
+      onDismissed: (_) {
+        HapticFeedback.mediumImpact();
+        _remove(t);
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: space5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(colors: [c.negative.withValues(alpha: 0.05), c.negative.withValues(alpha: 0.35)]),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Eliminar', style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(width: space2),
+            CrIcon('trash', size: 18, color: c.ink),
+          ],
+        ),
+      ),
+      child: _card(context, t, ref),
     );
   }
 
@@ -288,12 +455,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       _ => '',
     };
     return DealCard(
+      // Tocar la tarjeta la abre para editar (arriba de la lista)
+      onTap: () => _edit(context, t),
       avatar: initials(category ?? title),
       accent: color,
       title: title,
       subtitle: target != null ? '${account?.name} → $target' : account?.name,
       eyebrow: typeLabels[t.type],
-      value: '$sign${formatMoney(t.amount, account?.currency)}',
+      // Signo separado como en el resto de la app («− $ 44.900»), sin partir la línea
+      value: sign.isEmpty ? formatMoney(t.amount, account?.currency) : '$sign\u00a0${formatMoney(t.amount, account?.currency)}',
       valueColor: t.type == 'income' ? c.positive : null,
       chips: [
         if (category != null) DealChip(category, dot: true, color: color),
@@ -303,35 +473,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ],
       trailing: t.type == 'expense' ? lifeHoursNote(t.amount, ref.hourlyRate)?.replaceFirst(' de trabajo', '') : null,
       actions: [
-        CardAction(
-          icon: 'edit',
-          tooltip: 'Editar',
-          onPressed: () => setState(() {
-            _formOpen = true;
-            _editing = t;
-          }),
-        ),
-        CardAction(
-          icon: 'trash',
-          tooltip: 'Eliminar',
-          danger: true,
-          onPressed: () async {
-            final app = context.app;
-            if (!await showConfirm(
-              context,
-              title: '¿Eliminar este movimiento?',
-              body: 'Se ajustará el saldo de la cuenta. Esta acción no se puede deshacer.',
-            )) {
-              return;
-            }
-            try {
-              setState(() => _removeError = null);
-              await app.data.delete('/transactions/${t.id}', 'Movimiento eliminado');
-            } catch (e) {
-              if (mounted) setState(() => _removeError = e);
-            }
-          },
-        ),
+        CardAction(icon: 'edit', tooltip: 'Editar', onPressed: () => _edit(context, t)),
+        CardAction(icon: 'trash', tooltip: 'Eliminar', danger: true, onPressed: () => _remove(t)),
       ],
       semanticLabel: '$title, ${typeLabels[t.type]} de ${formatMoney(t.amount, account?.currency)}, ${formatDate(t.occurredOn)}',
     );

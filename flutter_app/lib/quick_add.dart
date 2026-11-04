@@ -130,8 +130,11 @@ class CategoryUsage {
 enum _Step { amount, details, done }
 
 class QuickAddSheet extends StatefulWidget {
-  const QuickAddSheet({super.key, required this.type});
+  const QuickAddSheet({super.key, required this.type, this.onClose});
   final String type;
+
+  /// Dentro de la app se cierra como un diálogo; en el recuadro del sistema, cerrando la actividad.
+  final VoidCallback? onClose;
 
   @override
   State<QuickAddSheet> createState() => _QuickAddSheetState();
@@ -186,6 +189,16 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     super.dispose();
   }
 
+  void _dismiss() {
+    _autoClose?.cancel();
+    final close = widget.onClose;
+    if (close != null) {
+      if (mounted) close();
+    } else {
+      _close();
+    }
+  }
+
   double get _amount => double.tryParse(_digits) ?? 0;
 
   List<Category> get _kindCategories => _usage.sort(_categories.where((c) => c.kind == _type).toList(), DateTime.now());
@@ -238,6 +251,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
       await app.pending.add(body);
       _queued = true;
     }
+    app.invalidate();
     await _prefs.setString('quick_account', account);
     if (_category != null) await _usage.add(_category!, DateTime.now());
     try {
@@ -248,7 +262,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
       _busy = false;
       _step = _Step.done;
     });
-    _autoClose = Timer(const Duration(seconds: 3), _close);
+    _autoClose = Timer(const Duration(seconds: 3), _dismiss);
   }
 
   Future<void> _undo() async {
@@ -284,7 +298,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
         Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: _close,
+            onTap: _dismiss,
             child: const ColoredBox(color: Color(0x9E050308)),
           ),
         ),
@@ -431,7 +445,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
         const SizedBox(height: 14),
         Row(
           children: [
-            _GhostButton(label: 'Cancelar', onPressed: _close),
+            _GhostButton(label: 'Cancelar', onPressed: _dismiss),
             const SizedBox(width: 8),
             Expanded(
               child: _NeonButton(
@@ -890,3 +904,25 @@ class _GhostButton extends StatelessWidget {
 /// Para pruebas: el recuadro con un tema oscuro, sin canal nativo.
 @visibleForTesting
 Widget quickAddForTest(AppState state, {String type = 'expense'}) => QuickAddApp(state: state, type: type);
+
+/// El mismo recuadro rápido, dentro de la app (botón «+» de la barra inferior).
+Future<void> showQuickAdd(BuildContext context, {String type = 'expense'}) => showGeneralDialog<void>(
+  context: context,
+  barrierDismissible: false,
+  barrierColor: Colors.transparent,
+  transitionDuration: const Duration(milliseconds: 260),
+  pageBuilder: (ctx, _, _) => Material(
+    type: MaterialType.transparency,
+    child: QuickAddSheet(type: type, onClose: () => Navigator.of(ctx).pop()),
+  ),
+  transitionBuilder: (ctx, anim, _, child) {
+    final curve = CurvedAnimation(parent: anim, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: curve,
+      child: SlideTransition(
+        position: Tween(begin: const Offset(0, 0.08), end: Offset.zero).animate(curve),
+        child: child,
+      ),
+    );
+  },
+);

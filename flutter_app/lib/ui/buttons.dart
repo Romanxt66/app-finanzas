@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'icons.dart';
 import 'motion.dart';
@@ -37,6 +38,12 @@ class CrButton extends StatefulWidget {
 class _CrButtonState extends State<CrButton> {
   bool _hover = false;
   bool _focused = false;
+
+  /// Toque con una vibración muy suave en el teléfono (en la web no hace nada).
+  void _tap() {
+    HapticFeedback.selectionClick();
+    widget.onPressed?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +134,7 @@ class _CrButtonState extends State<CrButton> {
       onShowHoverHighlight: (h) => setState(() => _hover = h),
       onShowFocusHighlight: (f) => setState(() => _focused = f),
       actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => widget.onPressed?.call())},
-      child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: widget.onPressed, child: btn),
+      child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: enabled ? _tap : null, child: btn),
     );
     if (widget.expand) btn = SizedBox(width: double.infinity, child: btn);
     return Semantics(

@@ -23,6 +23,9 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
+  /// Formulario de alta desplegado (con datos ya creados empieza plegado).
+  bool _formOpen = false;
+
   final _name = TextEditingController();
   String _kind = 'expense';
   bool _submitted = false;
@@ -47,6 +50,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       if (mounted) {
         setState(() {
           _name.clear();
+          _formOpen = false;
           _submitted = false;
         });
       }
@@ -71,8 +75,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return PageScaffold(
       children: [
         PageHead('Categorías', headline: 'Ordena tu dinero *a tu manera*.'),
-        CrCard(
+        CreateSection(
+          label: 'Nueva categoría',
           title: 'Nueva categoría',
+          open: _formOpen,
+          onOpenChanged: (v) => setState(() => _formOpen = v),
+          hasData: context.ref.categories.isNotEmpty,
           child: Stack12(
             children: [
               FormGrid(

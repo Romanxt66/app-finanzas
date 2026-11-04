@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/state.dart';
+import '../ui/buttons.dart';
 import '../ui/glass.dart';
 import '../ui/page.dart';
 import '../ui/theme.dart';
@@ -9,7 +11,7 @@ import '../ui/widgets.dart';
 const _links = [
   ('/budgets', 'Presupuestos', 'target'),
   ('/recurring', 'Recurrentes', 'swap'),
-  ('/waiting', 'Sala de espera', 'target'),
+  ('/waiting', 'Sala de espera', 'calendar'),
   ('/subscriptions', 'Suscripciones', 'search'),
   ('/import', 'Importar CSV', 'download'),
   ('/categories', 'Categorías', 'tag'),
@@ -35,6 +37,10 @@ class MoreScreen extends StatelessWidget {
                 _MoreRow(first: i == 0, to: _links[i].$1, label: _links[i].$2, icon: _links[i].$3, color: c.ink),
             ],
           ),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: CrButton(variant: CrButtonVariant.ghost, icon: 'logout', label: 'Cerrar sesión', onPressed: () => context.app.logout()),
         ),
       ],
     );

@@ -77,6 +77,9 @@ class AppState extends ChangeNotifier {
   /// Mensaje para avisos (toasts) emitidos desde el estado; lo conecta la raíz de la app.
   void Function(String message)? onToast;
 
+  /// Aviso con botón (p. ej. «Deshacer» tras eliminar).
+  void Function(String message, String actionLabel, VoidCallback onAction)? onToastAction;
+
   static const _userCacheKey = 'user_cache';
 
   Future<void> boot() async {

@@ -937,6 +937,72 @@ class CrMonthField extends StatelessWidget {
   }
 }
 
+/// Mes en una píldora de cristal: ‹ mes anterior · «noviembre 2026» (abre el selector) · mes siguiente ›.
+class CrMonthPill extends StatelessWidget {
+  const CrMonthPill({super.key, required this.month, required this.onChanged});
+  final DateTime month;
+  final ValueChanged<DateTime> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final label = DateFormat("MMMM y", 'es').format(month);
+    Widget arrow(String tip, bool next) => Semantics(
+      button: true,
+      label: tip,
+      excludeSemantics: true,
+      child: InkResponse(
+        radius: 20,
+        onTap: () => onChanged(DateTime(month.year, month.month + (next ? 1 : -1))),
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Center(
+            child: Transform.rotate(
+              angle: next ? -1.5708 : 1.5708,
+              child: CrIcon('chevron', size: 16, color: c.inkMuted),
+            ),
+          ),
+        ),
+      ),
+    );
+    return Glass(
+      radius: radiusPill,
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          arrow('Mes anterior', false),
+          Semantics(
+            button: true,
+            label: 'Mes: $label. Elegir otro',
+            excludeSemantics: true,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(radiusPill),
+              onTap: () async {
+                final picked = await showCrDialog<DateTime>(context, builder: (_) => _MonthPicker(initial: month));
+                if (picked != null) onChanged(picked);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CrIcon('calendar', size: 15, color: c.neon),
+                    const SizedBox(width: 8),
+                    Text(label, style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w700, fontSize: 14)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          arrow('Mes siguiente', true),
+        ],
+      ),
+    );
+  }
+}
+
 class _MonthPicker extends StatefulWidget {
   const _MonthPicker({required this.initial});
   final DateTime initial;

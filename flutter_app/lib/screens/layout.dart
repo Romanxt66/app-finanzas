@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/format.dart';
@@ -15,6 +16,7 @@ import '../ui/notice_bell.dart';
 import '../ui/online.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart' show CrTag;
+import '../quick_add.dart';
 import 'reminders.dart';
 
 class NavItem {
@@ -36,10 +38,10 @@ const desktopNav = [
 // En móvil caben cinco pestañas: lo demás vive en «Más».
 const mobileNav = [
   NavItem('/', 'Inicio', 'home', end: true),
-  NavItem('/transactions', 'Movimientos', 'list'),
+  NavItem('/transactions', 'Historial', 'list'),
   NavItem('/accounts', 'Cuentas', 'wallet'),
   NavItem('/goals', 'Metas', 'chart'),
-  NavItem('/more', 'Más', 'plus'),
+  NavItem('/more', 'Más', 'dots'),
 ];
 
 bool _active(NavItem item, String location) => item.end ? location == item.to : (location == item.to || location.startsWith('${item.to}/'));
@@ -249,8 +251,55 @@ class _TopBar extends StatelessWidget {
               onPressed: app.cycleTheme,
             ),
             const SizedBox(width: space1),
-            CrButton(variant: CrButtonVariant.glass, small: true, icon: 'logout', label: 'Salir', onPressed: () => app.logout()),
+            // En el móvil, «Salir» vive en Perfil y en Más: aquí basta el avatar que lleva al perfil
+            if (wide)
+              CrButton(variant: CrButtonVariant.glass, small: true, icon: 'logout', label: 'Salir', onPressed: () => app.logout())
+            else
+              _Avatar(name: app.user?.fullName ?? '', active: location == '/profile'),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Iniciales del usuario en un círculo de cristal con anillo neón; abre el perfil.
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name, required this.active});
+  final String name;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final initials = parts.isEmpty
+        ? '·'
+        : (parts.length == 1 ? parts.first.substring(0, 1) : '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}').toUpperCase();
+    return Semantics(
+      button: true,
+      label: 'Perfil de $name',
+      excludeSemantics: true,
+      child: PressScale(
+        scale: 0.94,
+        child: GestureDetector(
+          onTap: () => context.go('/profile'),
+          child: Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [c.neon.withValues(alpha: 0.35), c.brandFill.withValues(alpha: 0.25)],
+              ),
+              border: Border.all(color: active ? c.neon : c.glassBorder, width: active ? 1.6 : 1),
+              boxShadow: active ? [BoxShadow(color: c.neonGlow, blurRadius: 12)] : null,
+            ),
+            child: Text(initials, style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w800, fontSize: 12.5)),
+          ),
         ),
       ),
     );
@@ -395,14 +444,59 @@ class _TabBar extends StatelessWidget {
       padding: const EdgeInsets.all(space2),
       child: Row(
         children: [
-          for (final item in mobileNav)
+          for (final (i, item) in mobileNav.indexed) ...[
+            // En el centro, el «+» para anotar un gasto o ingreso al momento
+            if (i == 2) const _AddTab(),
             Expanded(
               child: _Tab(item: item, active: _active(item, location)),
             ),
+          ],
         ],
       ),
     ),
   );
+}
+
+/// Botón central de la barra: abre el recuadro rápido (gasto o ingreso en tres toques).
+class _AddTab extends StatelessWidget {
+  const _AddTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: space1),
+      child: Semantics(
+        button: true,
+        label: 'Anotar un gasto o ingreso',
+        excludeSemantics: true,
+        child: PressScale(
+          scale: 0.92,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              showQuickAdd(context);
+            },
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color.lerp(c.neon, Colors.white, 0.4)!, c.neon, Color.lerp(c.neon, Colors.black, 0.12)!],
+                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 18)],
+              ),
+              child: Center(child: CrIcon('plus', size: 24, color: c.onNeon, stroke: 2.4)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Tab extends StatelessWidget {
@@ -422,7 +516,10 @@ class _Tab extends StatelessWidget {
         scale: 0.95,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => context.go(item.to),
+          onTap: () {
+            if (!active) HapticFeedback.selectionClick();
+            context.go(item.to);
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: space2),
             child: Column(
