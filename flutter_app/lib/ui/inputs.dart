@@ -955,8 +955,8 @@ class CrMonthPill extends StatelessWidget {
         radius: 20,
         onTap: () => onChanged(DateTime(month.year, month.month + (next ? 1 : -1))),
         child: SizedBox(
-          width: 36,
-          height: 36,
+          width: 44,
+          height: 44,
           child: Center(
             child: Transform.rotate(
               angle: next ? -1.5708 : 1.5708,

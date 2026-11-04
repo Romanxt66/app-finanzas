@@ -8,6 +8,46 @@ import 'theme.dart';
 const crEase = Cubic(0.2, 0.7, 0.2, 1);
 const crPopEase = Cubic(0.2, 0.8, 0.2, 1);
 
+/// Duraciones de la app según cuánto se mueve y cuánto importa (no una sola para todo):
+/// respuesta al toque, cambios de estado pequeños, transiciones de pantalla y entradas.
+abstract final class CrMotion {
+  /// Respuesta a un toque (presión, vibración visual).
+  static const tap = Duration(milliseconds: 110);
+
+  /// Cambios de estado pequeños (colores, chips, interruptores).
+  static const fast = Duration(milliseconds: 180);
+
+  /// Elementos que cambian de tamaño o lugar (despliegues, indicadores).
+  static const base = Duration(milliseconds: 260);
+
+  /// Cambio de pantalla (fundido con leve escala).
+  static const page = Duration(milliseconds: 320);
+
+  /// Entradas de módulos al aparecer.
+  static const entrance = Duration(milliseconds: 520);
+}
+
+/// Transición entre pantallas: la anterior se desvanece rápido y la nueva entra con un fundido y una
+/// escala mínima (97 % → 100 %). Da continuidad sin distraer; sin movimiento si el sistema lo pide.
+Widget crFadeThrough(BuildContext context, Animation<double> animation, Animation<double> secondary, Widget child) {
+  if (MediaQuery.disableAnimationsOf(context)) return child;
+  final incoming = CurvedAnimation(
+    parent: animation,
+    curve: const Interval(0.25, 1, curve: crEase),
+  );
+  final outgoing = CurvedAnimation(
+    parent: secondary,
+    curve: const Interval(0, 0.35, curve: Curves.easeIn),
+  );
+  return FadeTransition(
+    opacity: Tween<double>(begin: 1, end: 0).animate(outgoing),
+    child: FadeTransition(
+      opacity: incoming,
+      child: ScaleTransition(scale: Tween<double>(begin: 0.97, end: 1).animate(incoming), child: child),
+    ),
+  );
+}
+
 /// Entrada de módulo: sube, crece un poco y aparece (0,52 s). Se escalona con [delay].
 /// Si el módulo empieza fuera de la pantalla, espera a que el desplazamiento lo traiga a la vista.
 class Rise extends StatefulWidget {

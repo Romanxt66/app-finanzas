@@ -283,22 +283,29 @@ class _Avatar extends StatelessWidget {
       child: PressScale(
         scale: 0.94,
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => context.go('/profile'),
-          child: Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [c.neon.withValues(alpha: 0.35), c.brandFill.withValues(alpha: 0.25)],
+          // 44 px para el dedo; el círculo visible es de 34
+          child: SizedBox.square(
+            dimension: 44,
+            child: Center(
+              child: Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [c.neon.withValues(alpha: 0.35), c.brandFill.withValues(alpha: 0.25)],
+                  ),
+                  border: Border.all(color: active ? c.neon : c.glassBorder, width: active ? 1.6 : 1),
+                  boxShadow: active ? [BoxShadow(color: c.neonGlow, blurRadius: 12)] : null,
+                ),
+                child: Text(initials, style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w800, fontSize: 12.5)),
               ),
-              border: Border.all(color: active ? c.neon : c.glassBorder, width: active ? 1.6 : 1),
-              boxShadow: active ? [BoxShadow(color: c.neonGlow, blurRadius: 12)] : null,
             ),
-            child: Text(initials, style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w800, fontSize: 12.5)),
           ),
         ),
       ),
@@ -435,26 +442,67 @@ class _TabBar extends StatelessWidget {
   const _TabBar({required this.location});
   final String location;
 
+  /// Ancho del botón «+» central con su margen.
+  static const _addWidth = 52.0 + space1 * 2;
+
   @override
-  Widget build(BuildContext context) => Semantics(
-    container: true,
-    label: 'Navegación principal',
-    child: Glass(
-      strong: true,
-      padding: const EdgeInsets.all(space2),
-      child: Row(
-        children: [
-          for (final (i, item) in mobileNav.indexed) ...[
-            // En el centro, el «+» para anotar un gasto o ingreso al momento
-            if (i == 2) const _AddTab(),
-            Expanded(
-              child: _Tab(item: item, active: _active(item, location)),
-            ),
-          ],
-        ],
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final active = mobileNav.indexWhere((item) => _active(item, location));
+    return Semantics(
+      container: true,
+      label: 'Navegación principal',
+      child: Glass(
+        strong: true,
+        padding: const EdgeInsets.all(space2),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final tab = (box.maxWidth - _addWidth) / mobileNav.length;
+            final left = active < 0 ? 0.0 : active * tab + (active >= 2 ? _addWidth : 0);
+            return Stack(
+              children: [
+                // Píldora que se desliza hasta la pestaña activa
+                AnimatedPositioned(
+                  duration: context.reduceMotion ? Duration.zero : CrMotion.base,
+                  curve: crEase,
+                  left: left + 3,
+                  width: tab - 6,
+                  top: 0,
+                  bottom: 0,
+                  child: AnimatedOpacity(
+                    duration: CrMotion.fast,
+                    opacity: active < 0 ? 0 : 1,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [c.neon.withValues(alpha: 0.20), c.neon.withValues(alpha: 0.06)],
+                        ),
+                        border: Border.all(color: c.neon.withValues(alpha: 0.30)),
+                      ),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    for (final (i, item) in mobileNav.indexed) ...[
+                      // En el centro, el «+» para anotar un gasto o ingreso al momento
+                      if (i == 2) const _AddTab(),
+                      Expanded(
+                        child: _Tab(item: item, active: i == active),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Botón central de la barra: abre el recuadro rápido (gasto o ingreso en tres toques).
