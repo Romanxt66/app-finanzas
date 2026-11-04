@@ -9,9 +9,9 @@ import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
 import '../ui/deal_card.dart';
-import '../ui/dialogs.dart';
 import '../ui/download.dart';
 import '../ui/glass.dart';
+import '../ui/icons.dart';
 import '../ui/inputs.dart';
 import '../ui/motion.dart';
 import '../ui/page.dart';
@@ -305,14 +305,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget _board(BuildContext context, List<Transaction> items, RefData ref) {
     final c = context.c;
     if (!context.isWide || _type.isNotEmpty) {
-      return CardGrid(minWidth: 250, children: [for (final t in items) _card(context, t, ref)]);
+      return CardGrid(
+        minWidth: 250,
+        children: [
+          for (final t in items)
+            if (!_hidden.contains(t.id)) _swipeable(context, t, ref),
+        ],
+      );
     }
     final columns = [
       for (final type in const ['expense', 'income', 'transfer'])
         if (items.any((t) => t.type == type)) type,
     ];
     if (columns.length < 2) {
-      return CardGrid(minWidth: 250, children: [for (final t in items) _card(context, t, ref)]);
+      return CardGrid(
+        minWidth: 250,
+        children: [
+          for (final t in items)
+            if (!_hidden.contains(t.id)) _swipeable(context, t, ref),
+        ],
+      );
     }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,13 +342,90 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   color: txColor(c, columns[i]),
                   count: mine.length,
                   total: currencies.length == 1 ? formatMoney(total, currencies.first) : null,
-                  children: [for (final t in mine) _card(context, t, ref)],
+                  children: [
+                    for (final t in mine)
+                      if (!_hidden.contains(t.id)) _swipeable(context, t, ref),
+                  ],
                 );
               },
             ),
           ),
         ],
       ],
+    );
+  }
+
+  /// Eliminados al momento (antes de recargar la lista), para que la tarjeta desaparezca ya.
+  final _hidden = <String>{};
+
+  /// Elimina sin preguntar y ofrece «Deshacer» unos segundos (lo vuelve a crear igual).
+  Future<void> _remove(Transaction t) async {
+    final app = context.app;
+    setState(() {
+      _removeError = null;
+      _hidden.add(t.id);
+    });
+    try {
+      await app.api.delete('/transactions/${t.id}');
+      app.invalidate();
+      final body = {
+        'type': t.type,
+        'account_id': t.accountId,
+        'transfer_account_id': t.transferAccountId,
+        'category_id': t.type == 'transfer' ? null : t.categoryId,
+        'amount': t.amountRaw,
+        'description': t.description,
+        'occurred_on': t.occurredOn,
+        'mood': t.type == 'expense' ? t.mood : null,
+      };
+      Future<void> undo() async {
+        try {
+          await app.data.post('/transactions', body, 'Movimiento recuperado');
+        } catch (_) {
+          app.onToast?.call('No se pudo recuperar el movimiento');
+        }
+      }
+
+      if (app.onToastAction != null) {
+        app.onToastAction!('Movimiento eliminado', 'Deshacer', undo);
+      } else {
+        app.onToast?.call('Movimiento eliminado');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hidden.remove(t.id);
+          _removeError = e;
+        });
+      }
+    }
+  }
+
+  /// Deslizar la tarjeta a la izquierda la elimina (con «Deshacer»).
+  Widget _swipeable(BuildContext context, Transaction t, RefData ref) {
+    final c = context.c;
+    return Dismissible(
+      key: ValueKey('tx-${t.id}'),
+      direction: DismissDirection.endToStart,
+      dismissThresholds: const {DismissDirection.endToStart: 0.35},
+      onDismissed: (_) => _remove(t),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: space5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(colors: [c.negative.withValues(alpha: 0.05), c.negative.withValues(alpha: 0.35)]),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Eliminar', style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(width: space2),
+            CrIcon('trash', size: 18, color: c.ink),
+          ],
+        ),
+      ),
+      child: _card(context, t, ref),
     );
   }
 
@@ -377,27 +466,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             _editing = t;
           }),
         ),
-        CardAction(
-          icon: 'trash',
-          tooltip: 'Eliminar',
-          danger: true,
-          onPressed: () async {
-            final app = context.app;
-            if (!await showConfirm(
-              context,
-              title: '¿Eliminar este movimiento?',
-              body: 'Se ajustará el saldo de la cuenta. Esta acción no se puede deshacer.',
-            )) {
-              return;
-            }
-            try {
-              setState(() => _removeError = null);
-              await app.data.delete('/transactions/${t.id}', 'Movimiento eliminado');
-            } catch (e) {
-              if (mounted) setState(() => _removeError = e);
-            }
-          },
-        ),
+        CardAction(icon: 'trash', tooltip: 'Eliminar', danger: true, onPressed: () => _remove(t)),
       ],
       semanticLabel: '$title, ${typeLabels[t.type]} de ${formatMoney(t.amount, account?.currency)}, ${formatDate(t.occurredOn)}',
     );

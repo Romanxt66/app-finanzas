@@ -78,6 +78,7 @@ class _AlveaAppState extends State<AlveaApp> {
   void initState() {
     super.initState();
     widget.state.onToast = _toasts.success;
+    widget.state.onToastAction = (message, label, action) => _toasts.show(message, actionLabel: label, onAction: action);
     widget.state.reminders.onOpen = _openFromNotice;
     NativeApp.onOpen(_openFromNotice);
     _boot();

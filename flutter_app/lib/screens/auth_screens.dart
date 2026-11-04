@@ -546,27 +546,6 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 48,
           onPressed: _busy ? null : _submit,
         ),
-        Row(
-          children: [
-            Expanded(child: Container(height: 1, color: c.hairline)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: space3),
-              child: Text('o entra con', style: CrText.mono(c.inkFaint, size: 11.5)),
-            ),
-            Expanded(child: Container(height: 1, color: c.hairline)),
-          ],
-        ),
-        const Row(
-          children: [
-            Expanded(
-              child: CrButton(icon: 'fingerprint', label: 'Huella', tooltip: 'Huella (próximamente)', expand: true),
-            ),
-            SizedBox(width: space3),
-            Expanded(
-              child: CrButton(icon: 'key', label: 'Passkey', tooltip: 'Passkey (próximamente)', expand: true),
-            ),
-          ],
-        ),
       ],
     );
   }
