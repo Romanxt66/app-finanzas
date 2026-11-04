@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/data.dart';
 import '../core/format.dart';
 import '../core/models.dart';
+import '../core/reminders.dart' show chargesRoute;
 import '../core/state.dart';
 import '../ui/glass.dart';
 import '../ui/icons.dart';
@@ -530,12 +531,13 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
                           child: GestureDetector(
                             onTap: () {
                               app.notices.markRead(top);
-                              context.go(top.link);
+                              // Un cobro próximo abre la hoja de cobros de ese día (como desde la campana)
+                              context.go(top.kind == 'recurring_due' ? chargesRoute(parseIso(top.date)) : top.link);
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(radiusPill),
+                                borderRadius: BorderRadius.circular(14),
                                 color: tone.withValues(alpha: 0.14),
                                 border: Border.all(color: tone.withValues(alpha: 0.6)),
                               ),
@@ -547,7 +549,7 @@ class _FinanceMoodCardState extends State<FinanceMoodCard> {
                                   Flexible(
                                     child: Text(
                                       top.title,
-                                      maxLines: 1,
+                                      maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: CrText.mono(c.ink, size: 11.5),
                                     ),

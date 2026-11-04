@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/data.dart';
 import '../core/format.dart';
@@ -401,6 +402,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
+  /// Abre el movimiento para editar y sube hasta el formulario.
+  void _edit(BuildContext context, Transaction t) {
+    setState(() {
+      _formOpen = true;
+      _editing = t;
+    });
+    Scrollable.maybeOf(context)?.position.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+  }
+
   /// Deslizar la tarjeta a la izquierda la elimina (con «Deshacer»).
   Widget _swipeable(BuildContext context, Transaction t, RefData ref) {
     final c = context.c;
@@ -408,7 +418,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       key: ValueKey('tx-${t.id}'),
       direction: DismissDirection.endToStart,
       dismissThresholds: const {DismissDirection.endToStart: 0.35},
-      onDismissed: (_) => _remove(t),
+      onDismissed: (_) {
+        HapticFeedback.mediumImpact();
+        _remove(t);
+      },
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: space5),
@@ -443,13 +456,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     };
     return DealCard(
       // Tocar la tarjeta la abre para editar (arriba de la lista)
-      onTap: () {
-        setState(() {
-          _formOpen = true;
-          _editing = t;
-        });
-        Scrollable.maybeOf(context)?.position.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
-      },
+      onTap: () => _edit(context, t),
       avatar: initials(category ?? title),
       accent: color,
       title: title,
@@ -466,14 +473,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ],
       trailing: t.type == 'expense' ? lifeHoursNote(t.amount, ref.hourlyRate)?.replaceFirst(' de trabajo', '') : null,
       actions: [
-        CardAction(
-          icon: 'edit',
-          tooltip: 'Editar',
-          onPressed: () => setState(() {
-            _formOpen = true;
-            _editing = t;
-          }),
-        ),
+        CardAction(icon: 'edit', tooltip: 'Editar', onPressed: () => _edit(context, t)),
         CardAction(icon: 'trash', tooltip: 'Eliminar', danger: true, onPressed: () => _remove(t)),
       ],
       semanticLabel: '$title, ${typeLabels[t.type]} de ${formatMoney(t.amount, account?.currency)}, ${formatDate(t.occurredOn)}',
