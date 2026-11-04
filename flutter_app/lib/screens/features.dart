@@ -13,8 +13,10 @@ import '../ui/glass.dart';
 import '../ui/inputs.dart';
 import '../ui/page.dart';
 import '../ui/query.dart';
+import '../ui/mood_face.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
+import 'insights.dart' show FinanceMood;
 
 const cadenceLabels = {'weekly': 'cada semana', 'monthly': 'cada mes', 'yearly': 'cada año'};
 const alertIcons = {'price_increase': 'up', 'duplicate': 'swap', 'trial_converted': 'tag'};
@@ -245,7 +247,17 @@ class DailyAllowanceCard extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Gauge(ratio: ratio, danger: danger, size: wide ? 120 : 96),
-              Text('${(ratio.clamp(0, 9.99) * 100).round()}%', style: CrText.display(c.ink, size: wide ? 24 : 20)),
+              // Pasado del día: en vez de un porcentaje enorme («999 %»), Alvi preocupada
+              if (ratio > 1)
+                Semantics(
+                  label: 'Te pasaste de lo de hoy',
+                  child: SizedBox.square(
+                    dimension: wide ? 72 : 58,
+                    child: RepaintBoundary(child: CustomPaint(painter: FacePainter(FinanceMood.faces[1], 0.5))),
+                  ),
+                )
+              else
+                Text('${(ratio * 100).round()}%', style: CrText.display(c.ink, size: wide ? 24 : 20)),
             ],
           ),
         );
@@ -270,7 +282,10 @@ class DailyAllowanceCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: space2),
-              Text('$basis${d.patternUsed ? ' · ajustado a tus hábitos por día de la semana' : ''}'.toLowerCase(), style: CrText.mono(c.inkFaint, size: 11.5)),
+              Text(
+                '$basis${d.patternUsed ? ' · ajustado a tus hábitos por día de la semana' : ''}'.toLowerCase(),
+                style: CrText.mono(c.inkFaint, size: 11.5),
+              ),
             ],
           ],
         );
@@ -377,7 +392,10 @@ class LifeHoursCard extends StatelessWidget {
                                 ),
                             ],
                           ),
-                        Text('tu hora vale ${formatMoney(profile.hourlyRate, ref.displayCurrency)}', style: CrText.mono(c.inkFaint, size: 11.5)),
+                        Text(
+                          'tu hora vale ${formatMoney(profile.hourlyRate, ref.displayCurrency)}',
+                          style: CrText.mono(c.inkFaint, size: 11.5),
+                        ),
                       ],
                     ),
             );

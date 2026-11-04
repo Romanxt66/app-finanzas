@@ -11,7 +11,9 @@ import '../ui/buttons.dart';
 import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
 import '../ui/download.dart';
+import '../ui/glass.dart';
 import '../ui/inputs.dart';
+import '../ui/motion.dart';
 import '../ui/page.dart';
 import '../ui/query.dart';
 import '../ui/theme.dart';
@@ -43,6 +45,97 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   int _page = 0;
   bool _formOpen = false;
   Transaction? _editing;
+
+  /// Filtros avanzados (tipo, cuenta, fechas) desplegados.
+  bool _filtersOpen = false;
+
+  int get _activeFilters => [_type, _account, _from, _to].where((v) => v.isNotEmpty).length;
+
+  /// Búsqueda siempre a mano y el resto de filtros tras un botón (con cuántos hay activos).
+  Widget _filterBar(BuildContext context, RefData ref) {
+    final active = _activeFilters;
+    return Glass(
+      lift: true,
+      padding: const EdgeInsets.all(space4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: CrTextField(
+                  label: 'Buscar',
+                  controller: _search,
+                  onChanged: (v) {
+                    _debounce?.cancel();
+                    _debounce = Timer(const Duration(milliseconds: 300), () => _setFilter(() => _searchText = v.trim()));
+                  },
+                ),
+              ),
+              const SizedBox(width: space3),
+              CrButton(
+                variant: _filtersOpen || active > 0 ? CrButtonVariant.primary : CrButtonVariant.glass,
+                icon: 'list',
+                label: active > 0 ? 'Filtros · $active' : 'Filtros',
+                onPressed: () => setState(() => _filtersOpen = !_filtersOpen),
+              ),
+            ],
+          ),
+          AnimatedSize(
+            duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 260),
+            curve: crEase,
+            alignment: Alignment.topCenter,
+            child: !_filtersOpen
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.only(top: space3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        FormGrid(
+                          children: [
+                            CrSelect<String>(
+                              label: 'Tipo',
+                              value: _type,
+                              options: [('', 'Todos'), for (final e in typeLabels.entries) (e.key, e.value)],
+                              onChanged: (v) => _setFilter(() => _type = v),
+                            ),
+                            CrSelect<String>(
+                              label: 'Cuenta',
+                              value: _account,
+                              options: [('', 'Todas'), for (final a in ref.allAccounts) (a.id, a.name)],
+                              onChanged: (v) => _setFilter(() => _account = v),
+                            ),
+                            CrDateField(label: 'Desde', value: _from, optional: true, onChanged: (v) => _setFilter(() => _from = v ?? '')),
+                            CrDateField(label: 'Hasta', value: _to, optional: true, onChanged: (v) => _setFilter(() => _to = v ?? '')),
+                          ],
+                        ),
+                        if (active > 0) ...[
+                          const SizedBox(height: space3),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: CrButton(
+                              variant: CrButtonVariant.ghost,
+                              small: true,
+                              label: 'Quitar filtros',
+                              onPressed: () => _setFilter(() {
+                                _type = '';
+                                _account = '';
+                                _from = '';
+                                _to = '';
+                              }),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
 
   /// Transferencia precargada («Mover dinero» de un recordatorio de cobro).
   TransactionDraft? _draft;
@@ -161,35 +254,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   _draft = null;
                 }),
               ),
-            CrCard(
-              title: 'Filtros',
-              child: FormGrid(
-                children: [
-                  CrTextField(
-                    label: 'Buscar',
-                    controller: _search,
-                    onChanged: (v) {
-                      _debounce?.cancel();
-                      _debounce = Timer(const Duration(milliseconds: 300), () => _setFilter(() => _searchText = v.trim()));
-                    },
-                  ),
-                  CrSelect<String>(
-                    label: 'Tipo',
-                    value: _type,
-                    options: [('', 'Todos'), for (final e in typeLabels.entries) (e.key, e.value)],
-                    onChanged: (v) => _setFilter(() => _type = v),
-                  ),
-                  CrSelect<String>(
-                    label: 'Cuenta',
-                    value: _account,
-                    options: [('', 'Todas'), for (final a in ref.allAccounts) (a.id, a.name)],
-                    onChanged: (v) => _setFilter(() => _account = v),
-                  ),
-                  CrDateField(label: 'Desde', value: _from, optional: true, onChanged: (v) => _setFilter(() => _from = v ?? '')),
-                  CrDateField(label: 'Hasta', value: _to, optional: true, onChanged: (v) => _setFilter(() => _to = v ?? '')),
-                ],
-              ),
-            ),
+            _filterBar(context, ref),
             if (q.loading)
               const Skeleton(lines: 4)
             else if (q.error != null && data == null)
@@ -293,7 +358,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       title: title,
       subtitle: target != null ? '${account?.name} → $target' : account?.name,
       eyebrow: typeLabels[t.type],
-      value: '$sign${formatMoney(t.amount, account?.currency)}',
+      // Signo separado como en el resto de la app («− $ 44.900»), sin partir la línea
+      value: sign.isEmpty ? formatMoney(t.amount, account?.currency) : '$sign\u00a0${formatMoney(t.amount, account?.currency)}',
       valueColor: t.type == 'income' ? c.positive : null,
       chips: [
         if (category != null) DealChip(category, dot: true, color: color),

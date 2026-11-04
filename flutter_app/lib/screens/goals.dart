@@ -33,6 +33,9 @@ class GoalsScreen extends StatefulWidget {
 }
 
 class _GoalsScreenState extends State<GoalsScreen> {
+  /// Formulario de alta desplegado (con datos ya creados empieza plegado).
+  bool _formOpen = false;
+
   final _name = TextEditingController();
   final _target = TextEditingController();
   String _currency = '';
@@ -68,6 +71,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
       if (mounted) {
         setState(() {
           _name.clear();
+          _formOpen = false;
           _target.clear();
           _currency = '';
           _deadline = '';
@@ -98,8 +102,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
         return PageScaffold(
           children: [
             PageHead('Metas', headline: 'Ahorra para lo que *importa*.'),
-            CrCard(
+            CreateSection(
+              label: 'Nueva meta',
               title: 'Nueva meta',
+              open: _formOpen,
+              onOpenChanged: (v) => setState(() => _formOpen = v),
+              hasData: goals != null && goals.isNotEmpty,
               child: Stack12(
                 children: [
                   FormGrid(

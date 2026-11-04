@@ -22,6 +22,9 @@ class BudgetsScreen extends StatefulWidget {
 }
 
 class _BudgetsScreenState extends State<BudgetsScreen> {
+  /// Formulario de alta desplegado (con datos ya creados empieza plegado).
+  bool _formOpen = false;
+
   String _month = monthStart();
   final _amount = TextEditingController();
   String _category = '';
@@ -47,6 +50,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
         setState(() {
           _category = '';
           _amount.clear();
+          _formOpen = false;
           _submitted = false;
         });
       }
@@ -78,15 +82,14 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
             PageHead(
               'Presupuestos',
               headline: 'Gasta con *intención*.',
-              actions: [
-                SizedBox(
-                  width: 200,
-                  child: CrMonthField(label: 'Mes', month: parseIso(_month), onChanged: (d) => setState(() => _month = monthStart(d))),
-                ),
-              ],
+              actions: [CrMonthPill(month: parseIso(_month), onChanged: (d) => setState(() => _month = monthStart(d)))],
             ),
-            CrCard(
+            CreateSection(
+              label: 'Nuevo presupuesto',
               title: 'Nuevo presupuesto',
+              open: _formOpen,
+              onOpenChanged: (v) => setState(() => _formOpen = v),
+              hasData: budgets != null && budgets.isNotEmpty,
               child: Stack12(
                 children: [
                   FormGrid(

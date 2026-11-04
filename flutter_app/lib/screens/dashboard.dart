@@ -75,14 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           value: currency ?? currencies.first,
                           onChanged: (v) => setState(() => _chosenCurrency = v),
                         ),
-                      SizedBox(
-                        width: 200,
-                        child: CrMonthField(
-                          label: 'Mes',
-                          month: parseIso(_month),
-                          onChanged: (d) => setState(() => _month = monthStart(d)),
-                        ),
-                      ),
+                      CrMonthPill(month: parseIso(_month), onChanged: (d) => setState(() => _month = monthStart(d))),
                     ],
                   ),
                   const ChargeAlertBanner(),

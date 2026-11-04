@@ -26,6 +26,9 @@ class RecurringScreen extends StatefulWidget {
 }
 
 class _RecurringScreenState extends State<RecurringScreen> {
+  /// Formulario de alta desplegado (con datos ya creados empieza plegado).
+  bool _formOpen = false;
+
   String _type = 'expense';
   String _account = '';
   String _transfer = '';
@@ -73,6 +76,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
       if (mounted) {
         setState(() {
           _amount.clear();
+          _formOpen = false;
           _desc.clear();
           _account = '';
           _transfer = '';
@@ -107,8 +111,12 @@ class _RecurringScreenState extends State<RecurringScreen> {
         return PageScaffold(
           children: [
             PageHead('Recurrentes', headline: 'Lo que se repite, *se registra solo*.'),
-            CrCard(
+            CreateSection(
+              label: 'Nuevo recurrente',
               title: 'Nuevo movimiento recurrente',
+              open: _formOpen,
+              onOpenChanged: (v) => setState(() => _formOpen = v),
+              hasData: rules != null && rules.isNotEmpty,
               child: Stack12(
                 children: [
                   FormGrid(

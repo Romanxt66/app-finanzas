@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/format.dart';
@@ -249,8 +250,55 @@ class _TopBar extends StatelessWidget {
               onPressed: app.cycleTheme,
             ),
             const SizedBox(width: space1),
-            CrButton(variant: CrButtonVariant.glass, small: true, icon: 'logout', label: 'Salir', onPressed: () => app.logout()),
+            // En el móvil, «Salir» vive en Perfil y en Más: aquí basta el avatar que lleva al perfil
+            if (wide)
+              CrButton(variant: CrButtonVariant.glass, small: true, icon: 'logout', label: 'Salir', onPressed: () => app.logout())
+            else
+              _Avatar(name: app.user?.fullName ?? '', active: location == '/profile'),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Iniciales del usuario en un círculo de cristal con anillo neón; abre el perfil.
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.name, required this.active});
+  final String name;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final initials = parts.isEmpty
+        ? '·'
+        : (parts.length == 1 ? parts.first.substring(0, 1) : '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}').toUpperCase();
+    return Semantics(
+      button: true,
+      label: 'Perfil de $name',
+      excludeSemantics: true,
+      child: PressScale(
+        scale: 0.94,
+        child: GestureDetector(
+          onTap: () => context.go('/profile'),
+          child: Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [c.neon.withValues(alpha: 0.35), c.brandFill.withValues(alpha: 0.25)],
+              ),
+              border: Border.all(color: active ? c.neon : c.glassBorder, width: active ? 1.6 : 1),
+              boxShadow: active ? [BoxShadow(color: c.neonGlow, blurRadius: 12)] : null,
+            ),
+            child: Text(initials, style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w800, fontSize: 12.5)),
+          ),
         ),
       ),
     );
@@ -422,7 +470,10 @@ class _Tab extends StatelessWidget {
         scale: 0.95,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => context.go(item.to),
+          onTap: () {
+            if (!active) HapticFeedback.selectionClick();
+            context.go(item.to);
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: space2),
             child: Column(

@@ -7,6 +7,7 @@ import '../core/format.dart';
 import 'buttons.dart';
 import 'glass.dart';
 import 'icons.dart';
+import 'mood_face.dart';
 import 'motion.dart';
 import 'theme.dart';
 
@@ -281,24 +282,46 @@ class SectionTitle extends StatelessWidget {
 }
 
 class CrEmpty extends StatelessWidget {
-  const CrEmpty(this.text, {super.key});
+  const CrEmpty(this.text, {super.key, this.face = true});
   final String text;
+
+  /// Alvi tranquila encima del texto (quieta: no anima nada en una pantalla vacía).
+  final bool face;
+
+  static const _calm = FaceExpression(color: Color(0xFF7DD3FC), smile: 0.35, blush: 0.25);
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: space6, horizontal: space4),
+    padding: const EdgeInsets.symmetric(vertical: space5, horizontal: space4),
     child: Center(
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontFamily: fontFamily,
-          fontFamilyFallback: fontFallback,
-          fontSize: 14,
-          height: 20 / 14,
-          fontWeight: FontWeight.w500,
-          color: context.c.inkMuted,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (face) ...[
+            ExcludeSemantics(
+              child: SizedBox.square(
+                dimension: 72,
+                child: RepaintBoundary(child: CustomPaint(painter: FacePainter(_calm, 0.25))),
+              ),
+            ),
+            const SizedBox(height: space2),
+          ],
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: fontFamily,
+                fontFamilyFallback: fontFallback,
+                fontSize: 14,
+                height: 20 / 14,
+                fontWeight: FontWeight.w500,
+                color: context.c.inkMuted,
+              ),
+            ),
+          ),
+        ],
       ),
     ),
   );
