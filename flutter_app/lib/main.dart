@@ -30,6 +30,7 @@ import 'quick_add.dart';
 import 'ui/buttons.dart';
 import 'ui/dialogs.dart';
 import 'ui/glass.dart';
+import 'ui/motion.dart';
 import 'ui/theme.dart';
 
 /// Entrada del recuadro rápido (QuickAddActivity, Android): gasto o ingreso sin abrir la app.
@@ -182,7 +183,14 @@ class _AlveaAppState extends State<AlveaApp> {
 }
 
 GoRouter _buildRouter(AppState app) {
-  Page<void> page(Widget child, GoRouterState s) => NoTransitionPage<void>(key: s.pageKey, child: child);
+  // Cambio de pantalla con fundido y leve escala (sin movimiento si el sistema pide reducirlo)
+  Page<void> page(Widget child, GoRouterState s) => CustomTransitionPage<void>(
+    key: s.pageKey,
+    child: child,
+    transitionDuration: CrMotion.page,
+    reverseTransitionDuration: CrMotion.fast,
+    transitionsBuilder: crFadeThrough,
+  );
   return GoRouter(
     refreshListenable: app,
     redirect: (context, state) {

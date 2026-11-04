@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'motion.dart';
 import 'theme.dart';
 
 const backgroundAsset = 'assets/backgrounds/fondo.jpg';
@@ -352,6 +353,8 @@ class _GlassState extends State<Glass> {
         ),
       ),
     );
+    // Tarjeta que se puede tocar: se hunde un poco al pulsarla (respuesta inmediata, sin mover nada alrededor)
+    if (widget.onTap != null) glass = PressScale(scale: 0.985, child: glass);
     if (widget.lift) {
       glass = MouseRegion(
         onEnter: (_) => setState(() => _hover = true),

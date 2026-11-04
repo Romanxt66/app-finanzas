@@ -502,9 +502,10 @@ class CardAction extends StatelessWidget {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onPressed,
-              child: Padding(
-                padding: const EdgeInsets.all(7),
-                child: CrIcon(icon, size: 15, color: danger ? c.negative : c.inkMuted),
+              // Zona táctil de 44 px (aunque el icono se vea pequeño): fácil de acertar con el dedo
+              child: SizedBox.square(
+                dimension: 44,
+                child: Center(child: CrIcon(icon, size: 17, color: danger ? c.negative : c.inkMuted)),
               ),
             ),
           ),
