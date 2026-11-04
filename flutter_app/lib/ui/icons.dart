@@ -41,6 +41,7 @@ const _paths = <String, String>{
   'play': 'M8 5.5v13l10-6.5z',
   'backspace': 'M21 5H9l-6 7 6 7h12zM16 9.5l-5 5M11 9.5l5 5',
   'bell': 'M6 9a6 6 0 0 1 12 0c0 6.5 3 8 3 8H3s3-1.5 3-8M10.3 21a1.9 1.9 0 0 0 3.4 0',
+  'dots': 'M5 12h.01M12 12h.01M19 12h.01',
   'calendar': 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
 };
 
