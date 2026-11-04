@@ -442,6 +442,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       _ => '',
     };
     return DealCard(
+      // Tocar la tarjeta la abre para editar (arriba de la lista)
+      onTap: () {
+        setState(() {
+          _formOpen = true;
+          _editing = t;
+        });
+        Scrollable.maybeOf(context)?.position.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+      },
       avatar: initials(category ?? title),
       accent: color,
       title: title,

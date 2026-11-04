@@ -453,7 +453,12 @@ class AnimatedMoney extends StatelessWidget {
   @override
   Widget build(BuildContext context) => CountUp(
     value: value,
-    builder: (context, v) => Text(formatMoney(v, currency), style: style),
+    // Una cifra nunca se parte en dos líneas: si no cabe, se encoge un poco
+    builder: (context, v) => FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(formatMoney(v, currency), style: style, maxLines: 1, softWrap: false),
+    ),
   );
 }
 

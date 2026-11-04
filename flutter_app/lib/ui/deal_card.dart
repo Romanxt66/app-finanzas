@@ -90,6 +90,7 @@ class DealCard extends StatelessWidget {
     this.footer,
     this.dimmed = false,
     this.semanticLabel,
+    this.onTap,
   });
   final String title;
   final String? subtitle;
@@ -112,6 +113,9 @@ class DealCard extends StatelessWidget {
   final bool dimmed;
   final String? semanticLabel;
 
+  /// Tocar la tarjeta (p. ej. abrirla para editar); los botones de acción siguen funcionando aparte.
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final c = context.c;
@@ -119,6 +123,7 @@ class DealCard extends StatelessWidget {
     final card = Glass(
       lift: true,
       radius: 16,
+      onTap: onTap,
       padding: const EdgeInsets.fromLTRB(space4, space4, space3, space4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
