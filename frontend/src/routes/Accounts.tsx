@@ -20,6 +20,8 @@ import {
   Select,
   Skeleton,
   ConfirmDialog,
+  Donut,
+  DONUT_COLORS,
   FormDialog,
 } from '../design'
 import { CurrencySelect } from '../features/CurrencySelect'
@@ -80,6 +82,7 @@ export function AccountsPage() {
           <ErrorText error={create.error} />
         </form>
       </Card>
+      {!!accounts?.length && <BalancesDonut accounts={accounts} />}
       {isLoading ? (
         <Skeleton lines={3} />
       ) : !accounts?.length ? (
@@ -163,5 +166,65 @@ export function AccountsPage() {
       </ConfirmDialog>
       <ErrorText error={remove.error} />
     </>
+  )
+}
+
+/** Reparto del saldo entre las cuentas activas (moneda principal), con el total en el centro. */
+function BalancesDonut({ accounts }: { accounts: Account[] }) {
+  const active = accounts.filter((a) => !a.archived)
+  if (!active.length) return null
+  const currency = active[0].currency
+  const mine = active
+    .filter((a) => a.currency === currency)
+    .sort((a, b) => Number(b.balance) - Number(a.balance))
+  const total = mine.reduce((t, a) => t + Number(a.balance), 0)
+  const positive = mine.filter((a) => Number(a.balance) > 0)
+  const sum = positive.reduce((t, a) => t + Number(a.balance), 0)
+  return (
+    <Card title="Saldos">
+      <div className="cr-donut-wrap">
+        <div className="cr-donut-center">
+          <Donut
+            size={180}
+            label={`Reparto del saldo: ${positive.map((a) => `${a.name} ${Math.round((Number(a.balance) / sum) * 100)} %`).join(', ')}`}
+            data={positive.map((a) => ({ key: a.id, value: Number(a.balance) }))}
+          />
+          <span className="cr-donut-total">
+            <span className="caption cr-muted">saldo total</span>
+            <strong>{formatMoney(total, currency)}</strong>
+          </span>
+        </div>
+        <ul className="cr-donut-legend">
+          {mine
+            .map((a) => {
+              const share = Number(a.balance) > 0 && sum > 0 ? Number(a.balance) / sum : 0
+              const idx = positive.findIndex((p) => p.id === a.id)
+              return (
+                <li key={a.id}>
+                  <span
+                    className="cr-dot"
+                    style={{
+                      background:
+                        idx >= 0 ? DONUT_COLORS[idx % DONUT_COLORS.length] : 'var(--hairline)',
+                    }}
+                    aria-hidden="true"
+                  />
+                  <span className="cr-donut-name">
+                    <span className="body">{a.name}</span>
+                    <span className="caption cr-muted">
+                      {TYPE_LABELS[a.type as keyof typeof TYPE_LABELS] ?? a.type}
+                    </span>
+                  </span>
+                  <span className="cr-donut-amount">
+                    <span>{formatMoney(a.balance, a.currency)}</span>
+                    <span className="caption cr-muted">{Math.round(share * 100)} %</span>
+                  </span>
+                </li>
+              )
+            })
+            .slice(0, 8)}
+        </ul>
+      </div>
+    </Card>
   )
 }

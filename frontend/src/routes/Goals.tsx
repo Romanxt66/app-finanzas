@@ -6,6 +6,10 @@ import { useContribute, useCreateGoal, useDeleteGoal, useGoals, type Goal } from
 import {
   Button,
   Card,
+  Checkbox,
+  Glass,
+  Icon,
+  StatTile,
   ConfirmDialog,
   Empty,
   ErrorText,
@@ -101,6 +105,7 @@ export function GoalsPage() {
   const remove = useDeleteGoal()
   const [contribution, setContribution] = useState<{ goal: Goal; withdraw: boolean } | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Goal | null>(null)
+  const [showAchieved, setShowAchieved] = useState(true)
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(goalSchema),
   })
@@ -142,41 +147,52 @@ export function GoalsPage() {
           <Empty>Aún no tienes metas. Crea una para empezar a ahorrar con un objetivo.</Empty>
         </Card>
       ) : (
-        <ul className="cr-goal-grid">
-          {goals.map((g) => (
-            <li key={g.id}>
-              <ProgressCard
-                label={g.name}
-                saved={Number(g.saved)}
-                target={Number(g.target_amount)}
-                currency={g.currency}
-                achieved={g.achieved}
-                note={goalNote(g)}
-                actions={
-                  <>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => setContribution({ goal: g, withdraw: false })}
-                    >
-                      Aportar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setContribution({ goal: g, withdraw: true })}
-                    >
-                      Retirar
-                    </Button>
-                    <Button variant="danger" size="sm" onClick={() => setPendingDelete(g)}>
-                      Eliminar
-                    </Button>
-                  </>
-                }
-              />
-            </li>
-          ))}
-        </ul>
+        <>
+          <GoalsSummary goals={goals} />
+          <Checkbox
+            className="cr-goal-filter"
+            label="Mostrar metas cumplidas"
+            checked={showAchieved}
+            onChange={(e) => setShowAchieved(e.target.checked)}
+          />
+          <ul className="cr-goal-grid">
+            {goals
+              .filter((g) => showAchieved || !g.achieved)
+              .map((g) => (
+                <li key={g.id}>
+                  <ProgressCard
+                    label={g.name}
+                    saved={Number(g.saved)}
+                    target={Number(g.target_amount)}
+                    currency={g.currency}
+                    achieved={g.achieved}
+                    note={goalNote(g)}
+                    actions={
+                      <>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => setContribution({ goal: g, withdraw: false })}
+                        >
+                          Aportar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setContribution({ goal: g, withdraw: true })}
+                        >
+                          Retirar
+                        </Button>
+                        <Button variant="danger" size="sm" onClick={() => setPendingDelete(g)}>
+                          Eliminar
+                        </Button>
+                      </>
+                    }
+                  />
+                </li>
+              ))}
+          </ul>
+        </>
       )}
 
       <FormDialog
@@ -210,5 +226,41 @@ export function GoalsPage() {
       </ConfirmDialog>
       <ErrorText error={remove.error} />
     </>
+  )
+}
+
+/** Total ahorrado (moneda de la primera meta) y cuántas metas se cumplieron. */
+function GoalsSummary({ goals }: { goals: Goal[] }) {
+  const currency = goals[0].currency
+  const same = goals.filter((g) => g.currency === currency)
+  const saved = same.reduce((t, g) => t + Number(g.saved), 0)
+  const target = same.reduce((t, g) => t + Number(g.target_amount), 0)
+  const done = goals.filter((g) => g.achieved).length
+  return (
+    <div className="cr-grid-kpi">
+      <StatTile
+        label="Ahorrado"
+        value={saved}
+        currency={currency}
+        icon="target"
+        note={`de ${formatMoney(target, currency)}`}
+      />
+      <Glass size="md" className="cr-stat">
+        <div className="cr-stat-head">
+          <span className="cr-chip">
+            <Icon name="check" />
+          </span>
+        </div>
+        <div>
+          <div className="overline">Cumplidas</div>
+          <div className="amount">
+            {done}/{goals.length}
+          </div>
+          <div className="caption cr-muted">
+            {done === goals.length ? '¡todas cumplidas!' : `${goals.length - done} en camino`}
+          </div>
+        </div>
+      </Glass>
+    </div>
   )
 }

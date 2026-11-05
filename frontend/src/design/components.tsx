@@ -1,3 +1,4 @@
+import { DONUT_COLORS } from './donutColors'
 import {
   forwardRef,
   useId,
@@ -552,8 +553,6 @@ export function ProgressCard(props: {
     </Glass>
   )
 }
-
-const DONUT_COLORS = ['var(--brand)', 'var(--amber)', 'var(--negative)', 'var(--ink-muted)']
 
 /** Dona de participación. El color no es la única pista: el significado va en la leyenda (lista) contigua. */
 export function Donut({

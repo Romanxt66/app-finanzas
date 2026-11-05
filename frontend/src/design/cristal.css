@@ -1765,3 +1765,73 @@ a.cr-user:focus-visible {
   width: 18px;
   height: 18px;
 }
+
+/* ---- Cuentas: reparto del saldo ---- */
+.cr-donut-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+}
+.cr-donut-center {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+}
+.cr-donut-total {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 120px;
+  text-align: center;
+}
+.cr-donut-total strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+.cr-donut-legend {
+  flex: 1 1 240px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cr-donut-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+.cr-dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+}
+.cr-donut-name,
+.cr-donut-amount {
+  display: flex;
+  flex-direction: column;
+}
+.cr-donut-name {
+  flex: 1;
+  min-width: 0;
+}
+.cr-donut-amount {
+  align-items: flex-end;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cr-goal-filter {
+  align-self: flex-end;
+}
+
+.cr-cat-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
