@@ -13,6 +13,7 @@ from app.core.security import create_token, decode_token, hash_password, verify_
 from app.models import User
 from app.schemas.auth import (
     ChangePasswordIn,
+    DeleteAccountIn,
     LoginIn,
     ProfileUpdate,
     RecoveryCodes,
@@ -92,6 +93,12 @@ async def update_profile(data: ProfileUpdate, user: CurrentUser, session: Sessio
     user.full_name = data.full_name
     await session.commit()
     return user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(data: DeleteAccountIn, user: CurrentUser, session: SessionDep) -> None:
+    """Elimina la cuenta y todos sus datos. Pide la contraseña para confirmar."""
+    await auth.delete_account(session, user, data.password)
 
 
 @router.post("/change-password", response_model=TokenPair)
