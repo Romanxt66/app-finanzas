@@ -5,6 +5,7 @@ import { ToastProvider } from './design'
 import { AuthProvider } from './features/auth'
 import { LoginPage, RegisterPage } from './routes/AuthPages'
 import { Layout } from './routes/Layout'
+import { LegalPage } from './routes/Legal'
 
 // Cada pantalla se descarga al visitarla; recharts solo viaja con el resumen
 const lazyPage = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
@@ -34,6 +35,8 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/terminos" element={<LegalPage kind="terms" />} />
+              <Route path="/privacidad" element={<LegalPage kind="privacy" />} />
               <Route element={<Layout />}>
                 <Route index element={<DashboardPage />} />
                 <Route path="transactions" element={<TransactionsPage />} />

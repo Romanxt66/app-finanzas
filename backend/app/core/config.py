@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     environment: str = "development"
     # Opcional: si se define, los errores del servidor y los que reporta la app se envían a Sentry
     sentry_dsn: str | None = None
+    # IDs de cliente de OAuth de Google (web y Android) que pueden iniciar sesión.
+    # Vacío = desactivado.
+    google_client_ids: list[str] = []
 
 
 @lru_cache

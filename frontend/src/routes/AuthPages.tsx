@@ -80,6 +80,9 @@ function Shell({
           <p className="cr-login-sub">{subtitle}</p>
           {children}
           <p className="cr-login-foot">{footer}</p>
+          <p className="cr-legal-links">
+            <Link to="/terminos">Términos</Link> · <Link to="/privacidad">Privacidad</Link>
+          </p>
         </section>
       </main>
     </Backdrop>

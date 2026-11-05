@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import totp
 from app.core.errors import AppError, ConflictError, UnauthorizedError
+from app.core.google import GoogleIdentity
 from app.core.security import hash_password, verify_password
 from app.models import (
     Account,
@@ -31,8 +32,35 @@ async def register(session: AsyncSession, data: RegisterIn) -> User:
 
 async def authenticate(session: AsyncSession, email: str, password: str) -> User:
     user = await session.scalar(select(User).where(User.email == email.lower()))
-    if user is None or not verify_password(password, user.hashed_password):
+    if user is None or user.hashed_password is None:
         raise UnauthorizedError("Credenciales incorrectas")
+    if not verify_password(password, user.hashed_password):
+        raise UnauthorizedError("Credenciales incorrectas")
+    return user
+
+
+async def google_user(session: AsyncSession, identity: GoogleIdentity) -> User:
+    """Cuenta para una identidad de Google: la ya vinculada, la del mismo correo o una nueva.
+
+    Solo se vincula a una cuenta existente por correo si Google confirma que el correo es suyo; si
+    no, alguien podría crear en Google una cuenta con un correo ajeno sin verificar y entrar a la
+    de otro.
+    """
+    user = await session.scalar(select(User).where(User.google_sub == identity.sub))
+    if user is not None:
+        return user
+    if not identity.email_verified:
+        raise UnauthorizedError("Verifica tu correo en Google antes de usarlo para entrar")
+    user = await session.scalar(select(User).where(User.email == identity.email))
+    if user is not None:
+        user.google_sub = identity.sub
+    else:
+        name = (identity.name or identity.email.split("@")[0])[:120]
+        user = User(
+            email=identity.email, hashed_password=None, full_name=name, google_sub=identity.sub
+        )
+        session.add(user)
+    await session.flush()
     return user
 
 
@@ -83,7 +111,8 @@ def confirm_two_factor(user: User, code: str) -> list[str]:
 def disable_two_factor(user: User, password: str, code: str) -> None:
     if not user.totp_enabled:
         raise AppError("La verificación en dos pasos no está activada")
-    if not verify_password(password, user.hashed_password):
+    # Sin contraseña (cuenta de Google) basta el código de la app de autenticación
+    if user.hashed_password is not None and not verify_password(password, user.hashed_password):
         raise AppError("La contraseña es incorrecta")
     if not check_second_factor(user, code):
         raise AppError("El código no es correcto")
@@ -118,10 +147,21 @@ _OWNED = (
 )
 
 
-async def delete_account(session: AsyncSession, user: User, password: str) -> None:
-    """Borra al usuario y todos sus datos (derecho de supresión; lo exige Google Play)."""
-    if not verify_password(password, user.hashed_password):
-        raise AppError("La contraseña no es correcta")
+async def delete_account(
+    session: AsyncSession,
+    user: User,
+    password: str | None,
+    google: GoogleIdentity | None = None,
+) -> None:
+    """Borra al usuario y todos sus datos (derecho de supresión; lo exige Google Play).
+
+    Se confirma con la contraseña o, en las cuentas sin contraseña, volviendo a entrar con Google.
+    """
+    if user.hashed_password is not None:
+        if not password or not verify_password(password, user.hashed_password):
+            raise AppError("La contraseña no es correcta")
+    elif google is None or google.sub != user.google_sub:
+        raise AppError("Confirma con la misma cuenta de Google para eliminarla")
     for model in _OWNED:
         await session.execute(delete(model).where(model.user_id == user.id))
     await session.execute(delete(User).where(User.id == user.id))

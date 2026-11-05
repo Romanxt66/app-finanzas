@@ -8,7 +8,12 @@ class User(IdMixin, TimestampMixin, Base):
     __tablename__ = "users"
 
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(255))
+    # Nulo en las cuentas creadas con Google que aún no tienen contraseña
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Identificador estable de la cuenta de Google vinculada («sub» del ID token)
+    google_sub: Mapped[str | None] = mapped_column(
+        String(255), unique=True, nullable=True, default=None
+    )
     full_name: Mapped[str] = mapped_column(String(120))
     # Se incrementa al cambiar la contraseña o cerrar sesión en todos los dispositivos:
     # los tokens emitidos con una versión anterior dejan de valer.
@@ -22,3 +27,12 @@ class User(IdMixin, TimestampMixin, Base):
     totp_last_step: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     # Hashes SHA-256 de los códigos de recuperación aún sin usar
     recovery_codes: Mapped[list[str] | None] = mapped_column(JSON, nullable=True, default=None)
+
+    @property
+    def email_login(self) -> bool:
+        """Puede entrar con correo y contraseña."""
+        return self.hashed_password is not None
+
+    @property
+    def google_linked(self) -> bool:
+        return self.google_sub is not None

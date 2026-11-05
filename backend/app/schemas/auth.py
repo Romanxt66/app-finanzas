@@ -39,6 +39,11 @@ class LoginIn(BaseModel):
     otp: str | None = Field(default=None, max_length=32)
 
 
+class GoogleLoginIn(BaseModel):
+    id_token: str = Field(min_length=20, max_length=4096)
+    otp: str | None = Field(default=None, max_length=32)
+
+
 class RefreshIn(BaseModel):
     refresh_token: str
 
@@ -56,6 +61,9 @@ class UserOut(ORMModel):
     two_factor_enabled: bool = Field(
         default=False, validation_alias=AliasChoices("totp_enabled", "two_factor_enabled")
     )
+    # False en cuentas de Google sin contraseña aún (Perfil ofrece crear una)
+    email_login: bool = True
+    google_linked: bool = False
 
 
 class ProfileUpdate(BaseModel):
@@ -63,11 +71,14 @@ class ProfileUpdate(BaseModel):
 
 
 class DeleteAccountIn(BaseModel):
-    password: str
+    # Con contraseña si la cuenta la tiene; si solo entra con Google, un ID token reciente suyo
+    password: str | None = None
+    google_id_token: str | None = Field(default=None, max_length=4096)
 
 
 class ChangePasswordIn(BaseModel):
-    current_password: str
+    # Vacío solo si la cuenta (creada con Google) aún no tiene contraseña: así se crea la primera
+    current_password: str = ""
     new_password: str
 
     @field_validator("new_password")
@@ -86,7 +97,7 @@ class TwoFactorCode(BaseModel):
 
 
 class TwoFactorDisable(BaseModel):
-    password: str
+    password: str = ""  # vacío en las cuentas de Google sin contraseña
     code: str = Field(min_length=6, max_length=32)
 
 

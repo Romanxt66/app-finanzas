@@ -8,12 +8,14 @@ from app.core.errors import (
     TwoFactorRequiredError,
     UnauthorizedError,
 )
+from app.core.google import verify_google_token
 from app.core.ratelimit import FailureLimiter
 from app.core.security import create_token, decode_token, hash_password, verify_password
 from app.models import User
 from app.schemas.auth import (
     ChangePasswordIn,
     DeleteAccountIn,
+    GoogleLoginIn,
     LoginIn,
     ProfileUpdate,
     RecoveryCodes,
@@ -74,6 +76,29 @@ async def login(data: LoginIn, request: Request, session: SessionDep) -> TokenPa
     return _tokens(user)
 
 
+@router.post("/google", response_model=TokenPair)
+async def google_login(data: GoogleLoginIn, request: Request, session: SessionDep) -> TokenPair:
+    """Entra (o crea la cuenta) con un ID token de Google. Respeta la verificación en dos pasos."""
+    identity = await verify_google_token(data.id_token)
+    key = f"{request.client.host if request.client else '?'}|google:{identity.sub}"
+    wait = login_limiter.retry_after(key)
+    if wait:
+        raise TooManyRequestsError(
+            f"Demasiados intentos fallidos. Inténtalo de nuevo en {-(-wait // 60)} min"
+        )
+    user = await auth.google_user(session, identity)
+    if user.totp_enabled:
+        if not data.otp:
+            await session.commit()  # la vinculación con Google se guarda aunque falte el código
+            raise TwoFactorRequiredError("Escribe el código de tu app de autenticación")
+        if not auth.check_second_factor(user, data.otp):
+            login_limiter.record_failure(key)
+            raise UnauthorizedError("El código de verificación no es correcto")
+    await session.commit()
+    login_limiter.reset(key)
+    return _tokens(user)
+
+
 @router.post("/refresh", response_model=TokenPair)
 async def refresh(data: RefreshIn, session: SessionDep) -> TokenPair:
     claims = decode_token(data.refresh_token, "refresh")
@@ -98,7 +123,8 @@ async def update_profile(data: ProfileUpdate, user: CurrentUser, session: Sessio
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_me(data: DeleteAccountIn, user: CurrentUser, session: SessionDep) -> None:
     """Elimina la cuenta y todos sus datos. Pide la contraseña para confirmar."""
-    await auth.delete_account(session, user, data.password)
+    google = await verify_google_token(data.google_id_token) if data.google_id_token else None
+    await auth.delete_account(session, user, data.password, google)
 
 
 @router.post("/change-password", response_model=TokenPair)
@@ -106,7 +132,10 @@ async def change_password(
     data: ChangePasswordIn, user: CurrentUser, session: SessionDep
 ) -> TokenPair:
     """Cambia la contraseña y cierra las demás sesiones; devuelve tokens nuevos para esta."""
-    if not verify_password(data.current_password, user.hashed_password):
+    # Una cuenta creada con Google crea aquí su primera contraseña (no hay actual que comprobar)
+    if user.hashed_password is not None and not verify_password(
+        data.current_password, user.hashed_password
+    ):
         raise AppError("La contraseña actual es incorrecta")
     if data.current_password == data.new_password:
         raise AppError("La contraseña nueva debe ser distinta de la actual")

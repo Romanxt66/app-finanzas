@@ -21,6 +21,9 @@ services:
       CORS_ORIGINS: '[]'
       # Opcional: errores del servidor y de la app a Sentry (vacío = desactivado)
       SENTRY_DSN: ${SENTRY_DSN:-}
+      # «Continuar con Google»: IDs de cliente de OAuth en JSON, p. ej.
+      # ["123-web.apps.googleusercontent.com","123-android.apps.googleusercontent.com"] (vacío = desactivado)
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-[]}
     networks:
       - default
       - coolify # alcanzar el Postgres (master-db-central)

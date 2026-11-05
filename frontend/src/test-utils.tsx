@@ -68,6 +68,8 @@ export const user: Schemas['UserOut'] = {
   email: 'x@example.com',
   full_name: 'Ana Test',
   two_factor_enabled: false,
+  email_login: true,
+  google_linked: false,
 }
 
 export const account = (over: Partial<Schemas['AccountOut']> = {}): Schemas['AccountOut'] => ({
