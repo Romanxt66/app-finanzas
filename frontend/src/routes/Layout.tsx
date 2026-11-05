@@ -14,6 +14,7 @@ import {
   useTheme,
   type Command,
   type NavItem,
+  BrandLogo,
 } from '../design'
 import { useAuth } from '../features/authContext'
 import { APP_NAME } from '../lib/brand'
@@ -64,9 +65,7 @@ export function Layout() {
       <div className="cr-shell">
         <Glass as="header" className="cr-topbar">
           <span className="cr-brand">
-            <span className="cr-brand-mark">
-              <Icon name="wallet" />
-            </span>
+            <BrandLogo />
             {APP_NAME}
           </span>
           <TopNav items={DESKTOP_NAV} />

@@ -602,3 +602,17 @@ export function Donut({
     </svg>
   )
 }
+
+/** Logotipo de Alvea (la «A» plateada con la línea de tendencia). */
+export function BrandLogo({ size = 34 }: { size?: number }) {
+  return (
+    <img
+      className="cr-brand-logo"
+      src={size > 64 ? '/brand/logo-256.png' : '/brand/logo-128.png'}
+      width={size}
+      height={size}
+      alt=""
+      decoding="async"
+    />
+  )
+}

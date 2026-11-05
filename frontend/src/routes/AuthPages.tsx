@@ -3,7 +3,16 @@ import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
-import { Backdrop, Button, Checkbox, ErrorText, Icon, Input, PasswordInput } from '../design'
+import {
+  Backdrop,
+  Button,
+  Checkbox,
+  ErrorText,
+  Icon,
+  Input,
+  PasswordInput,
+  BrandLogo,
+} from '../design'
 import { useAuth } from '../features/authContext'
 import { PasswordRules } from '../features/PasswordRules'
 import { APP_NAME } from '../lib/brand'
@@ -62,9 +71,7 @@ function Shell({
       <main className="cr-login">
         <section className="cr-login-hero">
           <span className="cr-brand cr-brand-lg">
-            <span className="cr-brand-mark">
-              <Icon name="wallet" />
-            </span>
+            <BrandLogo />
             {APP_NAME}
           </span>
           <p className="cr-hero-title">

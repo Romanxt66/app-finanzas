@@ -11,6 +11,23 @@
 }
 
 /* Fondo con resplandores: lo que el vidrio desenfoca */
+:root {
+  --room:
+    linear-gradient(180deg, rgba(5, 5, 5, 0.5), rgba(5, 5, 5, 0.72)),
+    url('/bg/fondo.jpg') center / cover no-repeat;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --room:
+      linear-gradient(180deg, rgba(244, 244, 244, 0.72), rgba(244, 244, 244, 0.86)),
+      url('/bg/fondo.jpg') center / cover no-repeat;
+  }
+}
+:root[data-theme='light'] {
+  --room:
+    linear-gradient(180deg, rgba(244, 244, 244, 0.72), rgba(244, 244, 244, 0.86)),
+    url('/bg/fondo.jpg') center / cover no-repeat;
+}
 .cr-backdrop {
   position: relative;
   isolation: isolate;
@@ -1105,6 +1122,13 @@ a.cr-user:focus-visible {
 }
 
 /* Marca */
+.cr-brand-logo {
+  flex: none;
+  border-radius: 24%;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+  object-fit: cover;
+}
 .cr-brand-mark {
   width: 34px;
   height: 34px;
@@ -1281,7 +1305,7 @@ a.cr-user:focus-visible {
 }
 .cr-hero-title em {
   font-style: normal;
-  background: linear-gradient(120deg, var(--brand), #e879f9);
+  background: linear-gradient(120deg, var(--brand), var(--ink-muted));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
