@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
+import '../ui/category_icon.dart';
 import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
 import '../ui/inputs.dart';
@@ -27,6 +28,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   bool _formOpen = false;
 
   final _name = TextEditingController();
+  final _search = TextEditingController();
   String _kind = 'expense';
   bool _submitted = false;
   bool _busy = false;
@@ -64,6 +66,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   void dispose() {
     _name.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -102,6 +105,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             ],
           ),
         ),
+        if (ref.categories.length > 6)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: CrTextField(
+              label: 'Buscar categoría',
+              controller: _search,
+              icon: 'search',
+              hint: 'Comida, transporte…',
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
         if (!ref.loaded)
           const Skeleton(lines: 3)
         else
@@ -116,7 +130,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   for (final k in kinds.entries)
                     Builder(
                       builder: (context) {
-                        final items = ref.categories.where((x) => x.kind == k.key).toList();
+                        final q = _search.text.trim().toLowerCase();
+                        final items = ref.categories
+                            .where((x) => x.kind == k.key && (q.isEmpty || x.name.toLowerCase().contains(q)))
+                            .toList();
                         final color = txColor(c, k.key);
                         return BoardColumn(
                           title: k.value,
@@ -124,7 +141,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           count: items.length,
                           total: k.key == 'expense' && monthTotal > 0 ? '${formatMoney(monthTotal, currency)} este mes' : null,
                           children: items.isEmpty
-                              ? [const CrCard(child: CrEmpty('Sin categorías.'))]
+                              ? [CrCard(child: CrEmpty(q.isEmpty ? 'Sin categorías.' : 'Ninguna coincide con «${_search.text.trim()}».'))]
                               : [for (final cat in items) _card(context, cat, color, spent[cat.id], monthTotal, currency)],
                         );
                       },
@@ -141,7 +158,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget _card(BuildContext context, Category cat, Color color, double? spent, double monthTotal, String? currency) {
     final expense = cat.kind == 'expense';
     return DealCard(
-      avatar: initials(cat.name),
+      leading: CategoryGlyph(cat.name, kind: cat.kind),
       accent: color,
       title: cat.name,
       subtitle: expense ? 'categoría de gasto' : 'categoría de ingreso',

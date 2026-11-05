@@ -18,6 +18,7 @@ import 'screens/categories.dart';
 import 'screens/dashboard.dart';
 import 'screens/goals.dart';
 import 'screens/import_screen.dart';
+import 'screens/analytics.dart';
 import 'screens/legal.dart';
 import 'screens/layout.dart';
 import 'screens/lock_screen.dart';
@@ -218,6 +219,7 @@ GoRouter _buildRouter(AppState app) {
             path: '/transactions',
             pageBuilder: (c, s) => page(TransactionsScreen(link: s.uri), s),
           ),
+          GoRoute(path: '/analytics', pageBuilder: (c, s) => page(const AnalyticsScreen(), s)),
           GoRoute(path: '/accounts', pageBuilder: (c, s) => page(const AccountsScreen(), s)),
           GoRoute(path: '/categories', pageBuilder: (c, s) => page(const CategoriesScreen(), s)),
           GoRoute(path: '/budgets', pageBuilder: (c, s) => page(const BudgetsScreen(), s)),

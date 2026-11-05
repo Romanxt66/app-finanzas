@@ -18,6 +18,7 @@ import '../ui/motion.dart';
 import '../ui/page.dart';
 import '../ui/query.dart';
 import '../ui/theme.dart';
+import '../ui/week_strip.dart';
 import '../ui/widgets.dart';
 import 'features.dart';
 import 'insights.dart';
@@ -255,7 +256,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   _draft = null;
                 }),
               ),
+            const _MonthTotals(),
             _filterBar(context, ref),
+            WeekStrip(
+              selected: _from.isNotEmpty && _from == _to ? _from : null,
+              marked: {for (final t in data?.items ?? const <Transaction>[]) t.occurredOn.substring(0, 10)},
+              onChanged: (day) => setState(() {
+                _from = day ?? '';
+                _to = day ?? '';
+                _page = 0;
+              }),
+            ),
             if (q.loading)
               const Skeleton(lines: 4)
             else if (q.error != null && data == null)
@@ -301,11 +312,44 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
+  /// Neto del día (ingresos − gastos) si todo va en la misma moneda; las transferencias no cuentan.
+  String? _dayNet(List<Transaction> items, RefData ref) {
+    final currencies = {for (final t in items) ref.currencyOf(t.accountId)};
+    if (currencies.length != 1) return null;
+    var net = 0.0;
+    for (final t in items) {
+      if (t.type == 'income') net += t.amount;
+      if (t.type == 'expense') net -= t.amount;
+    }
+    return net == 0 ? null : formatMoney(net, currencies.first, true);
+  }
+
   /// Tablero por tipo en pantallas anchas (como un «pipeline»); cuadrícula de tarjetas en móvil o con
   /// un tipo filtrado.
   Widget _board(BuildContext context, List<Transaction> items, RefData ref) {
     final c = context.c;
-    if (!context.isWide || _type.isNotEmpty) {
+    if (!context.isWide) {
+      // Móvil: agrupados por día, con el neto de cada día a la derecha
+      final days = <String, List<Transaction>>{};
+      for (final t in items) {
+        if (!_hidden.contains(t.id)) days.putIfAbsent(t.occurredOn.substring(0, 10), () => []).add(t);
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final e in days.entries) ...[
+            DayHeader(e.key, total: _dayNet(e.value, ref)),
+            const SizedBox(height: space2),
+            for (final t in e.value)
+              Padding(
+                padding: const EdgeInsets.only(bottom: space3),
+                child: _swipeable(context, t, ref),
+              ),
+          ],
+        ],
+      );
+    }
+    if (_type.isNotEmpty) {
       return CardGrid(
         minWidth: 250,
         children: [
@@ -620,6 +664,30 @@ class _TransactionFormState extends State<TransactionForm> {
           ErrorText(_error),
         ],
       ),
+    );
+  }
+}
+
+/// Ingresos y gastos del mes en curso, arriba del historial.
+class _MonthTotals extends StatelessWidget {
+  const _MonthTotals();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Query<Summary>(
+      load: () => context.app.data.summary(monthStart(), null),
+      builder: (context, q) {
+        final s = q.data;
+        if (s == null) return const SizedBox.shrink();
+        return CardGrid(
+          minWidth: 150,
+          children: [
+            SummaryTile(icon: 'up', color: c.positive, label: 'Ingresos del mes', value: formatMoney(s.income, s.currency, true)),
+            SummaryTile(icon: 'down', color: c.negative, label: 'Gastos del mes', value: formatMoney(-s.expense, s.currency, true)),
+          ],
+        );
+      },
     );
   }
 }
