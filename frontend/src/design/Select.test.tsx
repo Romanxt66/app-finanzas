@@ -59,10 +59,27 @@ describe('Select de cristal', () => {
     expect(screen.getByRole('listbox')).toBeInTheDocument()
   })
 
-  it('el scroll de la página sí lo cierra', async () => {
-    render(<Harness />)
+  it('el scroll de la página que mueve el campo sí lo cierra; un reajuste mínimo no', async () => {
+    const { container } = render(<Harness />)
+    const face = container.querySelector('.cr-select-face') as HTMLElement
+    let top = 100
+    face.getBoundingClientRect = () => ({
+      top,
+      bottom: top + 40,
+      left: 0,
+      right: 200,
+      width: 200,
+      height: 40,
+      x: 0,
+      y: top,
+      toJSON: () => ({}),
+    })
     await userEvent.click(screen.getByLabelText('Moneda'))
     await screen.findByRole('listbox')
+    top = 103 // la página se reacomodó un poco al llegar datos
+    fireEvent.scroll(document)
+    expect(screen.getByRole('listbox')).toBeInTheDocument()
+    top = 300 // la persona desplazó la página
     fireEvent.scroll(document)
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
