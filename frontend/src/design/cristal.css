@@ -1947,3 +1947,10 @@ a.cr-user:focus-visible {
     transition: none;
   }
 }
+.cr-check a,
+.cr-legal-notice a,
+.cr-login-foot a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--ink-faint);
+}
