@@ -10,7 +10,7 @@ import '../ui/motion.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 
-/// Perfil → Apariencia: tema, color de acento, luz del fondo (con vista previa en vivo) y animaciones.
+/// Perfil → Apariencia: tema, tono de los grises, luz del fondo (con vista previa en vivo) y animaciones.
 class AppearanceCard extends StatelessWidget {
   const AppearanceCard({super.key});
 
@@ -38,10 +38,10 @@ class AppearanceCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: space2),
-          label('color de acento'),
+          label('tono de los grises'),
           Semantics(
             container: true,
-            label: 'Color de acento',
+            label: 'Tono de los grises',
             child: Wrap(
               spacing: space3,
               runSpacing: space3,
@@ -80,7 +80,7 @@ class AppearanceCard extends StatelessWidget {
                 variant: CrButtonVariant.ghost,
                 small: true,
                 icon: 'restore',
-                label: 'Volver a los colores de Alvea',
+                label: 'Volver al estilo original',
                 onPressed: () {
                   app.setAccent(fuchsiaAccent);
                   app.setGlow(GlowLevel.normal);
@@ -143,7 +143,7 @@ class _Swatch extends StatelessWidget {
                       child: AnimatedOpacity(
                         duration: Duration(milliseconds: ms),
                         opacity: selected ? 1 : 0,
-                        child: const Center(child: CrIcon('check', size: 18, color: Color(0xFF1A0420), stroke: 2.6)),
+                        child: const Center(child: CrIcon('check', size: 18, color: Color(0xFF0B0B0B), stroke: 2.6)),
                       ),
                     ),
                   ),

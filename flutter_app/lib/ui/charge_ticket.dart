@@ -37,33 +37,33 @@ class TicketTheme {
 
   static TicketTheme of(TicketVariant v) => switch (v) {
     TicketVariant.covered => TicketTheme(
-      accent: Color(0xFFE879F9),
-      soft: Color(0x38E879F9),
-      serif: Color(0xFFF5C2FD),
-      rim: Color(0xB3F0ABFC),
-      glow: Color(0x99E879F9),
-      orbs: const [Color(0x99E879F9), Color(0x8C7C3AED), Color(0x522DD4BF)],
-      stubTint: Color(0x1FE879F9),
+      accent: Color(0xFF9A9A9A),
+      soft: Color(0x389A9A9A),
+      serif: Color(0xFFD1D1D1),
+      rim: Color(0xB3C0C0C0),
+      glow: Color(0x999A9A9A),
+      orbs: const [Color(0x999A9A9A), Color(0x8C555555), Color(0x52AFAFAF)],
+      stubTint: Color(0x1F9A9A9A),
       face: FinanceMood.faces[3], // contenta
     ),
     TicketVariant.short => TicketTheme(
-      accent: Color(0xFFFBBF24),
-      soft: Color(0x38FBBF24),
-      serif: Color(0xFFFCD34D),
-      rim: Color(0xBFFCD34D),
-      glow: Color(0x80FBBF24),
-      orbs: const [Color(0x8CFB923C), Color(0x807C3AED), Color(0x57F87171)],
-      stubTint: Color(0x1FFBBF24),
+      accent: Color(0xFFC1C1C1),
+      soft: Color(0x38C1C1C1),
+      serif: Color(0xFFD2D2D2),
+      rim: Color(0xBFD2D2D2),
+      glow: Color(0x80C1C1C1),
+      orbs: const [Color(0x8CA2A2A2), Color(0x80555555), Color(0x578E8E8E)],
+      stubTint: Color(0x1FC1C1C1),
       face: FinanceMood.faces[1], // preocupada
     ),
     TicketVariant.paid => TicketTheme(
-      accent: Color(0xFF34D399),
-      soft: Color(0x3834D399),
-      serif: Color(0xFF6EE7B7),
-      rim: Color(0xB36EE7B7),
-      glow: Color(0x8034D399),
-      orbs: const [Color(0x8034D399), Color(0x807C3AED), Color(0x57E879F9)],
-      stubTint: Color(0x1F34D399),
+      accent: Color(0xFFADADAD),
+      soft: Color(0x38ADADAD),
+      serif: Color(0xFFCACACA),
+      rim: Color(0xB3CACACA),
+      glow: Color(0x80ADADAD),
+      orbs: const [Color(0x80ADADAD), Color(0x80555555), Color(0x579A9A9A)],
+      stubTint: Color(0x1FADADAD),
       face: FinanceMood.faces[4], // radiante
     ),
   };
@@ -71,13 +71,13 @@ class TicketTheme {
 
 /// Color del punto de la etiqueta.
 Color chipToneColor(ChipTone tone, TicketTheme t) => switch (tone) {
-  ChipTone.good => const Color(0xFF34D399),
-  ChipTone.bad => const Color(0xFFF87171),
+  ChipTone.good => const Color(0xFFADADAD),
+  ChipTone.bad => const Color(0xFF8E8E8E),
   ChipTone.neutral => t.accent,
 };
 
-const _ink = Color(0xFFF4F2FA);
-const _inkSoft = Color(0xFFDDD7EB);
+const _ink = Color(0xFFF3F3F3);
+const _inkSoft = Color(0xFFDADADA);
 
 /// Gradiente lineal con el ángulo de CSS (0° hacia arriba, 90° hacia la derecha) sobre [r].
 ui.Gradient cssLinear(Rect r, double degrees, List<Color> colors, List<double> stops) {
@@ -125,7 +125,7 @@ class ChargeTicketPainter extends CustomPainter {
     canvas.saveLayer(_ticket.inflate(2), Paint()..imageFilter = glassFilter(26, 1.7));
     _scene(canvas, t);
     canvas.restore();
-    canvas.drawRect(_ticket, Paint()..color = const Color(0x610C0810));
+    canvas.drawRect(_ticket, Paint()..color = const Color(0x61090909));
     canvas.drawRect(
       _ticket,
       Paint()..shader = cssLinear(_ticket, 135, const [Color(0x1FFFFFFF), Color(0x0AFFFFFF), Color(0x14FFFFFF)], const [0, 0.55, 1]),
@@ -193,7 +193,7 @@ class ChargeTicketPainter extends CustomPainter {
   /// Fondo: imagen de la app con velo, tres luces de color y el halo bajo el boleto.
   void _scene(Canvas canvas, TicketTheme t) {
     const full = Rect.fromLTWH(0, 0, 960, 480);
-    canvas.drawRect(full, Paint()..color = const Color(0xFF020103));
+    canvas.drawRect(full, Paint()..color = const Color(0xFF010101));
     final img = background;
     if (img != null) {
       final dst = const Rect.fromLTWH(-40, -40, 1040, 560);
@@ -201,7 +201,7 @@ class ChargeTicketPainter extends CustomPainter {
       final src = Rect.fromCenter(center: Offset(img.width / 2, img.height / 2), width: dst.width / scale, height: dst.height / scale);
       canvas.drawImageRect(img, src, dst, Paint()..filterQuality = FilterQuality.medium);
     }
-    canvas.drawRect(full, Paint()..color = const Color(0x57020103));
+    canvas.drawRect(full, Paint()..color = const Color(0x57010101));
     canvas.drawCircle(const Offset(755, 85), 235, _radial(const Offset(755, 85), 235, t.orbs[0]));
     canvas.drawCircle(const Offset(60, 440), 210, _radial(const Offset(60, 440), 210, t.orbs[1]));
     canvas.drawCircle(const Offset(840, 430), 140, _radial(const Offset(840, 430), 140, t.orbs[2]));

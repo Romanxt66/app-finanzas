@@ -17,8 +17,9 @@ Antes de tocar código lee la referencia que corresponda:
 
 1. **Solo presentación.** Los cambios de diseño no tocan `lib/core/` (API, estado, modelos) ni el
    backend. Si una idea necesita datos nuevos, es otra tarea: sepárala.
-2. **Oscuro, translúcido y luminoso.** Fondo con imagen desenfocada, tarjetas de cristal
-   esmerilado que dejan ver la luz de detrás, acentos en fucsia neón. Nada de bloques opacos.
+2. **Monocromo, translúcido y luminoso.** Solo blanco, negro y grises (nov. 2026). Fondo con imagen
+   desenfocada en escala de grises, tarjetas de cristal esmerilado y la acción en blanco (oscuro) o
+   casi negro (claro). Nada de colores saturados ni bloques opacos.
 3. **Fluido antes que vistoso.** La web corre con CanvasKit: nada que se repinte a pantalla
    completa en cada fotograma. Ver «Rendimiento».
 4. **Todo en español**, con tono cercano y frases cortas (ver «Textos»).
@@ -30,11 +31,13 @@ Antes de tocar código lee la referencia que corresponda:
 - Los colores salen de `design/tokens.json` → `lib/ui/tokens.g.dart` (generado con
   `dart run tool/gen_tokens.dart`; **nunca** se edita a mano, la CI lo comprueba).
 - Accede a la paleta con `context.c` (`CrPalette`). Acentos derivados en `CrAccent`
-  (`lib/ui/theme.dart`): `c.neon` (fucsia de acción), `c.onNeon` (texto sobre neón),
+  (`lib/ui/theme.dart`): `c.neon` (blanco/negro de acción), `c.onNeon` (texto sobre neón),
   `c.neonGlow` (halo), `c.panel` (fondo de chips/píldoras), `c.isDark`.
-- No inventes hex sueltos para la UI. Excepciones con color propio y documentado: las caritas de
-  ánimo (`FinanceMood.faces`, `spendingMoods`), las insignias de bancos (`bankBrands`) y la
-  imagen de fondo.
+- No inventes hex sueltos para la UI, y si hace falta uno, que sea un gris (R = G = B). Las caritas,
+  las insignias de bancos y las imágenes también son grises. Ingresos y gastos se distinguen por
+  signo y luminosidad, nunca solo por color.
+- Apariencia ofrece un tono leve para los grises (`accentChoices`: neutro, cálido, frío, grafito);
+  `AccentChoice.tint` nunca pasa del ~12 % de saturación.
 - Tipos de movimiento: `txColor(c, type)` — ingreso `positive`, gasto `neon`, transferencia `chart4`.
   Tipos de cuenta: `accountTypeColor(c, type)`.
 - Series de gráficos: `c.neon`, `c.chart2`, `c.chart3`, `c.chart4`, `c.amber`.

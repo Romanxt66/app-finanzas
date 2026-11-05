@@ -209,8 +209,8 @@ class _LockScreenState extends State<LockScreen> {
   }
 }
 
-const _calm = FaceExpression(color: Color(0xFFF0ABFC), smile: 0.4, eyeHappy: 0.85, blush: 0.4);
-const _worried = FaceExpression(color: Color(0xFFFB923C), smile: -0.45, brow: 1, browShow: 1, sweat: 0.9);
+const _calm = FaceExpression(color: Color(0xFFC0C0C0), smile: 0.4, eyeHappy: 0.85, blush: 0.4);
+const _worried = FaceExpression(color: Color(0xFFA2A2A2), smile: -0.45, brow: 1, browShow: 1, sweat: 0.9);
 
 class _Keypad extends StatelessWidget {
   const _Keypad({required this.onDigit, required this.onBack, required this.onSubmit});

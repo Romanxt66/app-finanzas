@@ -198,7 +198,7 @@ class FacePainter extends CustomPainter {
   /// Progreso del saltito al tocarla (0–1).
   final double jump;
 
-  static const _ink = Color(0xFF2A0F3A);
+  static const _ink = Color(0xFF181818);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -208,8 +208,8 @@ class FacePainter extends CustomPainter {
     final phase = t * math.pi * 2;
     final base = Offset(size.width / 2, size.height * 0.60);
     // Tonos de malvavisco: el color del ánimo aclarado hacia crema
-    final soft = Color.lerp(f.color, const Color(0xFFFFF7FB), 0.38)!;
-    final deep = Color.lerp(f.color, const Color(0xFF6B2E7A), 0.22)!;
+    final soft = Color.lerp(f.color, const Color(0xFFF9F9F9), 0.38)!;
+    final deep = Color.lerp(f.color, const Color(0xFF404040), 0.22)!;
 
     // Movimiento de cuerpo: respiración blandita, saltitos de alegría, tembleque y salto al tocar
     final breathe = math.sin(phase * 2) * 0.04;
@@ -324,7 +324,7 @@ class FacePainter extends CustomPainter {
       for (var i = 0; i < 4; i++) {
         final a = phase + i * math.pi / 2;
         final p = Offset(size.width / 2, base.dy - r * 0.35 - hop - jumpUp) + Offset(math.cos(a) * r * 1.5, math.sin(a) * r * 1.3);
-        final tint = i.isEven ? Colors.white : const Color(0xFFFFE08A);
+        final tint = i.isEven ? Colors.white : const Color(0xFFE0E0E0);
         _star(
           canvas,
           p,
@@ -341,7 +341,7 @@ class FacePainter extends CustomPainter {
         final a = -math.pi / 2 + (i - 2.5) * 0.45;
         final dist = r * (0.95 + jump * 1.1);
         final p = Offset(size.width / 2, base.dy - r * 0.6) + Offset(math.cos(a) * dist, math.sin(a) * dist * 0.9);
-        final paint = Paint()..color = (happy ? const Color(0xFFFF8FC0) : const Color(0xFF9AD8FF)).withValues(alpha: (1 - jump) * 0.95);
+        final paint = Paint()..color = (happy ? const Color(0xFFAAAAAA) : const Color(0xFFCECECE)).withValues(alpha: (1 - jump) * 0.95);
         final k = r * 0.13 * (1 - jump * 0.4);
         if (happy) {
           _heart(canvas, p, k, paint);
@@ -377,10 +377,10 @@ class FacePainter extends CustomPainter {
     // Mejillas sonrosadas con rayitas
     if (f.blush > 0.01) {
       final blush = Paint()
-        ..color = const Color(0xFFFF7FA8).withValues(alpha: 0.55 * f.blush)
+        ..color = const Color(0xFF9D9D9D).withValues(alpha: 0.55 * f.blush)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.04);
       final hatch = Paint()
-        ..color = const Color(0xFFFF5C8A).withValues(alpha: 0.7 * f.blush)
+        ..color = const Color(0xFF828282).withValues(alpha: 0.7 * f.blush)
         ..strokeWidth = r * 0.025
         ..strokeCap = StrokeCap.round;
       for (final s in [-1, 1]) {
@@ -453,7 +453,7 @@ class FacePainter extends CustomPainter {
       canvas.drawPath(mouth, Paint()..color = _ink);
       canvas.save();
       canvas.clipPath(mouth);
-      canvas.drawCircle(Offset(cx, mouthY + curve + drop * 0.9), r * 0.13, Paint()..color = const Color(0xFFFF7FA0));
+      canvas.drawCircle(Offset(cx, mouthY + curve + drop * 0.9), r * 0.13, Paint()..color = const Color(0xFF9D9D9D));
       canvas.restore();
     } else if (f.smile > 0.2) {
       final w = r * 0.08;
@@ -478,7 +478,7 @@ class FacePainter extends CustomPainter {
       final p = Offset(r * 0.80, -r * 0.55 + slide * r * 0.35);
       canvas.drawPath(
         _dropPath(r * 0.11, 0).shift(p),
-        Paint()..color = const Color(0xFFCDEBFF).withValues(alpha: f.sweat * (1 - slide * 0.6)),
+        Paint()..color = const Color(0xFFE6E6E6).withValues(alpha: f.sweat * (1 - slide * 0.6)),
       );
     }
 
@@ -486,7 +486,7 @@ class FacePainter extends CustomPainter {
     if (f.tear > 0.05) {
       final fall = (t * 1.5) % 1;
       final p = Offset(-r * 0.40, r * 0.22 + fall * r * 0.55);
-      canvas.drawPath(_dropPath(r * 0.09, 0).shift(p), Paint()..color = const Color(0xFFCDEBFF).withValues(alpha: f.tear * (1 - fall)));
+      canvas.drawPath(_dropPath(r * 0.09, 0).shift(p), Paint()..color = const Color(0xFFE6E6E6).withValues(alpha: f.tear * (1 - fall)));
     }
   }
 

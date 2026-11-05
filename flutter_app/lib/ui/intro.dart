@@ -72,7 +72,7 @@ class _BrandIntroState extends State<BrandIntro> with SingleTickerProviderStateM
                           gradient: const RadialGradient(
                             center: Alignment(0, -0.4),
                             radius: 0.8,
-                            colors: [Color(0xFF2A0F4A), Color(0xFF140826), Color(0xFF0A0414)],
+                            colors: [Color(0xFF191919), Color(0xFF0D0D0D), Color(0xFF060606)],
                             stops: [0, 0.6, 1],
                           ),
                           borderRadius: BorderRadius.circular(22 * (1 - grow) + 4),

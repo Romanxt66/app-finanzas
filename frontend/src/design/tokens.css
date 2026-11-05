@@ -1,4 +1,4 @@
-/* Cristal — generated from design/tokens.json. No editar a mano: npm run gen:tokens */
+/* Cristal monocromo — generated from design/tokens.json. No editar a mano: npm run gen:tokens */
 :root {
   --font-sans: Manrope, 'Segoe UI', system-ui, sans-serif;
   --space-1: 4px;
@@ -39,10 +39,10 @@
   --negative-soft: rgba(240, 154, 154, 0.16);
   --focus: #ecd33f;
   --chart-1: var(--brand-fill);
-  --chart-2: #2dd4bf;
-  --chart-3: #fbbf24;
-  --chart-4: #a78bfa;
-  --chart-5: #6a6383;
+  --chart-2: #8f8f8f;
+  --chart-3: #cfcfcf;
+  --chart-4: #6b6b6b;
+  --chart-5: #474747;
   --ink-on-dark: #f4eee4;
   --card-dark: #2a2420;
   --card-dark-ink-muted: #b9afa1;
@@ -80,10 +80,10 @@
     --negative-soft: rgba(161, 43, 43, 0.12);
     --focus: #2a2420;
     --chart-1: var(--brand-fill);
-    --chart-2: #0f766e;
-    --chart-3: #b45309;
-    --chart-4: #7c3aed;
-    --chart-5: #8f89a3;
+    --chart-2: #7a7a7a;
+    --chart-3: #3d3d3d;
+    --chart-4: #a3a3a3;
+    --chart-5: #c7c7c7;
     --ink-on-dark: #f4eee4;
     --card-dark: #2f2825;
     --card-dark-ink-muted: #b9afa1;
@@ -120,10 +120,10 @@
   --negative-soft: rgba(161, 43, 43, 0.12);
   --focus: #2a2420;
   --chart-1: var(--brand-fill);
-  --chart-2: #0f766e;
-  --chart-3: #b45309;
-  --chart-4: #7c3aed;
-  --chart-5: #8f89a3;
+  --chart-2: #7a7a7a;
+  --chart-3: #3d3d3d;
+  --chart-4: #a3a3a3;
+  --chart-5: #c7c7c7;
   --ink-on-dark: #f4eee4;
   --card-dark: #2f2825;
   --card-dark-ink-muted: #b9afa1;

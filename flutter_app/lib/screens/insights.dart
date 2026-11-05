@@ -18,11 +18,11 @@ import '../ui/widgets.dart';
 
 /// Ánimos que se pueden marcar al registrar un gasto (claves de la API).
 const spendingMoods = <String, ({String label, FaceExpression face})>{
-  'happy': (label: 'Feliz', face: FaceExpression(color: Color(0xFFFACC15), smile: 0.85, eyeHappy: 0.9, blush: 0.6)),
-  'calm': (label: 'Tranquilo', face: FaceExpression(color: Color(0xFF86EFAC), smile: 0.4, eyeHappy: 0.85, blush: 0.3)),
-  'stressed': (label: 'Estresado', face: FaceExpression(color: Color(0xFFFB923C), smile: -0.45, brow: 1, browShow: 1, sweat: 0.9)),
-  'sad': (label: 'Triste', face: FaceExpression(color: Color(0xFF93C5FD), smile: -0.8, brow: -1, browShow: 1, tear: 1)),
-  'bored': (label: 'Aburrido', face: FaceExpression(color: Color(0xFFC4B5FD), smile: -0.05, lid: 0.75)),
+  'happy': (label: 'Feliz', face: FaceExpression(color: Color(0xFFC9C9C9), smile: 0.85, eyeHappy: 0.9, blush: 0.6)),
+  'calm': (label: 'Tranquilo', face: FaceExpression(color: Color(0xFFD4D4D4), smile: 0.4, eyeHappy: 0.85, blush: 0.3)),
+  'stressed': (label: 'Estresado', face: FaceExpression(color: Color(0xFFA2A2A2), smile: -0.45, brow: 1, browShow: 1, sweat: 0.9)),
+  'sad': (label: 'Triste', face: FaceExpression(color: Color(0xFFBEBEBE), smile: -0.8, brow: -1, browShow: 1, tear: 1)),
+  'bored': (label: 'Aburrido', face: FaceExpression(color: Color(0xFFBDBDBD), smile: -0.05, lid: 0.75)),
 };
 
 const _weekdays = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados', 'domingos'];
@@ -322,11 +322,11 @@ class FinanceMood {
     '¡Tus finanzas brillan! Ahorras y vas por debajo de tus límites.',
   ];
   static const faces = [
-    FaceExpression(color: Color(0xFFF87171), smile: -1, mouthOpen: 0.3, brow: -1, browShow: 1, tear: 0.9, sweat: 0.6, shiver: 0.35),
-    FaceExpression(color: Color(0xFFFB923C), smile: -0.4, brow: -1, browShow: 1, sweat: 1, shiver: 1),
-    FaceExpression(color: Color(0xFF7DD3FC), smile: 0.35, blush: 0.25),
-    FaceExpression(color: Color(0xFFC084FC), smile: 0.8, mouthOpen: 0.35, blush: 0.7, bounce: 0.35),
-    FaceExpression(color: Color(0xFFF472D0), smile: 1, mouthOpen: 0.7, eyeHappy: 1, blush: 0.8, sparkle: 1, bounce: 1),
+    FaceExpression(color: Color(0xFF8E8E8E), smile: -1, mouthOpen: 0.3, brow: -1, browShow: 1, tear: 0.9, sweat: 0.6, shiver: 0.35),
+    FaceExpression(color: Color(0xFFA2A2A2), smile: -0.4, brow: -1, browShow: 1, sweat: 1, shiver: 1),
+    FaceExpression(color: Color(0xFFC4C4C4), smile: 0.35, blush: 0.25),
+    FaceExpression(color: Color(0xFF999999), smile: 0.8, mouthOpen: 0.35, blush: 0.7, bounce: 0.35),
+    FaceExpression(color: Color(0xFF949494), smile: 1, mouthOpen: 0.7, eyeHappy: 1, blush: 0.8, sparkle: 1, bounce: 1),
   ];
 
   /// Lo que dice Alvi en su bocadillo, en primera persona.

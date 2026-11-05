@@ -67,7 +67,7 @@ Future<T?> showCrDialog<T>(BuildContext context, {required WidgetBuilder builder
               child: ClipRect(
                 child: BackdropFilter(
                   filter: ui.ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                  child: const ColoredBox(color: Color.fromRGBO(5, 8, 12, 0.55)),
+                  child: const ColoredBox(color: Color.fromRGBO(5, 5, 5, 0.55)),
                 ),
               ),
             ),

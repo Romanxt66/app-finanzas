@@ -13,19 +13,19 @@ import 'theme.dart';
 // Alvi de la app) y la parte nativa solo las muestra y reparte los toques. Android no deja
 // desenfocar lo que hay detrás de un widget: el cristal se imita con degradados translúcidos.
 
-const _ink = Color(0xFFF4F2FA);
-const _soft = Color(0xFFDDD7EB);
-const _amber = Color(0xFFFBBF24);
-const _amberText = Color(0xFFFCD34D);
-const _green = Color(0xFF6EE7B7);
+const _ink = Color(0xFFF5F5F5);
+const _soft = Color(0xFFD4D4D4);
+const _amber = Color(0xFFBDBDBD);
+const _amberText = Color(0xFFE5E5E5);
+const _green = Color(0xFFFFFFFF);
 
-/// Colores del acento elegido en Apariencia (los widgets lo siguen).
+/// Grises de los widgets con el tono elegido en Apariencia (neutro, cálido o frío).
 class WidgetTint {
   WidgetTint(AccentChoice a)
-    : neon = shiftHue(const Color(0xFFE879F9), a.hue - baseHue),
-      serif = shiftHue(const Color(0xFFF5C2FD), a.hue - baseHue),
-      deep = shiftHue(const Color(0xFFA21CAF), a.hue - baseHue),
-      violet = shiftHue(const Color(0xFF7C3AED), a.hue - baseHue);
+    : neon = a.tint(const Color(0xFFF5F5F5)),
+      serif = a.tint(const Color(0xFFD9D9D9)),
+      deep = a.tint(const Color(0xFF8A8A8A)),
+      violet = a.tint(const Color(0xFF5C5C5C));
   final Color neon, serif, deep, violet;
 }
 
@@ -110,7 +110,7 @@ TextStyle _serif(double size, Color color) => TextStyle(
 void _glass(Canvas canvas, Size size, {Color? tint, Color? rim, double radius = 28}) {
   final rect = Offset.zero & size;
   final rr = RRect.fromRectAndRadius(rect.deflate(0.5), Radius.circular(radius));
-  canvas.drawRRect(rr, Paint()..color = const Color(0xA80C0810));
+  canvas.drawRRect(rr, Paint()..color = const Color(0xA80C0C0C));
   if (tint != null) {
     canvas.drawRRect(
       rr,
@@ -212,9 +212,9 @@ class HomeWidgetPainter extends CustomPainter {
       fill: LinearGradient(colors: [_green.withValues(alpha: 0.26), _green.withValues(alpha: 0.08)]),
       border: _green.withValues(alpha: 0.45),
     );
-    final a = _tp('− Gasto', _sans(16, FontWeight.w800, const Color(0xFF1A0420)));
+    final a = _tp('− Gasto', _sans(16, FontWeight.w800, const Color(0xFF0A0A0A)));
     a.paint(canvas, left.center - Offset(a.width / 2, a.height / 2));
-    final b = _tp('+ Ingreso', _sans(16, FontWeight.w800, const Color(0xFFA7F3D0)));
+    final b = _tp('+ Ingreso', _sans(16, FontWeight.w800, const Color(0xFFF5F5F5)));
     b.paint(canvas, right.center - Offset(b.width / 2, b.height / 2));
   }
 
@@ -338,7 +338,7 @@ class HomeWidgetPainter extends CustomPainter {
         RRect.fromRectAndRadius(fill, const Radius.circular(5)),
         Paint()
           ..shader = ui.Gradient.linear(fill.centerLeft, fill.centerRight, [
-            g.achieved ? const Color(0xFF34D399) : tint.deep,
+            g.achieved ? const Color(0xFFD4D4D4) : tint.deep,
             g.achieved ? _green : tint.neon,
           ]),
       );

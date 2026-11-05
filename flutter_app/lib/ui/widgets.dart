@@ -288,7 +288,7 @@ class CrEmpty extends StatelessWidget {
   /// Alvi tranquila encima del texto (quieta: no anima nada en una pantalla vacía).
   final bool face;
 
-  static const _calm = FaceExpression(color: Color(0xFF7DD3FC), smile: 0.35, blush: 0.25);
+  static const _calm = FaceExpression(color: Color(0xFFC4C4C4), smile: 0.35, blush: 0.25);
 
   @override
   Widget build(BuildContext context) => Padding(
