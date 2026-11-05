@@ -235,12 +235,15 @@ describe('MorePage', () => {
     renderApp(<MorePage />)
     const hrefs = screen.getAllByRole('link').map((l) => l.getAttribute('href'))
     expect(hrefs).toEqual([
+      '/analytics',
       '/budgets',
       '/recurring',
       '/subscriptions',
       '/import',
       '/categories',
       '/profile',
+      '/terminos',
+      '/privacidad',
     ])
   })
 })

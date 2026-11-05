@@ -315,6 +315,14 @@ export function useChangePassword() {
   })
 }
 
+/** Borra la cuenta y todos sus datos (con la contraseña, o confirmando con Google si no tiene). */
+export function useDeleteMyAccount() {
+  return useMutation({
+    mutationFn: (body: Schemas['DeleteAccountIn']) =>
+      api<void>('/auth/me', { method: 'DELETE', body }),
+  })
+}
+
 export function useLogoutAll() {
   return useMutation({ mutationFn: () => api<void>('/auth/logout-all', { method: 'POST' }) })
 }

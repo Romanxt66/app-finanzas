@@ -17,11 +17,13 @@ import {
   BrandLogo,
 } from '../design'
 import { useAuth } from '../features/authContext'
+import { LegalNotice } from '../features/LegalNotice'
 import { APP_NAME } from '../lib/brand'
 
 const DESKTOP_NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/transactions', label: 'Movimientos', icon: 'list' },
+  { to: '/analytics', label: 'Análisis', icon: 'chart' },
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
   { to: '/budgets', label: 'Presupuestos', icon: 'target' },
   { to: '/goals', label: 'Metas', icon: 'chart' },
@@ -93,6 +95,7 @@ export function Layout() {
           </p>
         )}
         <main className="cr-main">
+          <LegalNotice />
           <Suspense fallback={<Skeleton lines={3} height={96} />}>
             <Outlet />
           </Suspense>

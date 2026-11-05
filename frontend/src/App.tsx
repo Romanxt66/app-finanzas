@@ -10,6 +10,7 @@ import { LegalPage } from './routes/Legal'
 // Cada pantalla se descarga al visitarla; recharts solo viaja con el resumen
 const lazyPage = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
   lazy(async () => ({ default: (await load())[name] }))
+const AnalyticsPage = lazyPage(() => import('./routes/Analytics'), 'AnalyticsPage')
 const AccountsPage = lazyPage(() => import('./routes/Accounts'), 'AccountsPage')
 const BudgetsPage = lazyPage(() => import('./routes/Budgets'), 'BudgetsPage')
 const CategoriesPage = lazyPage(() => import('./routes/Categories'), 'CategoriesPage')
@@ -40,6 +41,7 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route index element={<DashboardPage />} />
                 <Route path="transactions" element={<TransactionsPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="accounts" element={<AccountsPage />} />
                 <Route path="categories" element={<CategoriesPage />} />
                 <Route path="budgets" element={<BudgetsPage />} />

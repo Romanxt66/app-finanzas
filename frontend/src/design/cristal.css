@@ -1679,3 +1679,89 @@ a.cr-user:focus-visible {
 .cr-legal-links a {
   color: var(--ink);
 }
+
+.cr-legal-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.cr-legal-notice p {
+  margin: 0;
+  flex: 1 1 260px;
+  color: var(--ink-muted);
+}
+.cr-legal-notice a {
+  color: var(--ink);
+}
+
+/* ---- Análisis: gasto por categoría ---- */
+.cr-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cr-breakdown li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+.cr-breakdown li + li {
+  border-top: 1px solid var(--hairline);
+}
+.cr-breakdown-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.cr-breakdown-amount {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cr-ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+}
+.cr-ring svg {
+  position: absolute;
+  inset: 0;
+}
+.cr-ring-value {
+  transition: stroke-dasharray 0.9s var(--cr-soft, ease);
+}
+.cr-ring-label {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+/* Icono de categoría en un círculo de cristal */
+.cr-glyph {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ink) 14%, transparent),
+    color-mix(in srgb, var(--ink) 4%, transparent)
+  );
+  color: var(--ink);
+}
+.cr-glyph svg {
+  width: 18px;
+  height: 18px;
+}
