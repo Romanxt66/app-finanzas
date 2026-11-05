@@ -53,6 +53,7 @@ const PATHS = {
   briefcase: 'M3 7h18v13H3zM9 7V4h6v3M3 12h18',
   calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
   chevron: 'M9 6l6 6-6 6',
+  dots: 'M5 12h.01M12 12h.01M19 12h.01',
 } as const
 
 export type IconName = keyof typeof PATHS

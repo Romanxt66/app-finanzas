@@ -37,7 +37,7 @@ const MOBILE_NAV: NavItem[] = [
   { to: '/transactions', label: 'Movimientos', icon: 'list' },
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
   { to: '/goals', label: 'Metas', icon: 'chart' },
-  { to: '/more', label: 'Más', icon: 'plus' },
+  { to: '/more', label: 'Más', icon: 'dots' },
 ]
 
 export function Layout() {
