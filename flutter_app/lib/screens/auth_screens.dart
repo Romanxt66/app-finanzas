@@ -496,7 +496,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return _AuthShell(
       title: 'Iniciar sesión',
       subtitle: 'Bienvenido de nuevo. Ingresa tus datos para continuar.',
-      footer: _FootLink(prefix: '¿Aún no tienes cuenta? ', link: 'Regístrate gratis', onTap: () => context.go('/register')),
+      footer: Column(
+        children: [
+          _FootLink(prefix: '¿Aún no tienes cuenta? ', link: 'Regístrate gratis', onTap: () => context.go('/register')),
+          const SizedBox(height: space2),
+          const Center(child: LegalLinks()),
+        ],
+      ),
       children: [
         CrTextField(
           label: 'Correo',
