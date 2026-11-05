@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import {
@@ -210,7 +211,17 @@ export function TransactionsPage() {
     date_to: '',
   })
   const [page, setPage] = useState(0)
-  const [form, setForm] = useState<{ editing: Transaction | null } | null>(null)
+  // El «+» de la barra abre el alta (aunque ya estemos en esta pantalla: cada toque es una navegación nueva)
+  const location = useLocation()
+  const wantsNew = (location.state as { nuevo?: boolean } | null)?.nuevo === true
+  const [form, setForm] = useState<{ editing: Transaction | null } | null>(() =>
+    wantsNew ? { editing: null } : null,
+  )
+  const [handledKey, setHandledKey] = useState(location.key)
+  if (wantsNew && handledKey !== location.key) {
+    setHandledKey(location.key)
+    setForm({ editing: null })
+  }
   const { data: accounts = [] } = useAccounts(true)
   const { data: categories = [] } = useCategories()
   const { data, isLoading } = useTransactions({

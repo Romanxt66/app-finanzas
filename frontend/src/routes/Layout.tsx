@@ -101,7 +101,19 @@ export function Layout() {
           </Suspense>
         </main>
         <div className="cr-bottom">
-          <TabBar items={MOBILE_NAV} />
+          <TabBar
+            items={MOBILE_NAV}
+            center={
+              <Link
+                to="/transactions"
+                state={{ nuevo: true }}
+                className="cr-tab-add"
+                aria-label="Anotar un movimiento"
+              >
+                <Icon name="plus" />
+              </Link>
+            }
+          />
         </div>
       </div>
     </Backdrop>

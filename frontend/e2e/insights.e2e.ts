@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
+import { reveal } from './helpers'
 
 // Funciones diferenciadoras: horas de vida, suscripciones fantasma y «disponible hoy».
 // Fechas relativas a hoy y datos únicos por ejecución: nada fijo en el código.
@@ -100,6 +101,7 @@ test('resumen: disponible hoy, valor de la hora y aviso de suscripciones', async
 test('selector de moneda: menú de cristal con teclado', async ({ page }) => {
   await seed(page)
   await page.goto('/accounts')
+  await reveal(page, 'Nueva cuenta')
   const moneda = page.getByLabel('Moneda')
   await moneda.focus()
   await page.keyboard.press('Enter')
@@ -121,6 +123,7 @@ test('selector de moneda: se puede desplazar el menú hasta la última moneda', 
   await seed(page)
   const codes: string[] = await (await page.request.get('/api/v1/currencies')).json()
   await page.goto('/accounts')
+  await reveal(page, 'Nueva cuenta')
   const moneda = page.getByLabel('Moneda')
   await moneda.click()
   const menu = page.getByRole('listbox', { name: 'Moneda' })

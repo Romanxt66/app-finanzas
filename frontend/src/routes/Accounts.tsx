@@ -23,6 +23,7 @@ import {
   Donut,
   DONUT_COLORS,
   FormDialog,
+  CreateSection,
 } from '../design'
 import { CurrencySelect } from '../features/CurrencySelect'
 import { RenameForm } from '../features/RenameForm'
@@ -52,7 +53,7 @@ export function AccountsPage() {
   return (
     <>
       <h1 className="title">Cuentas</h1>
-      <Card title="Nueva cuenta">
+      <CreateSection title="Nueva cuenta" hasData={!!accounts?.length}>
         <form
           className="cr-stack"
           onSubmit={handleSubmit((d) => create.mutate(d, { onSuccess: () => reset() }))}
@@ -81,7 +82,7 @@ export function AccountsPage() {
           </div>
           <ErrorText error={create.error} />
         </form>
-      </Card>
+      </CreateSection>
       {!!accounts?.length && <BalancesDonut accounts={accounts} />}
       {isLoading ? (
         <Skeleton lines={3} />

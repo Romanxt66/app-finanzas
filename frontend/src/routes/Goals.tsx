@@ -17,6 +17,7 @@ import {
   Input,
   ProgressCard,
   Skeleton,
+  CreateSection,
 } from '../design'
 import { CurrencySelect } from '../features/CurrencySelect'
 import { formatDate, formatMoney, todayISO } from '../lib/format'
@@ -113,7 +114,7 @@ export function GoalsPage() {
   return (
     <>
       <h1 className="title">Metas</h1>
-      <Card title="Nueva meta">
+      <CreateSection title="Nueva meta" hasData={!!goals?.length}>
         <form
           className="cr-stack"
           onSubmit={handleSubmit((d) =>
@@ -138,7 +139,7 @@ export function GoalsPage() {
           </div>
           <ErrorText error={create.error} />
         </form>
-      </Card>
+      </CreateSection>
 
       {isLoading ? (
         <Skeleton lines={2} height={120} />

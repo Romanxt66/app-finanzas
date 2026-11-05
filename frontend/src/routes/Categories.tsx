@@ -19,6 +19,7 @@ import {
   Select,
   Skeleton,
   FormDialog,
+  CreateSection,
 } from '../design'
 import { RenameForm } from '../features/RenameForm'
 import { categoryIcon } from '../lib/categoryIcon'
@@ -46,7 +47,7 @@ export function CategoriesPage() {
   return (
     <>
       <h1 className="title">Categorías</h1>
-      <Card title="Nueva categoría">
+      <CreateSection title="Nueva categoría" hasData={!!categories?.length}>
         <form
           className="cr-stack"
           onSubmit={handleSubmit((d) =>
@@ -67,7 +68,7 @@ export function CategoriesPage() {
           </div>
           <ErrorText error={create.error} />
         </form>
-      </Card>
+      </CreateSection>
       {(categories?.length ?? 0) > 6 && (
         <Input
           label="Buscar categoría"

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
+import { reveal } from './helpers'
 
 const run = Date.now()
 const creds = {
@@ -40,6 +41,7 @@ test('metas: crear, aportar, retirar de más, lograr y eliminar', async ({ page 
   await expect(steps.getByRole('link')).toHaveCount(3)
   await expect(steps.getByText('(pendiente)')).toHaveCount(3)
   await open(page, '/goals', 'Metas')
+  await reveal(page, 'Nueva meta')
   await page.getByLabel('Nombre').fill('Viaje')
   await page.getByLabel('Monto objetivo').fill('1000')
   await page.getByLabel('Moneda').selectOption('COP')
@@ -76,6 +78,7 @@ test('cuentas: renombrar, no eliminar con movimientos, eliminar vacía y exporta
 }) => {
   await login(page)
   await open(page, '/accounts', 'Cuentas')
+  await reveal(page, 'Nueva cuenta')
   for (const name of ['Principal', 'Vacía']) {
     await page.getByLabel('Nombre').fill(name)
     await page.getByLabel('Moneda').selectOption('COP')

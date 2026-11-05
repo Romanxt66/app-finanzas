@@ -19,6 +19,7 @@ import {
   Input,
   Skeleton,
   FormDialog,
+  CreateSection,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
 import { RenameForm } from '../features/RenameForm'
@@ -56,7 +57,7 @@ export function BudgetsPage() {
           />
         </div>
       </div>
-      <Card title="Nuevo presupuesto">
+      <CreateSection title="Nuevo presupuesto" hasData={!!budgets?.length}>
         <form
           className="cr-stack"
           onSubmit={handleSubmit((d) =>
@@ -85,7 +86,7 @@ export function BudgetsPage() {
           </div>
           <ErrorText error={create.error} />
         </form>
-      </Card>
+      </CreateSection>
       {isLoading ? (
         <Skeleton lines={2} />
       ) : !budgets?.length ? (
