@@ -9,6 +9,7 @@ async function signUp(page: Page) {
   await page.getByLabel('Nombre').fill(creds.name)
   await page.getByLabel('Correo').fill(creds.email)
   await page.getByLabel('Contraseña', { exact: true }).fill(creds.password)
+  await page.getByRole('checkbox', { name: /acepto los/ }).check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByText(creds.name)).toBeVisible()
 }
@@ -37,6 +38,7 @@ test('registro: cada contraseña inválida explica el motivo', async ({ page }) 
   ]
   for (const [password, reason] of cases) {
     await page.getByLabel('Contraseña', { exact: true }).fill(password)
+    await page.getByRole('checkbox', { name: /acepto los/ }).check()
     await page.getByRole('button', { name: 'Crear cuenta' }).click()
     await expect(page.getByText(reason).first()).toBeVisible()
   }
@@ -71,6 +73,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   await page.getByLabel('Nombre').fill('Cuenta principal')
   await page.getByLabel('Moneda').selectOption('EUR')
   await page.getByLabel('Saldo inicial').fill('1000')
+  await page.getByRole('checkbox', { name: /acepto los/ }).check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Cuenta creada' })).toBeVisible()
   await expect(page.getByRole('listitem').filter({ hasText: 'Cuenta principal' })).toContainText(
@@ -79,6 +82,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   await page.getByLabel('Nombre').fill('Ahorro')
   await page.getByLabel('Tipo').selectOption('savings')
   await page.getByLabel('Moneda').selectOption('EUR')
+  await page.getByRole('checkbox', { name: /acepto los/ }).check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: 'Ahorro' })).toBeVisible()
 

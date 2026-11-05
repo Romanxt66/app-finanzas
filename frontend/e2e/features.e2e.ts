@@ -13,6 +13,7 @@ async function register(page: Page) {
   await page.getByLabel('Nombre').fill(creds.name)
   await page.getByLabel('Correo').fill(creds.email)
   await page.getByLabel('Contraseña', { exact: true }).fill(creds.password)
+  await page.getByRole('checkbox', { name: /acepto los/ }).check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Resumen' })).toBeVisible()
 }
@@ -78,6 +79,7 @@ test('cuentas: renombrar, no eliminar con movimientos, eliminar vacía y exporta
   for (const name of ['Principal', 'Vacía']) {
     await page.getByLabel('Nombre').fill(name)
     await page.getByLabel('Moneda').selectOption('COP')
+    await page.getByRole('checkbox', { name: /acepto los/ }).check()
     await page.getByRole('button', { name: 'Crear cuenta' }).click()
     await expect(page.getByRole('listitem').filter({ hasText: name })).toBeVisible()
   }
