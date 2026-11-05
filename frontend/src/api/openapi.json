@@ -83,6 +83,46 @@
         }
       }
     },
+    "/api/v1/auth/google": {
+      "post": {
+        "tags": ["auth"],
+        "summary": "Google Login",
+        "description": "Entra (o crea la cuenta) con un ID token de Google. Respeta la verificación en dos pasos.",
+        "operationId": "google_login_api_v1_auth_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/refresh": {
       "post": {
         "tags": ["auth"],
@@ -3518,7 +3558,8 @@
         "properties": {
           "current_password": {
             "type": "string",
-            "title": "Current Password"
+            "title": "Current Password",
+            "default": ""
           },
           "new_password": {
             "type": "string",
@@ -3526,7 +3567,7 @@
           }
         },
         "type": "object",
-        "required": ["current_password", "new_password"],
+        "required": ["new_password"],
         "title": "ChangePasswordIn"
       },
       "ClientError": {
@@ -3728,12 +3769,30 @@
       "DeleteAccountIn": {
         "properties": {
           "password": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Password"
+          },
+          "google_id_token": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Google Id Token"
           }
         },
         "type": "object",
-        "required": ["password"],
         "title": "DeleteAccountIn"
       },
       "Frequency": {
@@ -3921,6 +3980,31 @@
         },
         "type": "object",
         "title": "GoalUpdate"
+      },
+      "GoogleLoginIn": {
+        "properties": {
+          "id_token": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 20,
+            "title": "Id Token"
+          },
+          "otp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otp"
+          }
+        },
+        "type": "object",
+        "required": ["id_token"],
+        "title": "GoogleLoginIn"
       },
       "HTTPValidationError": {
         "properties": {
@@ -5116,7 +5200,8 @@
         "properties": {
           "password": {
             "type": "string",
-            "title": "Password"
+            "title": "Password",
+            "default": ""
           },
           "code": {
             "type": "string",
@@ -5126,7 +5211,7 @@
           }
         },
         "type": "object",
-        "required": ["password", "code"],
+        "required": ["code"],
         "title": "TwoFactorDisable"
       },
       "TwoFactorSetup": {
@@ -5163,6 +5248,16 @@
           "two_factor_enabled": {
             "type": "boolean",
             "title": "Two Factor Enabled",
+            "default": false
+          },
+          "email_login": {
+            "type": "boolean",
+            "title": "Email Login",
+            "default": true
+          },
+          "google_linked": {
+            "type": "boolean",
+            "title": "Google Linked",
             "default": false
           }
         },

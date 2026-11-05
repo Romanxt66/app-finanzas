@@ -38,6 +38,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/auth/google': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Google Login
+     * @description Entra (o crea la cuenta) con un ID token de Google. Respeta la verificación en dos pasos.
+     */
+    post: operations['google_login_api_v1_auth_google_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/auth/refresh': {
     parameters: {
       query?: never
@@ -1099,7 +1119,10 @@ export interface components {
     }
     /** ChangePasswordIn */
     ChangePasswordIn: {
-      /** Current Password */
+      /**
+       * Current Password
+       * @default
+       */
       current_password: string
       /** New Password */
       new_password: string
@@ -1218,7 +1241,9 @@ export interface components {
     /** DeleteAccountIn */
     DeleteAccountIn: {
       /** Password */
-      password: string
+      password?: string | null
+      /** Google Id Token */
+      google_id_token?: string | null
     }
     /**
      * Frequency
@@ -1280,6 +1305,13 @@ export interface components {
       target_amount?: number | string | null
       /** Deadline */
       deadline?: string | null
+    }
+    /** GoogleLoginIn */
+    GoogleLoginIn: {
+      /** Id Token */
+      id_token: string
+      /** Otp */
+      otp?: string | null
     }
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -1758,7 +1790,10 @@ export interface components {
     }
     /** TwoFactorDisable */
     TwoFactorDisable: {
-      /** Password */
+      /**
+       * Password
+       * @default
+       */
       password: string
       /** Code */
       code: string
@@ -1789,6 +1824,16 @@ export interface components {
        * @default false
        */
       two_factor_enabled: boolean
+      /**
+       * Email Login
+       * @default true
+       */
+      email_login: boolean
+      /**
+       * Google Linked
+       * @default false
+       */
+      google_linked: boolean
     }
     /** ValidationError */
     ValidationError: {
@@ -1927,6 +1972,39 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['LoginIn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TokenPair']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  google_login_api_v1_auth_google_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GoogleLoginIn']
       }
     }
     responses: {
