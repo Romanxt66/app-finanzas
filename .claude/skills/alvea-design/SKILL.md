@@ -1,6 +1,6 @@
 ---
 name: alvea-design
-description: Sistema de diseño de Alvea 2 (app Flutter en flutter_app/, rama cli/flutter-app) — fondo con imagen y cristal esmerilado, tarjetas tipo «pipeline», titulares con acento en serif, fucsia neón, Alvi (la gotita de malvavisco), gráficos con curvas monótonas y animaciones. Úsala SIEMPRE antes de crear o modificar cualquier pantalla, tarjeta, gráfico, color, animación o texto visible de la app Flutter, y para revisar si un cambio respeta el estilo.
+description: Sistema de diseño de Alvea 2 (app Flutter en flutter_app/, rama cli/flutter-app) — fondo con imagen y cristal esmerilado, tarjetas tipo «pipeline», titulares con acento en serif, paleta monocroma (blanco, negro y gris), Alvi (la gotita de malvavisco), gráficos con curvas monótonas y animaciones. Úsala SIEMPRE antes de crear o modificar cualquier pantalla, tarjeta, gráfico, color, animación o texto visible de la app Flutter, y para revisar si un cambio respeta el estilo.
 ---
 
 # Diseño de Alvea 2 (Flutter)
