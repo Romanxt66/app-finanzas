@@ -29,6 +29,7 @@ class NavItem {
 const desktopNav = [
   NavItem('/', 'Inicio', 'home', end: true),
   NavItem('/transactions', 'Movimientos', 'list'),
+  NavItem('/analytics', 'Análisis', 'chart'),
   NavItem('/accounts', 'Cuentas', 'wallet'),
   NavItem('/budgets', 'Presupuestos', 'target'),
   NavItem('/goals', 'Metas', 'chart'),
