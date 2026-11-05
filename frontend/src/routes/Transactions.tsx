@@ -7,6 +7,7 @@ import {
   useCategories,
   useDeleteTransaction,
   useSaveTransaction,
+  useSummary,
   useTransactions,
   type Transaction,
 } from '../api/hooks'
@@ -22,10 +23,13 @@ import {
   Skeleton,
   TransactionList,
   TransactionRow,
+  StatTile,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
+import { WeekStrip } from '../features/WeekStrip'
+import { dayLabel } from '../lib/dates'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
-import { formatDate, todayISO } from '../lib/format'
+import { formatDate, formatMoney, monthStart, todayISO } from '../lib/format'
 
 const PAGE_SIZE = 20
 const TYPE_LABELS = { income: 'Ingreso', expense: 'Gasto', transfer: 'Transferencia' } as const
@@ -151,6 +155,51 @@ function TransactionForm({ editing, onDone }: { editing: Transaction | null; onD
   )
 }
 
+/** Movimientos agrupados por día, en el orden en que llegan (del más reciente al más antiguo). */
+function groupByDay(items: Transaction[]): [string, Transaction[]][] {
+  const days = new Map<string, Transaction[]>()
+  for (const t of items) {
+    const day = t.occurred_on.slice(0, 10)
+    days.set(day, [...(days.get(day) ?? []), t])
+  }
+  return [...days.entries()]
+}
+
+/** Neto del día (ingresos − gastos) si todo va en la misma moneda; las transferencias no cuentan. */
+function dayNet(items: Transaction[], accounts: Map<string, { currency: string }>): string | null {
+  const currencies = new Set(items.map((t) => accounts.get(t.account_id)?.currency))
+  if (currencies.size !== 1) return null
+  const net = items.reduce(
+    (n, t) =>
+      n + (t.type === 'income' ? Number(t.amount) : t.type === 'expense' ? -Number(t.amount) : 0),
+    0,
+  )
+  return net ? formatMoney(net, [...currencies][0], { signed: true }) : null
+}
+
+/** Ingresos y gastos del mes en curso, arriba del historial. */
+function MonthTotals() {
+  const { data } = useSummary(monthStart())
+  if (!data) return null
+  return (
+    <div className="cr-grid-kpi">
+      <StatTile
+        label="Ingresos del mes"
+        value={Number(data.income)}
+        currency={data.currency ?? undefined}
+        icon="up"
+      />
+      <StatTile
+        label="Gastos del mes"
+        value={-Number(data.expense)}
+        currency={data.currency ?? undefined}
+        icon="down"
+        tone="negative"
+      />
+    </div>
+  )
+}
+
 export function TransactionsPage() {
   const lifeNote = useLifeHoursNote()
   const [filters, setFilters] = useState({
@@ -258,6 +307,17 @@ export function TransactionsPage() {
           />
         </div>
       </Card>
+      <MonthTotals />
+      <WeekStrip
+        selected={
+          filters.date_from && filters.date_from === filters.date_to ? filters.date_from : null
+        }
+        marked={new Set(data?.items.map((t) => t.occurred_on.slice(0, 10)) ?? [])}
+        onChange={(day) => {
+          setFilters((f) => ({ ...f, date_from: day ?? '', date_to: day ?? '' }))
+          setPage(0)
+        }}
+      />
       {isLoading ? (
         <Skeleton lines={4} />
       ) : !data?.items.length ? (
@@ -265,50 +325,64 @@ export function TransactionsPage() {
           <Empty>No hay transacciones.</Empty>
         </Card>
       ) : (
-        <TransactionList label="Movimientos">
-          {data.items.map((t) => {
-            const account = accountById.get(t.account_id)
-            const category = t.category_id ? categoryById.get(t.category_id) : undefined
-            const target = t.transfer_account_id
-              ? accountById.get(t.transfer_account_id)?.name
-              : undefined
-            return (
-              <TransactionRow
-                key={t.id}
-                kind={t.type}
-                title={t.description || category || TYPE_LABELS[t.type]}
-                detail={[
-                  formatDate(t.occurred_on),
-                  target ? `${account?.name} → ${target}` : account?.name,
-                  category,
-                  t.type === 'expense' ? lifeNote(Number(t.amount), account?.currency) : undefined,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-                amount={Number(t.amount)}
-                currency={account?.currency}
-                actions={
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon="edit"
-                      aria-label="Editar"
-                      onClick={() => setForm({ editing: t })}
+        groupByDay(data.items).map(([day, items]) => {
+          const { date, name } = dayLabel(day)
+          return (
+            <section key={day} aria-label={`${date}, ${name}`}>
+              <div className="cr-day-head">
+                <h2>{date}</h2>
+                <span className="caption cr-muted">{name}</span>
+                <span className="caption cr-muted cr-day-total">{dayNet(items, accountById)}</span>
+              </div>
+              <TransactionList label={`Movimientos del ${date}`}>
+                {items.map((t) => {
+                  const account = accountById.get(t.account_id)
+                  const category = t.category_id ? categoryById.get(t.category_id) : undefined
+                  const target = t.transfer_account_id
+                    ? accountById.get(t.transfer_account_id)?.name
+                    : undefined
+                  return (
+                    <TransactionRow
+                      key={t.id}
+                      kind={t.type}
+                      title={t.description || category || TYPE_LABELS[t.type]}
+                      detail={[
+                        formatDate(t.occurred_on),
+                        target ? `${account?.name} → ${target}` : account?.name,
+                        category,
+                        t.type === 'expense'
+                          ? lifeNote(Number(t.amount), account?.currency)
+                          : undefined,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                      amount={Number(t.amount)}
+                      currency={account?.currency}
+                      actions={
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon="edit"
+                            aria-label="Editar"
+                            onClick={() => setForm({ editing: t })}
+                          />
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            icon="trash"
+                            aria-label="Eliminar"
+                            onClick={() => setPendingDelete(t)}
+                          />
+                        </>
+                      }
                     />
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      icon="trash"
-                      aria-label="Eliminar"
-                      onClick={() => setPendingDelete(t)}
-                    />
-                  </>
-                }
-              />
-            )
-          })}
-        </TransactionList>
+                  )
+                })}
+              </TransactionList>
+            </section>
+          )
+        })
       )}
       <ConfirmDialog
         open={!!pendingDelete}

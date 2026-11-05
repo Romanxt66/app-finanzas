@@ -1835,3 +1835,115 @@ a.cr-user:focus-visible {
   gap: var(--space-3);
   min-width: 0;
 }
+
+/* ---- Historial: tira de la semana ---- */
+.cr-week {
+  padding: var(--space-2) var(--space-2) var(--space-3);
+}
+.cr-week-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cr-week-arrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  border-radius: 50%;
+}
+.cr-week-arrow.is-prev svg {
+  transform: rotate(180deg);
+}
+.cr-week-arrow svg,
+.cr-week-arrow:focus-visible {
+  width: 18px;
+  height: 18px;
+}
+.cr-week-arrow:focus-visible,
+.cr-week-day:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.cr-week-days {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.cr-week-pill {
+  position: absolute;
+  top: 20px;
+  left: calc((100% / 7) * var(--sel) + (100% / 14) - 22px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: var(--shadow-brand);
+  transition: left 0.26s var(--cr-soft, ease);
+}
+.cr-week-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0;
+}
+.cr-week-name {
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.cr-week-num {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.18s;
+}
+.cr-week-day[data-today] .cr-week-num {
+  text-decoration: underline;
+  text-decoration-color: var(--ink-faint);
+  font-weight: 800;
+}
+.cr-week-day[aria-pressed='true'] .cr-week-num {
+  color: var(--on-brand);
+  text-decoration: none;
+  font-weight: 800;
+}
+.cr-week-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: transparent;
+}
+.cr-week-dot[data-on] {
+  background: var(--ink-muted);
+}
+.cr-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-3) var(--space-1) var(--space-1);
+}
+.cr-day-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.cr-day-head .cr-day-total {
+  margin-left: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cr-week-pill {
+    transition: none;
+  }
+}
