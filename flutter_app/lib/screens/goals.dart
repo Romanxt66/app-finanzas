@@ -5,6 +5,7 @@ import '../core/format.dart';
 import '../core/models.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
+import '../ui/category_icon.dart';
 import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
 import '../ui/inputs.dart';
@@ -35,6 +36,9 @@ class GoalsScreen extends StatefulWidget {
 class _GoalsScreenState extends State<GoalsScreen> {
   /// Formulario de alta desplegado (con datos ya creados empieza plegado).
   bool _formOpen = false;
+
+  /// Mostrar también las metas ya cumplidas.
+  bool _showAchieved = true;
 
   final _name = TextEditingController();
   final _target = TextEditingController();
@@ -141,56 +145,67 @@ class _GoalsScreenState extends State<GoalsScreen> {
               const Skeleton(lines: 2, height: 120)
             else if (goals == null || goals.isEmpty)
               const CrCard(child: CrEmpty('Aún no tienes metas. Crea una para empezar a ahorrar con un objetivo.'))
-            else
+            else ...[
+              _GoalsSummary(goals: goals),
+              Align(
+                alignment: Alignment.centerRight,
+                child: CrCheckbox(
+                  value: _showAchieved,
+                  onChanged: (v) => setState(() => _showAchieved = v),
+                  label: 'Mostrar metas cumplidas',
+                ),
+              ),
               CardGrid(
                 minWidth: 260,
                 maxColumns: 3,
                 children: [
                   for (final g in goals)
-                    Builder(
-                      builder: (context) {
-                        final c = context.c;
-                        final ratio = g.target > 0 ? g.saved / g.target : 0.0;
-                        final color = g.achieved ? c.positive : c.neon;
-                        return DealCard(
-                          avatar: initials(g.name),
-                          accent: color,
-                          title: g.name,
-                          subtitle: goalNote(g),
-                          eyebrow: 'ahorrado · ${(ratio * 100).clamp(0, 999).round()} %',
-                          value: formatMoney(g.saved, g.currency),
-                          trailing: 'de ${formatMoney(g.target, g.currency)}',
-                          progress: ratio,
-                          chips: [
-                            if (g.achieved) DealChip('lograda', icon: 'check', color: c.positive),
-                            if (g.deadline != null) DealChip(formatDate(g.deadline!), icon: 'calendar'),
-                            if (!g.achieved) DealChip('faltan ${formatMoney(g.remaining, g.currency)}', dot: true, color: c.amber),
-                          ],
-                          actions: [CardAction(icon: 'trash', tooltip: 'Eliminar ${g.name}', danger: true, onPressed: () => _delete(g))],
-                          footer: Wrap(
-                            spacing: space2,
-                            runSpacing: space2,
-                            children: [
-                              CrButton(
-                                variant: CrButtonVariant.primary,
-                                small: true,
-                                label: 'Aportar',
-                                onPressed: () => _contribution(g, false),
-                              ),
-                              CrButton(
-                                variant: CrButtonVariant.ghost,
-                                small: true,
-                                label: 'Retirar',
-                                onPressed: () => _contribution(g, true),
-                              ),
+                    if (_showAchieved || !g.achieved)
+                      Builder(
+                        builder: (context) {
+                          final c = context.c;
+                          final ratio = g.target > 0 ? g.saved / g.target : 0.0;
+                          final color = g.achieved ? c.positive : c.neon;
+                          return DealCard(
+                            leading: CategoryGlyph(g.name, icon: g.achieved ? 'check' : null),
+                            accent: color,
+                            title: g.name,
+                            subtitle: goalNote(g),
+                            eyebrow: 'ahorrado · ${(ratio * 100).clamp(0, 999).round()} %',
+                            value: formatMoney(g.saved, g.currency),
+                            trailing: 'de ${formatMoney(g.target, g.currency)}',
+                            progress: ratio,
+                            chips: [
+                              if (g.achieved) DealChip('lograda', icon: 'check', color: c.positive),
+                              if (g.deadline != null) DealChip(formatDate(g.deadline!), icon: 'calendar'),
+                              if (!g.achieved) DealChip('faltan ${formatMoney(g.remaining, g.currency)}', dot: true, color: c.amber),
                             ],
-                          ),
-                          semanticLabel: '${g.name}: ${formatMoney(g.saved, g.currency)} de ${formatMoney(g.target, g.currency)}',
-                        );
-                      },
-                    ),
+                            actions: [CardAction(icon: 'trash', tooltip: 'Eliminar ${g.name}', danger: true, onPressed: () => _delete(g))],
+                            footer: Wrap(
+                              spacing: space2,
+                              runSpacing: space2,
+                              children: [
+                                CrButton(
+                                  variant: CrButtonVariant.primary,
+                                  small: true,
+                                  label: 'Aportar',
+                                  onPressed: () => _contribution(g, false),
+                                ),
+                                CrButton(
+                                  variant: CrButtonVariant.ghost,
+                                  small: true,
+                                  label: 'Retirar',
+                                  onPressed: () => _contribution(g, true),
+                                ),
+                              ],
+                            ),
+                            semanticLabel: '${g.name}: ${formatMoney(g.saved, g.currency)} de ${formatMoney(g.target, g.currency)}',
+                          );
+                        },
+                      ),
                 ],
               ),
+            ],
             ErrorText(_removeError),
           ],
         );
@@ -296,4 +311,42 @@ class _ContributionFormState extends State<_ContributionForm> {
       ),
     ],
   );
+}
+
+/// Total ahorrado (en la moneda de la primera meta) y cuántas metas se cumplieron.
+class _GoalsSummary extends StatelessWidget {
+  const _GoalsSummary({required this.goals});
+  final List<Goal> goals;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final currency = goals.first.currency;
+    final same = goals.where((g) => g.currency == currency);
+    final saved = same.fold<double>(0, (t, g) => t + g.saved);
+    final target = same.fold<double>(0, (t, g) => t + g.target);
+    final done = goals.where((g) => g.achieved).length;
+    final others = goals.length - same.length;
+    return CardGrid(
+      minWidth: 150,
+      children: [
+        SummaryTile(
+          icon: 'target',
+          color: c.neon,
+          label: 'Ahorrado',
+          value: formatMoney(saved, currency),
+          note: 'de ${formatMoney(target, currency)}${others > 0 ? ' · $others en otra moneda' : ''}',
+          progress: target > 0 ? saved / target : 0,
+        ),
+        SummaryTile(
+          icon: 'check',
+          color: c.positive,
+          label: 'Metas cumplidas',
+          value: '$done/${goals.length}',
+          note: done == goals.length ? '¡todas cumplidas!' : '${goals.length - done} en camino',
+          progress: goals.isEmpty ? 0 : done / goals.length,
+        ),
+      ],
+    );
+  }
 }

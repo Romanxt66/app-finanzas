@@ -73,6 +73,8 @@ flutter:
     - assets/backgrounds/
     # Logos opcionales de bancos (ver assets/banks/README.md)
     - assets/banks/
+    # Logotipo (cuadrado de 512 px)
+    - assets/brand/
   fonts:
     - family: Manrope
       fonts:

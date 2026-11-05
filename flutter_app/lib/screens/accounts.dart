@@ -9,6 +9,7 @@ import '../ui/banks.dart';
 import '../ui/buttons.dart';
 import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
+import '../ui/donut.dart';
 import '../ui/inputs.dart';
 import '../ui/page.dart';
 import '../ui/query.dart';
@@ -218,6 +219,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         else if (accounts.isEmpty)
           const CrCard(child: CrEmpty('Aún no tienes cuentas.'))
         else ...[
+          _BalancesDonut(accounts: accounts),
           _TypeSummary(accounts: accounts, selected: _filter, onSelect: (t) => setState(() => _filter = _filter == t ? '' : t)),
           Align(
             alignment: Alignment.centerLeft,
@@ -347,6 +349,35 @@ class _TypeSummary extends StatelessWidget {
                 );
               },
             ),
+      ],
+    );
+  }
+}
+
+/// Reparto del saldo entre las cuentas activas (en la moneda principal), con el total en el centro.
+class _BalancesDonut extends StatelessWidget {
+  const _BalancesDonut({required this.accounts});
+  final List<Account> accounts;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final active = accounts.where((a) => !a.archived).toList();
+    if (active.isEmpty) return const SizedBox.shrink();
+    final currency = active.first.currency;
+    final mine = active.where((a) => a.currency == currency).toList()..sort((a, b) => b.balance.compareTo(a.balance));
+    final total = mine.fold<double>(0, (t, a) => t + a.balance);
+    // Las cinco mayores por separado; el resto se agrupa en «Otras»
+    final top = mine.take(5).toList();
+    final rest = mine.skip(5).fold<double>(0, (t, a) => t + a.balance);
+    return DonutCard(
+      title: 'Saldos',
+      centerLabel: 'saldo total',
+      centerValue: AnimatedMoney(value: total, currency: currency, style: CrText.display(total < 0 ? c.negative : c.ink, size: 26)),
+      slices: [
+        for (final a in top)
+          DonutSlice(a.name, a.balance, note: accountTypeLabels[a.type] ?? a.type, trailing: formatMoney(a.balance, a.currency)),
+        if (mine.length > 5) DonutSlice('Otras', rest, note: '${mine.length - 5} cuentas', trailing: formatMoney(rest, currency)),
       ],
     );
   }
