@@ -194,13 +194,13 @@ function BalancesDonut({ accounts }: { accounts: Account[] }) {
             <strong>{formatMoney(total, currency)}</strong>
           </span>
         </div>
-        <ul className="cr-donut-legend">
+        <div className="cr-donut-legend">
           {mine
             .map((a) => {
               const share = Number(a.balance) > 0 && sum > 0 ? Number(a.balance) / sum : 0
               const idx = positive.findIndex((p) => p.id === a.id)
               return (
-                <li key={a.id}>
+                <div key={a.id} className="cr-donut-row">
                   <span
                     className="cr-dot"
                     style={{
@@ -219,11 +219,11 @@ function BalancesDonut({ accounts }: { accounts: Account[] }) {
                     <span>{formatMoney(a.balance, a.currency)}</span>
                     <span className="caption cr-muted">{Math.round(share * 100)} %</span>
                   </span>
-                </li>
+                </div>
               )
             })
             .slice(0, 8)}
-        </ul>
+        </div>
       </div>
     </Card>
   )

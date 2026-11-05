@@ -1793,11 +1793,8 @@ a.cr-user:focus-visible {
 }
 .cr-donut-legend {
   flex: 1 1 240px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
 }
-.cr-donut-legend li {
+.cr-donut-row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -1953,4 +1950,16 @@ a.cr-user:focus-visible {
   color: var(--ink);
   text-decoration: underline;
   text-decoration-color: var(--ink-faint);
+}
+
+.cr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

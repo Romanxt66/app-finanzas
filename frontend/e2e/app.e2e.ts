@@ -73,7 +73,6 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   await page.getByLabel('Nombre').fill('Cuenta principal')
   await page.getByLabel('Moneda').selectOption('EUR')
   await page.getByLabel('Saldo inicial').fill('1000')
-  await page.getByRole('checkbox', { name: /acepto los/ }).check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Cuenta creada' })).toBeVisible()
   await expect(page.getByRole('listitem').filter({ hasText: 'Cuenta principal' })).toContainText(
@@ -82,7 +81,6 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   await page.getByLabel('Nombre').fill('Ahorro')
   await page.getByLabel('Tipo').selectOption('savings')
   await page.getByLabel('Moneda').selectOption('EUR')
-  await page.getByRole('checkbox', { name: /acepto los/ }).check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: 'Ahorro' })).toBeVisible()
 

@@ -72,7 +72,7 @@ export function WeekStrip({
               type="button"
               className="cr-week-day"
               aria-pressed={on}
-              aria-label={d.toLocaleDateString('es-CO', {
+              title={d.toLocaleDateString('es-CO', {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
@@ -80,10 +80,15 @@ export function WeekStrip({
               data-today={key === today || undefined}
               onClick={() => onChange(on ? null : key)}
             >
-              <span className="cr-week-name">
+              <span className="cr-week-name" aria-hidden="true">
                 {d.toLocaleDateString('es-CO', { weekday: 'narrow' }).toUpperCase()}
               </span>
               <span className="cr-week-num">{d.getDate()}</span>
+              {/* El nombre accesible empieza por el número visible (WCAG 2.5.3) */}
+              <span className="cr-sr-only">
+                {d.toLocaleDateString('es-CO', { month: 'long' })},{' '}
+                {d.toLocaleDateString('es-CO', { weekday: 'long' })}
+              </span>
               <span className="cr-week-dot" data-on={(marked.has(key) && !on) || undefined} />
             </button>
           )
