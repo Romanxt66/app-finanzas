@@ -66,7 +66,11 @@ export interface paths {
     get: operations['me_api_v1_auth_me_get']
     put?: never
     post?: never
-    delete?: never
+    /**
+     * Delete Me
+     * @description Elimina la cuenta y todos sus datos. Pide la contraseña para confirmar.
+     */
+    delete: operations['delete_me_api_v1_auth_me_delete']
     options?: never
     head?: never
     /** Update Profile */
@@ -1211,6 +1215,11 @@ export interface components {
      * @enum {string}
      */
     Decision: 'bought' | 'skipped'
+    /** DeleteAccountIn */
+    DeleteAccountIn: {
+      /** Password */
+      password: string
+    }
     /**
      * Frequency
      * @enum {string}
@@ -1990,6 +1999,37 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['UserOut']
+        }
+      }
+    }
+  }
+  delete_me_api_v1_auth_me_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeleteAccountIn']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
         }
       }
     }

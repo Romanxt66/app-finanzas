@@ -145,6 +145,42 @@
           }
         ]
       },
+      "delete": {
+        "tags": ["auth"],
+        "summary": "Delete Me",
+        "description": "Elimina la cuenta y todos sus datos. Pide la contraseña para confirmar.",
+        "operationId": "delete_me_api_v1_auth_me_delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "patch": {
         "tags": ["auth"],
         "summary": "Update Profile",
@@ -3688,6 +3724,17 @@
         "type": "string",
         "enum": ["bought", "skipped"],
         "title": "Decision"
+      },
+      "DeleteAccountIn": {
+        "properties": {
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": ["password"],
+        "title": "DeleteAccountIn"
       },
       "Frequency": {
         "type": "string",

@@ -1,10 +1,21 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import totp
 from app.core.errors import AppError, ConflictError, UnauthorizedError
 from app.core.security import hash_password, verify_password
-from app.models import User
+from app.models import (
+    Account,
+    Budget,
+    Category,
+    Goal,
+    GoalContribution,
+    LifeHoursProfile,
+    RecurringRule,
+    Transaction,
+    User,
+    WaitingItem,
+)
 from app.schemas.auth import RegisterIn
 
 
@@ -90,3 +101,28 @@ def regenerate_recovery_codes(user: User, code: str) -> list[str]:
     codes = totp.generate_recovery_codes()
     user.recovery_codes = [totp.hash_recovery(c) for c in codes]
     return codes
+
+
+# Orden de borrado: primero lo que apunta a otras tablas del usuario (las claves foráneas no tienen
+# ON DELETE CASCADE), al final las cuentas y el propio usuario.
+_OWNED = (
+    GoalContribution,
+    Transaction,
+    Budget,
+    RecurringRule,
+    WaitingItem,
+    Goal,
+    LifeHoursProfile,
+    Category,
+    Account,
+)
+
+
+async def delete_account(session: AsyncSession, user: User, password: str) -> None:
+    """Borra al usuario y todos sus datos (derecho de supresión; lo exige Google Play)."""
+    if not verify_password(password, user.hashed_password):
+        raise AppError("La contraseña no es correcta")
+    for model in _OWNED:
+        await session.execute(delete(model).where(model.user_id == user.id))
+    await session.execute(delete(User).where(User.id == user.id))
+    await session.commit()
