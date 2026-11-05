@@ -18,6 +18,7 @@ import 'screens/categories.dart';
 import 'screens/dashboard.dart';
 import 'screens/goals.dart';
 import 'screens/import_screen.dart';
+import 'screens/legal.dart';
 import 'screens/layout.dart';
 import 'screens/lock_screen.dart';
 import 'screens/more.dart';
@@ -197,11 +198,16 @@ GoRouter _buildRouter(AppState app) {
       if (app.booting) return null;
       final authed = app.user != null;
       final onAuth = state.uri.path == '/login' || state.uri.path == '/register';
+      // Términos y privacidad se leen sin cuenta (los enlaza el registro y la ficha de Google Play)
+      if (state.uri.path == LegalDoc.terms.path || state.uri.path == LegalDoc.privacy.path) return null;
       if (!authed && !onAuth) return '/login';
       if (authed && onAuth) return '/';
       return null;
     },
+    errorPageBuilder: (c, s) => page(const NotFoundScreen(), s),
     routes: [
+      GoRoute(path: LegalDoc.terms.path, pageBuilder: (c, s) => page(const LegalScreen(LegalDoc.terms), s)),
+      GoRoute(path: LegalDoc.privacy.path, pageBuilder: (c, s) => page(const LegalScreen(LegalDoc.privacy), s)),
       GoRoute(path: '/login', pageBuilder: (c, s) => page(const LoginScreen(), s)),
       GoRoute(path: '/register', pageBuilder: (c, s) => page(const RegisterScreen(), s)),
       ShellRoute(

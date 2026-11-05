@@ -237,6 +237,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Borra la cuenta y todos sus datos en el servidor (pide la contraseña) y cierra la sesión aquí.
+  Future<void> deleteAccount(String password) async {
+    await api.call('DELETE', '/auth/me', body: {'password': password});
+    await logout();
+  }
+
+  /// Versión de los términos y la privacidad que se aceptó en este dispositivo (null = ninguna).
+  String? get legalAccepted => _prefs.getString('legal_accepted');
+
+  void acceptLegal(String version) {
+    _prefs.setString('legal_accepted', version);
+    notifyListeners();
+  }
+
   void setReduceMotion(bool value) {
     reduceMotion = value;
     _prefs.setString('reduce_motion', value ? '1' : '0');

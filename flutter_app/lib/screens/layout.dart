@@ -17,6 +17,7 @@ import '../ui/online.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart' show CrTag;
 import '../quick_add.dart';
+import 'legal.dart';
 import 'reminders.dart';
 
 class NavItem {
@@ -130,6 +131,8 @@ class _AppLayoutState extends State<AppLayout> {
                   ),
                 ),
               ),
+            // Quien no ha aceptado la versión vigente de los términos (cuentas anteriores o textos nuevos)
+            if (context.app.legalAccepted != legalVersion) const LegalConsent(),
             const BrandIntro(),
           ],
         ),
