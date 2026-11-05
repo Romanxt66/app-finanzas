@@ -56,7 +56,7 @@ class PeriodReport {
       income: income,
       expense: expense,
       byCategory: sorted,
-      trend: trend.length > months ? trend.sublist(trend.length - months) : trend,
+      trend: trend.length > math.max(months, 3) ? trend.sublist(trend.length - math.max(months, 3)) : trend,
       currency: summaries.firstOrNull?.currency,
     );
   }
@@ -111,13 +111,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 CardGrid(
                   minWidth: 150,
                   children: [
-                    SummaryTile(icon: 'wallet', color: c.neon, label: 'Saldo de tus cuentas', value: formatMoney(balance, currency)),
+                    SummaryTile(icon: 'wallet', color: c.neon, label: 'Saldo', value: formatMoney(balance, currency)),
                     SummaryTile(
                       icon: r.net >= 0 ? 'up' : 'down',
                       color: r.net >= 0 ? c.positive : c.negative,
-                      label: 'Balance ${_months == 1 ? 'del mes' : 'de $_months meses'}',
+                      label: _months == 1 ? 'Este mes' : '$_months meses',
                       value: formatMoney(r.net, cur, true),
-                      note: '${formatMoney(r.income, cur)} entró · ${formatMoney(r.expense, cur)} salió',
+                      note: 'balance del periodo',
                     ),
                   ],
                 ),

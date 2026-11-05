@@ -39,7 +39,7 @@ void main() {
     expect(r.expense, 70);
     expect(r.net, 80);
     expect(r.byCategory.first, (categoryId: 'b', total: 35.0));
-    expect(r.trend.length, 3);
+    expect(r.trend.length, 3); // al menos 3 meses en el gráfico
     expect(r.trend.last.month, '2026-06-01');
   });
 
