@@ -133,8 +133,8 @@ class _NotSpent extends StatelessWidget {
     final hasSaved = room.notSpent.isNotEmpty;
     final face = MoodFace(
       expression: hasSaved
-          ? const FaceExpression(color: Color(0xFFF472D0), smile: 1, mouthOpen: 0.6, eyeHappy: 1, blush: 0.7, sparkle: 1)
-          : const FaceExpression(color: Color(0xFFFACC15), smile: 0.3, lid: 0.1),
+          ? const FaceExpression(color: Color(0xFF949494), smile: 1, mouthOpen: 0.6, eyeHappy: 1, blush: 0.7, sparkle: 1)
+          : const FaceExpression(color: Color(0xFFC9C9C9), smile: 0.3, lid: 0.1),
       size: wide ? 96 : 76,
     );
     final text = Column(

@@ -25,6 +25,8 @@ jobs:
       # Servidor de la app: variable del repositorio ALVEA_API_URL o, si no existe, el de producción
       API_URL: ${{ vars.ALVEA_API_URL || 'https://alvea2.softlane.click' }}
       HAS_UPLOAD_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      # Correo de soporte que muestran los textos legales (variable del repositorio ALVEA_SUPPORT_EMAIL)
+      SUPPORT_EMAIL: ${{ vars.ALVEA_SUPPORT_EMAIL }}
     defaults:
       run:
         working-directory: flutter_app
@@ -56,12 +58,17 @@ jobs:
           keyPassword=${KEY_PASSWORD}
           EOF
 
+      # Versión visible en la app: la de pubspec.yaml más el número de compilación
+      - name: Versión
+        run: |
+          echo "APP_VERSION=$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml) (${{ github.run_number }})" >> "$GITHUB_ENV"
+
       # El número de ejecución sirve de versionCode: cada compilación es una actualización válida
       - name: APK
-        run: flutter build apk --release --dart-define=API_URL="$API_URL" --build-number=${{ github.run_number }}
+        run: flutter build apk --release --dart-define=API_URL="$API_URL" --dart-define=SUPPORT_EMAIL="$SUPPORT_EMAIL" --dart-define=APP_VERSION="$APP_VERSION" --build-number=${{ github.run_number }}
       - name: App bundle para Google Play
         if: env.HAS_UPLOAD_KEY == 'true'
-        run: flutter build appbundle --release --dart-define=API_URL="$API_URL" --build-number=${{ github.run_number }}
+        run: flutter build appbundle --release --dart-define=API_URL="$API_URL" --dart-define=SUPPORT_EMAIL="$SUPPORT_EMAIL" --dart-define=APP_VERSION="$APP_VERSION" --build-number=${{ github.run_number }}
 
       - name: Archivos con nombre claro
         run: |

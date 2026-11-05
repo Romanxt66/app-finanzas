@@ -10,7 +10,7 @@ void main() {
   test('los colores por defecto no cambian nada', () {
     expect(identical(tintPalette(crPaletteDark, fuchsiaAccent, GlowLevel.normal), crPaletteDark), isTrue);
     expect(backdropFilter(fuchsiaAccent, GlowLevel.normal), isNull);
-    expect(backdropFilter(accentById('azul'), GlowLevel.normal), isNotNull);
+    expect(backdropFilter(accentById('frio'), GlowLevel.normal), isNotNull);
     expect(accentById('no-existe'), fuchsiaAccent);
     expect(glowById('vivid'), GlowLevel.vivid);
   });
@@ -31,14 +31,20 @@ void main() {
     }
   });
 
-  test('el acento cambia el matiz del neón', () {
-    final p = tintPalette(crPaletteDark, accentById('turquesa'), GlowLevel.normal);
-    expect(HSLColor.fromColor(p.focus).hue, closeTo(178, 2));
+  test('la app es monocroma y el tono solo tiñe levemente los grises', () {
+    for (final base in [crPaletteDark, crPaletteLight]) {
+      for (final color in [base.brand, base.brandFill, base.ink, base.positive, base.negative, base.chart2]) {
+        expect(HSLColor.fromColor(color).saturation, lessThan(0.01));
+      }
+    }
+    final p = tintPalette(crPaletteDark, accentById('frio'), GlowLevel.normal);
+    expect(HSLColor.fromColor(p.inkMuted).hue, closeTo(214, 2));
+    expect(HSLColor.fromColor(p.inkMuted).saturation, lessThan(0.15));
     final soft = tintPalette(crPaletteDark, fuchsiaAccent, GlowLevel.soft);
     expect(soft.bgGlowBrand.a, lessThan(crPaletteDark.bgGlowBrand.a));
   });
 
-  testWidgets('elegir un color y la luz del fondo se guarda y se puede deshacer', (tester) async {
+  testWidgets('elegir un tono y la luz del fondo se guarda y se puede deshacer', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final state = AppState(prefs);
@@ -54,17 +60,17 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Volver a los colores de Alvea'), findsNothing);
-    await tester.tap(find.bySemanticsLabel('Esmeralda'));
+    expect(find.text('Volver al estilo original'), findsNothing);
+    await tester.tap(find.bySemanticsLabel('Cálido'));
     await tester.tap(find.text('Intensa'));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(state.accent.id, 'esmeralda');
+    expect(state.accent.id, 'calido');
     expect(state.glow, GlowLevel.vivid);
-    expect(prefs.getString('accent'), 'esmeralda');
-    expect(AppState(prefs).accent.id, 'esmeralda');
+    expect(prefs.getString('accent'), 'calido');
+    expect(AppState(prefs).accent.id, 'calido');
 
-    await tester.ensureVisible(find.text('Volver a los colores de Alvea'));
-    await tester.tap(find.text('Volver a los colores de Alvea'));
+    await tester.ensureVisible(find.text('Volver al estilo original'));
+    await tester.tap(find.text('Volver al estilo original'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(state.accent, fuchsiaAccent);
     expect(state.glow, GlowLevel.normal);

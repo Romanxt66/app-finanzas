@@ -299,7 +299,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: _dismiss,
-            child: const ColoredBox(color: Color(0x9E050308)),
+            child: const ColoredBox(color: Color(0x9E050505)),
           ),
         ),
         Align(
@@ -310,7 +310,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
                 child: _Panel(
-                  accent: _step == _Step.done || _type == 'income' ? const Color(0xFF6EE7B7) : context.c.neon,
+                  accent: _step == _Step.done || _type == 'income' ? const Color(0xFFFFFFFF) : _white,
                   child: AnimatedSize(
                     duration: context.reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
                     curve: Curves.easeOutCubic,
@@ -335,19 +335,19 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text('Inicia sesión en Alvea', style: CrText.title(const Color(0xFFF4F2FA))),
+      Text('Inicia sesión en Alvea', style: CrText.title(const Color(0xFFF5F5F5))),
       const SizedBox(height: 6),
-      Text('Para anotar desde aquí, entra primero en la app.', style: CrText.label(const Color(0xFFDDD7EB))),
+      Text('Para anotar desde aquí, entra primero en la app.', style: CrText.label(const Color(0xFFD4D4D4))),
       const SizedBox(height: 16),
       _NeonButton(label: 'Abrir Alvea', onPressed: () => _openApp('/login')),
     ],
   );
 
   Widget _header() {
-    const ink = Color(0xFFF4F2FA);
+    const ink = Color(0xFFF5F5F5);
     return Row(
       children: [
-        Expanded(child: Text('Nuevo movimiento', style: CrText.label(const Color(0xFFDDD7EB)))),
+        Expanded(child: Text('Nuevo movimiento', style: CrText.label(const Color(0xFFD4D4D4)))),
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(999)),
@@ -373,18 +373,14 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: t == 'income'
-                                    ? const [Color(0xFFA7F3D0), Color(0xFF34D399), Color(0xFF10B981)]
-                                    : [
-                                        Color.lerp(context.c.neon, Colors.white, 0.45)!,
-                                        context.c.neon,
-                                        Color.lerp(context.c.neon, Colors.black, 0.12)!,
-                                      ],
+                                    ? const [Color(0xFFFFFFFF), Color(0xFFE5E5E5), Color(0xFFCFCFCF)]
+                                    : [Color.lerp(_white, Colors.white, 0.45)!, _white, Color.lerp(_white, Colors.black, 0.12)!],
                               )
                             : null,
                       ),
                       child: Text(
                         label,
-                        style: CrText.label(_type == t ? (t == 'income' ? const Color(0xFF022C22) : context.c.onNeon) : ink)
+                        style: CrText.label(_type == t ? (t == 'income' ? const Color(0xFF0A0A0A) : _black) : ink)
                             .copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -402,8 +398,8 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   String _money(double v) => formatMoney(v, _selectedAccount?.currency ?? 'COP');
 
   Widget _amountStep() {
-    const ink = Color(0xFFF4F2FA);
-    const muted = Color(0xFFDDD7EB);
+    const ink = Color(0xFFF5F5F5);
+    const muted = Color(0xFFD4D4D4);
     final rate = context.app.reminders.hourlyRate;
     return Column(
       key: const ValueKey('amount'),
@@ -419,7 +415,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(_display, style: CrText.display(_type == 'income' ? const Color(0xFFA7F3D0) : ink, size: 48)),
+            child: Text(_display, style: CrText.display(_type == 'income' ? const Color(0xFFFFFFFF) : ink, size: 48)),
           ),
         ),
         const SizedBox(height: 4),
@@ -461,8 +457,8 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   }
 
   Widget _detailsStep() {
-    const ink = Color(0xFFF4F2FA);
-    const muted = Color(0xFFDDD7EB);
+    const ink = Color(0xFFF5F5F5);
+    const muted = Color(0xFFD4D4D4);
     final cats = _kindCategories;
     final income = _type == 'income';
     return Column(
@@ -484,14 +480,14 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(income ? 'ingreso' : 'gasto', style: CrText.mono(muted, size: 11)),
-                  Text(_display, style: CrText.amount(income ? const Color(0xFFA7F3D0) : ink)),
+                  Text(_display, style: CrText.amount(income ? const Color(0xFFFFFFFF) : ink)),
                 ],
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        CrHeadlineLite(income ? '¿De *dónde*?' : '¿En *qué*?', accent: income ? const Color(0xFF6EE7B7) : const Color(0xFFF5C2FD)),
+        CrHeadlineLite(income ? '¿De *dónde*?' : '¿En *qué*?', accent: income ? const Color(0xFFFFFFFF) : const Color(0xFFD9D9D9)),
         const SizedBox(height: 10),
         if (cats.isEmpty)
           Text(
@@ -513,7 +509,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
                     name: c.name,
                     color: _palette[i % _palette.length],
                     selected: _category == c.id,
-                    accent: income ? const Color(0xFF34D399) : context.c.neon,
+                    accent: income ? const Color(0xFFF5F5F5) : _white,
                     onTap: () => setState(() => _category = _category == c.id ? null : c.id),
                   ),
               ],
@@ -532,7 +528,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
         ),
         if (_error != null) ...[
           const SizedBox(height: 8),
-          Text(_error is ApiError ? (_error as ApiError).message : 'No se pudo guardar', style: CrText.label(const Color(0xFFFCA5A5))),
+          Text(_error is ApiError ? (_error as ApiError).message : 'No se pudo guardar', style: CrText.label(const Color(0xFFE5E5E5))),
         ],
         const SizedBox(height: 14),
         _NeonButton(
@@ -545,7 +541,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   }
 
   Widget _doneStep() {
-    const muted = Color(0xFFDDD7EB);
+    const muted = Color(0xFFD4D4D4);
     final cat = _categories.where((c) => c.id == _category).firstOrNull?.name;
     final account = _selectedAccount?.name;
     final what =
@@ -556,7 +552,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
       children: [
         MoodFace(expression: FinanceMood.faces[4], size: 120, semanticLabel: 'Alvi radiante'),
         const SizedBox(height: 4),
-        CrHeadlineLite('Listo, *anotado*.', accent: const Color(0xFF6EE7B7), size: 26),
+        CrHeadlineLite('Listo, *anotado*.', accent: const Color(0xFFFFFFFF), size: 26),
         const SizedBox(height: 6),
         Text(
           _queued ? '$what\nSin conexión: se enviará al abrir Alvea con internet.' : what,
@@ -582,18 +578,22 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   }
 }
 
-/// Colores de las fichas de categoría (los de los ánimos y gráficos de la app).
+/// Grises de las fichas de categoría (la app es monocroma: se distinguen por luz, no por color).
 const _palette = [
-  Color(0xFFFB923C),
-  Color(0xFF38BDF8),
-  Color(0xFF34D399),
-  Color(0xFFF472B6),
-  Color(0xFFA78BFA),
-  Color(0xFFF87171),
-  Color(0xFFFBBF24),
-  Color(0xFF2DD4BF),
-  Color(0xFFB9B3CC),
+  Color(0xFFF5F5F5),
+  Color(0xFFBDBDBD),
+  Color(0xFF8F8F8F),
+  Color(0xFFDADADA),
+  Color(0xFFA3A3A3),
+  Color(0xFF7A7A7A),
+  Color(0xFFCFCFCF),
+  Color(0xFFB0B0B0),
+  Color(0xFFE5E5E5),
 ];
+
+/// El recuadro rápido siempre es oscuro: la acción va en blanco con texto negro.
+const _white = Color(0xFFF5F5F5);
+const _black = Color(0xFF0A0A0A);
 
 /// Titular corto con una palabra en serif cursiva (`*así*`).
 class CrHeadlineLite extends StatelessWidget {
@@ -607,7 +607,7 @@ class CrHeadlineLite extends StatelessWidget {
     final parts = text.split('*');
     return Text.rich(
       TextSpan(
-        style: TextStyle(fontFamily: fontFamily, fontSize: size, fontWeight: FontWeight.w700, color: const Color(0xFFF4F2FA)),
+        style: TextStyle(fontFamily: fontFamily, fontSize: size, fontWeight: FontWeight.w700, color: const Color(0xFFF5F5F5)),
         children: [
           for (final (i, p) in parts.indexed)
             TextSpan(
@@ -646,7 +646,7 @@ class _Panel extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [const Color(0xF21A1220), const Color(0xF20E0912), Color.lerp(const Color(0xF20E0912), accent, 0.10)!],
+            colors: [const Color(0xF21A1A1A), const Color(0xF20E0E0E), Color.lerp(const Color(0xF20E0E0E), accent, 0.10)!],
           ),
           border: Border.all(color: Colors.white.withValues(alpha: 0.20), width: 1.2),
           boxShadow: [BoxShadow(color: accent.withValues(alpha: 0.22), blurRadius: 40, spreadRadius: -8)],
@@ -681,8 +681,8 @@ class _Key extends StatelessWidget {
         },
         child: Center(
           child: label == '⌫'
-              ? const CrIcon('backspace', color: Color(0xFFF4F2FA), size: 22)
-              : Text(label, style: CrText.display(const Color(0xFFF4F2FA), size: 22)),
+              ? const CrIcon('backspace', color: Color(0xFFF5F5F5), size: 22)
+              : Text(label, style: CrText.display(const Color(0xFFF5F5F5), size: 22)),
         ),
       ),
     ),
@@ -737,7 +737,7 @@ class _CategoryChip extends StatelessWidget {
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: CrText.label(const Color(0xFFF4F2FA)).copyWith(fontWeight: FontWeight.w700, fontSize: 12.5),
+              style: CrText.label(const Color(0xFFF5F5F5)).copyWith(fontWeight: FontWeight.w700, fontSize: 12.5),
             ),
           ],
         ),
@@ -755,7 +755,7 @@ class _AccountRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const muted = Color(0xFFDDD7EB);
+    const muted = Color(0xFFD4D4D4);
     final a = accounts.where((x) => x.id == value).firstOrNull;
     return Semantics(
       button: true,
@@ -767,7 +767,7 @@ class _AccountRow extends StatelessWidget {
             : () async {
                 final picked = await showModalBottomSheet<String>(
                   context: context,
-                  backgroundColor: const Color(0xFF14101A),
+                  backgroundColor: const Color(0xFF141414),
                   shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
                   builder: (ctx) => SafeArea(
                     child: ListView(
@@ -776,9 +776,9 @@ class _AccountRow extends StatelessWidget {
                       children: [
                         for (final x in accounts)
                           ListTile(
-                            title: Text(x.name, style: CrText.body(const Color(0xFFF4F2FA))),
+                            title: Text(x.name, style: CrText.body(const Color(0xFFF5F5F5))),
                             subtitle: Text(formatMoney(x.balance, x.currency), style: CrText.label(muted)),
-                            trailing: x.id == value ? const CrIcon('check', color: Color(0xFFF0ABFC)) : null,
+                            trailing: x.id == value ? const CrIcon('check', color: Color(0xFFFFFFFF)) : null,
                             onTap: () => Navigator.of(ctx).pop(x.id),
                           ),
                       ],
@@ -798,7 +798,7 @@ class _AccountRow extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 15,
-                backgroundColor: const Color(0xFF7C3AED),
+                backgroundColor: const Color(0xFF3A3A3A),
                 child: Text(
                   a == null || a.name.isEmpty ? '·' : a.name.substring(0, 1).toUpperCase(),
                   style: CrText.label(Colors.white).copyWith(fontWeight: FontWeight.w800),
@@ -812,14 +812,14 @@ class _AccountRow extends StatelessWidget {
                     Text(label, style: CrText.mono(muted, size: 10.5)),
                     Text(
                       a == null ? 'Crea una cuenta en la app' : '${a.name} · ${formatMoney(a.balance, a.currency)}',
-                      style: CrText.label(const Color(0xFFF4F2FA)).copyWith(fontWeight: FontWeight.w700),
+                      style: CrText.label(const Color(0xFFF5F5F5)).copyWith(fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              if (accounts.length > 1) Text('Cambiar', style: CrText.label(const Color(0xFFF5C2FD)).copyWith(fontWeight: FontWeight.w600)),
+              if (accounts.length > 1) Text('Cambiar', style: CrText.label(const Color(0xFFD9D9D9)).copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -836,8 +836,7 @@ class _NeonButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.c;
-    final base = income ? const Color(0xFF34D399) : c.neon;
+    final base = income ? const Color(0xFFF5F5F5) : _white;
     final on = onPressed != null;
     return Semantics(
       button: true,
@@ -862,7 +861,7 @@ class _NeonButton extends StatelessWidget {
               ),
               boxShadow: on ? [BoxShadow(color: base.withValues(alpha: 0.5), blurRadius: 24)] : null,
             ),
-            child: Text(label, style: CrText.body(income ? const Color(0xFF022C22) : c.onNeon).copyWith(fontWeight: FontWeight.w800)),
+            child: Text(label, style: CrText.body(income ? const Color(0xFF0A0A0A) : _black).copyWith(fontWeight: FontWeight.w800)),
           ),
         ),
       ),
@@ -894,7 +893,7 @@ class _GhostButton extends StatelessWidget {
             border: Border.all(color: Colors.white.withValues(alpha: 0.24)),
             gradient: LinearGradient(colors: [Colors.white.withValues(alpha: 0.16), Colors.white.withValues(alpha: 0.04)]),
           ),
-          child: Text(label, style: CrText.body(const Color(0xFFF4F2FA)).copyWith(fontWeight: FontWeight.w600)),
+          child: Text(label, style: CrText.body(const Color(0xFFF5F5F5)).copyWith(fontWeight: FontWeight.w600)),
         ),
       ),
     ),

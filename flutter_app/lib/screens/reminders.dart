@@ -83,7 +83,7 @@ class _Pane extends StatelessWidget {
               ? const [Color(0x24FFFFFF), Color(0x08FFFFFF)]
               : [Colors.white.withValues(alpha: 0.75), Colors.white.withValues(alpha: 0.45)],
         ),
-        color: c.isDark ? const Color(0x4D0C0810) : null,
+        color: c.isDark ? const Color(0x4D090909) : null,
       ),
       child: CustomPaint(
         foregroundPainter: RimPainter(radius: 18, rim: rim, dashed: dashed),
@@ -163,7 +163,7 @@ Future<void> showChargesSheet(BuildContext context, [DateTime? day]) => showModa
   isScrollControlled: true,
   useSafeArea: true,
   backgroundColor: Colors.transparent,
-  barrierColor: const Color(0x8C05080C),
+  barrierColor: const Color(0x8C080808),
   builder: (_) => ChargesSheet(day: dayOf(day ?? DateTime.now())),
 );
 
@@ -288,7 +288,7 @@ class _SheetGlass extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: radius,
-            color: c.isDark ? const Color(0x940A070E) : Colors.white.withValues(alpha: 0.82),
+            color: c.isDark ? const Color(0x94080808) : Colors.white.withValues(alpha: 0.82),
             gradient: LinearGradient(
               begin: const Alignment(-1, -1),
               end: const Alignment(0.2, 0.4),
@@ -629,7 +629,7 @@ class GlassSwitch extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     center: const Alignment(-0.3, -0.4),
-                    colors: value ? const [Colors.white, Color(0xFFF0D5FF)] : const [Color(0xFFE7E2F0), Color(0xFFB9B3CC)],
+                    colors: value ? const [Colors.white, Color(0xFFDEDEDE)] : const [Color(0xFFE4E4E4), Color(0xFFB6B6B6)],
                   ),
                 ),
               ),
@@ -780,8 +780,8 @@ class NotificationPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final ticket = reminder.ticket;
     final short = reminder.alert;
-    const ink = Color(0xFFF4F2FA);
-    const muted = Color(0xFFCFCAD6);
+    const ink = Color(0xFFF3F3F3);
+    const muted = Color(0xFFCCCCCC);
     return Semantics(
       label: hidden
           ? 'Vista previa: en la pantalla de bloqueo solo se ve que hay un aviso de Alvea'
@@ -789,7 +789,7 @@ class NotificationPreview extends StatelessWidget {
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        decoration: BoxDecoration(color: const Color(0xF528252E), borderRadius: BorderRadius.circular(22)),
+        decoration: BoxDecoration(color: const Color(0xF5262626), borderRadius: BorderRadius.circular(22)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -808,7 +808,7 @@ class NotificationPreview extends StatelessWidget {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: short ? const Color(0xFFB45309) : const Color(0xFFA21CAF),
+                              color: short ? const Color(0xFF626262) : const Color(0xFF434343),
                             ),
                             child: const AlveaLogo(size: 16, background: false),
                           ),

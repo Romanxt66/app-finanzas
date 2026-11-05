@@ -9,6 +9,7 @@ import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'appearance.dart';
 import 'auth_screens.dart' show PasswordRules;
+import 'delete_account.dart';
 import 'reminders.dart';
 import 'security.dart';
 
@@ -174,6 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         ErrorText(_allError),
+        const DeleteAccountCard(),
       ],
     );
   }

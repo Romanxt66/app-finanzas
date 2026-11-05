@@ -373,7 +373,7 @@ class SummaryTile extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(color: tint.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(10)),
-              child: Center(child: CrIcon(icon!, size: 18, color: const Color(0xFF1A0420))),
+              child: Center(child: CrIcon(icon!, size: 18, color: const Color(0xFF0B0B0B))),
             ),
             const SizedBox(width: space3),
           ],

@@ -24,10 +24,10 @@ class AlveaLogoPainter extends CustomPainter {
   const AlveaLogoPainter({this.background = true});
   final bool background;
 
-  static const violet = Color(0xFF9B3BEA);
-  static const glow = Color(0xFFB54DFF);
-  static const line = Color(0xFFC35BFF);
-  static const spark = Color(0xFFF3DDFF);
+  static const violet = Color(0xFF5C5C5C);
+  static const glow = Color(0xFF707070);
+  static const line = Color(0xFF7D7D7D);
+  static const spark = Color(0xFFE4E4E4);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -42,7 +42,7 @@ class AlveaLogoPainter extends CustomPainter {
           ..shader = const RadialGradient(
             center: Alignment(0, -0.4),
             radius: 0.8,
-            colors: [Color(0xFF2A0F4A), Color(0xFF140826), Color(0xFF0A0414)],
+            colors: [Color(0xFF191919), Color(0xFF0D0D0D), Color(0xFF060606)],
             stops: [0, 0.6, 1],
           ).createShader(const Rect.fromLTWH(0, 0, 108, 108)),
       );
@@ -83,7 +83,7 @@ class AlveaLogoPainter extends CustomPainter {
         ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF2B1250), Color(0xFF0E0520)],
+          colors: [Color(0xFF1C1C1C), Color(0xFF090909)],
         ).createShader(const Rect.fromLTRB(36, 32, 72, 78)),
     );
 

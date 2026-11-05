@@ -13,6 +13,7 @@ import '../ui/motion.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'layout.dart' show BrandMark;
+import 'legal.dart';
 
 final _emailRe = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
@@ -495,7 +496,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return _AuthShell(
       title: 'Iniciar sesión',
       subtitle: 'Bienvenido de nuevo. Ingresa tus datos para continuar.',
-      footer: _FootLink(prefix: '¿Aún no tienes cuenta? ', link: 'Regístrate gratis', onTap: () => context.go('/register')),
+      footer: Column(
+        children: [
+          _FootLink(prefix: '¿Aún no tienes cuenta? ', link: 'Regístrate gratis', onTap: () => context.go('/register')),
+          const SizedBox(height: space2),
+          const Center(child: LegalLinks()),
+        ],
+      ),
       children: [
         CrTextField(
           label: 'Correo',
@@ -564,6 +571,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _password = TextEditingController();
   bool _busy = false;
   bool _submitted = false;
+  bool _accepted = false;
   Object? _error;
 
   String? get _nameError => _submitted && (_name.text.trim().isEmpty ? true : _name.text.trim().length > 120)
@@ -577,12 +585,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _submitted = true;
       _error = null;
     });
-    if (_nameError != null || _emailError != null || _passwordError != null || _busy) {
+    if (_nameError != null || _emailError != null || _passwordError != null || !_accepted || _busy) {
       return;
     }
     final app = context.app;
     setState(() => _busy = true);
     try {
+      app.acceptLegal(legalVersion);
       await app.register(_name.text.trim(), _email.text.trim(), _password.text);
     } catch (e) {
       if (mounted) setState(() => _error = e);
@@ -634,6 +643,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         onSubmitted: (_) => _submit(),
       ),
       PasswordRules(_password.text),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CrCheckbox(
+            value: _accepted,
+            onChanged: (v) => setState(() => _accepted = v),
+            label: 'Soy mayor de edad y acepto los términos y la política de privacidad',
+          ),
+          const LegalLinks(prefix: 'Leer '),
+          if (_submitted && !_accepted)
+            Semantics(liveRegion: true, child: Text('Para crear la cuenta debes aceptarlos.', style: CrText.caption(context.c.negative))),
+        ],
+      ),
       ErrorText(_error),
       CrButton(
         variant: CrButtonVariant.primary,

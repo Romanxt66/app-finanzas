@@ -55,8 +55,8 @@ repositorio: `.gitignore` ya excluye `*.jks` y `key.properties`. Con la firma co
 4. Completa la ficha:
    - Icono: `brand/play-store-icon-512.png`.
    - Capturas: puedes usar las del artefacto `capturas-flutter` de la CI.
-   - Política de privacidad: Play la exige a las apps de finanzas; basta una página pública.
-   - Formulario de «Seguridad de los datos»: la app guarda correo, nombre y movimientos en tu servidor.
+   - Política de privacidad: `https://alvea2.softlane.click/privacidad` (pública, dentro de la app).
+   - Textos de la ficha y respuestas de «Seguridad de los datos»: ver `PLAY_STORE.md`.
 5. Cuando las pruebas vayan bien, promociona la versión a **Producción**.
 
 Las siguientes versiones solo requieren subir el nuevo `alvea.aab`. El `versionCode` lo pone el workflow (número

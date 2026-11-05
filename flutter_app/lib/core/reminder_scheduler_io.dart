@@ -104,7 +104,7 @@ NotificationDetails reminderDetails(ReminderPayload p) {
       importance: p.alert ? Importance.high : Importance.defaultImportance,
       priority: p.alert ? Priority.high : Priority.defaultPriority,
       icon: 'ic_stat_alvea',
-      color: p.alert ? const Color(0xFFB45309) : const Color(0xFFA21CAF),
+      color: p.alert ? const Color(0xFF626262) : const Color(0xFF434343),
       largeIcon: icon,
       styleInformation: style,
       visibility: p.hide ? NotificationVisibility.private : NotificationVisibility.public,

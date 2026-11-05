@@ -41,7 +41,7 @@ class _QrPainter extends CustomPainter {
         if (image.isDark(r, col)) path.addRect(Rect.fromLTWH(col * cell, r * cell, cell + 0.4, cell + 0.4));
       }
     }
-    canvas.drawPath(path, Paint()..color = const Color(0xFF0A0414));
+    canvas.drawPath(path, Paint()..color = const Color(0xFF060606));
   }
 
   @override

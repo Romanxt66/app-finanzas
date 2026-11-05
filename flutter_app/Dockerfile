@@ -23,7 +23,9 @@ COPY . .
 # --wasm: los navegadores con WasmGC (Chrome/Edge 119+, Firefox 120+, Safari 18.2+) cargan la versión
 # WebAssembly con el motor Skwasm (más rápida al arrancar y al desplazarse); el resto usa JavaScript.
 # Después se quitan los símbolos de depuración y se precomprime con gzip -9 (nginx: gzip_static).
-RUN flutter build web --release --wasm --no-web-resources-cdn \
+# SUPPORT_EMAIL: correo de soporte que muestran los textos legales (opcional, --build-arg).
+ARG SUPPORT_EMAIL=""
+RUN flutter build web --release --wasm --no-web-resources-cdn --dart-define=SUPPORT_EMAIL="${SUPPORT_EMAIL}" \
     && find build/web -name '*.symbols' -delete \
     && find build/web -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.wasm' -o -name '*.json' \
         -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name 'NOTICES' \) -exec gzip -9 -k {} +

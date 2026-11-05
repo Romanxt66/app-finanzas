@@ -31,21 +31,21 @@ class Cr extends ThemeExtension<Cr> {
   Cr lerp(Cr? other, double t) => t < 0.5 ? this : (other ?? this);
 }
 
-/// Acentos «neón» del diseño Relay, derivados de los fucsias de la paleta (no hay tonos nuevos).
+/// Acentos de la paleta monocroma: el «neón» es el blanco (oscuro) o el negro (claro) de acción.
 extension CrAccent on CrPalette {
   bool get isDark => bg.computeLuminance() < 0.2;
 
-  /// Relleno de la acción principal: fucsia vivo en oscuro, fucsia profundo en claro.
+  /// Relleno de la acción principal: blanco en oscuro, casi negro en claro.
   Color get neon => isDark ? focus : brandFill;
 
   /// Texto sobre [neon] (≥ 7:1 en ambos temas).
-  Color get onNeon => isDark ? const Color(0xFF1A0420) : onBrand;
+  Color get onNeon => onBrand;
 
   /// Halo de luz bajo los elementos en neón.
-  Color get neonGlow => (isDark ? focus : brandFill).withValues(alpha: isDark ? 0.45 : 0.28);
+  Color get neonGlow => (isDark ? focus : brandFill).withValues(alpha: isDark ? 0.22 : 0.20);
 
   /// Fondo de los paneles tipo «consola» (más opaco que el vidrio para leer datos).
-  Color get panel => isDark ? const Color(0xE60A070D) : const Color(0xEBFFFFFF);
+  Color get panel => isDark ? const Color(0xE60B0B0B) : const Color(0xEBFFFFFF);
 }
 
 extension CrContext on BuildContext {
