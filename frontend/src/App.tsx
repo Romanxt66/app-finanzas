@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { lazy } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { ApiError } from './api/client'
 import { ToastProvider } from './design'
 import { AuthProvider } from './features/auth'
 import { LoginPage, RegisterPage } from './routes/AuthPages'
@@ -24,7 +25,16 @@ const SubscriptionsPage = lazyPage(() => import('./routes/Subscriptions'), 'Subs
 const TransactionsPage = lazyPage(() => import('./routes/Transactions'), 'TransactionsPage')
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+  defaultOptions: {
+    queries: {
+      // El cliente ya reintenta los fallos pasajeros; aquí solo un intento más para errores del servidor
+      retry: (count, error) =>
+        count < 1 && error instanceof ApiError && (error.status === 0 || error.status >= 500),
+      // Al volver a la pestaña o recuperar la conexión, lo que falló se vuelve a pedir
+      refetchOnWindowFocus: (query) => query.state.status === 'error',
+      refetchOnReconnect: true,
+    },
+  },
 })
 
 export default function App() {

@@ -96,6 +96,28 @@ interface Options {
   auth?: boolean
 }
 
+/** Fallos pasajeros: sin conexión, proxy o servidor reiniciando. */
+const TRANSIENT = new Set([502, 503, 504])
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/**
+ * Las lecturas (GET) se reintentan solas ante un fallo pasajero (dos veces, con espera creciente):
+ * así un corte de un segundo o un reinicio del servidor no deja la pantalla con todo en cero.
+ * Las escrituras no se repiten (podrían duplicarse).
+ */
+async function sendWithRetry(send: () => Promise<Response>, method: string): Promise<Response> {
+  const delays = method === 'GET' ? [600, 1800] : []
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await sendSafe(send)
+      if (!TRANSIENT.has(res.status) || attempt >= delays.length) return res
+    } catch (error) {
+      if (attempt >= delays.length) throw error
+    }
+    await wait(delays[attempt])
+  }
+}
+
 async function sendSafe(send: () => Promise<Response>): Promise<Response> {
   try {
     return await send()
@@ -122,7 +144,7 @@ export async function api<T>(path: string, opts: Options = {}): Promise<T> {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     })
 
-  let res = await sendSafe(send)
+  let res = await sendWithRetry(send, method)
   if (res.status === 401 && auth && tokens.refresh) {
     refreshing ??= refreshTokens().finally(() => (refreshing = null))
     if (await refreshing) res = await sendSafe(send)
