@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/api.dart';
 import '../core/format.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
@@ -110,6 +111,11 @@ class _AppLayoutState extends State<AppLayout> {
                   valueListenable: _online,
                   builder: (context, online, _) => online ? const SizedBox.shrink() : const _OfflineBanner(),
                 ),
+                // Un fallo al cargar (servidor caído o reiniciando) se avisa: antes se veía todo en cero
+                ValueListenableBuilder<ApiError?>(
+                  valueListenable: context.app.api.loadError,
+                  builder: (context, error, _) => error == null ? const SizedBox.shrink() : const _LoadErrorBanner(),
+                ),
                 Expanded(
                   // App nativa: el teclado no encoge la ventana, así que el contenido deja su hueco
                   // (en la web ya lo hace el navegador)
@@ -136,6 +142,56 @@ class _AppLayoutState extends State<AppLayout> {
             if (context.app.legalAccepted != legalVersion) const LegalConsent(),
             const BrandIntro(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadErrorBanner extends StatelessWidget {
+  const _LoadErrorBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final app = context.app;
+    return Rise(
+      dy: 0,
+      duration: const Duration(milliseconds: 300),
+      child: Semantics(
+        liveRegion: true,
+        child: Glass(
+          strong: true,
+          margin: const EdgeInsets.fromLTRB(space3, space3, space3, 0),
+          padding: const EdgeInsets.fromLTRB(space4, space3, space3, space3),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'No pudimos cargar tus datos. ',
+                        style: CrText.label(c.ink).copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      TextSpan(text: 'Puede ser la conexión o el servidor; tus datos están a salvo.', style: CrText.label(c.inkMuted)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: space2),
+              CrButton(
+                variant: CrButtonVariant.primary,
+                small: true,
+                icon: 'restore',
+                label: 'Reintentar',
+                onPressed: () {
+                  app.api.loadError.value = null;
+                  app.invalidate();
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
