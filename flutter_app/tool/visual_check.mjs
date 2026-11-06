@@ -44,7 +44,7 @@ page.on('console', (m) => {
 await page.addInitScript((t) => {
   localStorage.setItem('flutter.access_token', JSON.stringify(t.access_token))
   localStorage.setItem('flutter.refresh_token', JSON.stringify(t.refresh_token))
-  localStorage.setItem('flutter.legal_accepted', JSON.stringify('2026-11-05'))
+  localStorage.setItem('flutter.legal_accepted', JSON.stringify('2026-11-06'))
 }, tokens)
 await page.goto(APP_URL + routes[0])
 // Se espera a que Flutter pinte (el lienzo vive dentro del shadow DOM de flt-glass-pane)

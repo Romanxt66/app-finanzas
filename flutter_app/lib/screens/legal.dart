@@ -14,7 +14,7 @@ import '../ui/widgets.dart';
 // vuelve a pedir la aceptación a quien aceptó una versión anterior.
 
 /// Fecha de la versión vigente de los textos legales.
-const legalVersion = '2026-11-05';
+const legalVersion = '2026-11-06';
 
 /// Correo de soporte y de solicitudes sobre datos personales (se define al compilar con
 /// `--dart-define=SUPPORT_EMAIL=...`). Si no se define, los textos remiten a la ficha de la tienda.
@@ -49,7 +49,7 @@ List<_Section> _terms() => [
     [
       'Debes ser mayor de edad (18 años) para crear una cuenta. Eres responsable de la información que registras y de '
           'mantener segura tu contraseña, tu PIN y el acceso a tu teléfono.',
-      'Puedes activar la verificación en dos pasos y el bloqueo con PIN o huella. Si crees que alguien entró a tu cuenta, '
+      'Puedes entrar con correo y contraseña o con tu cuenta de Google, y activar la verificación en dos pasos y el bloqueo con PIN o huella. Si crees que alguien entró a tu cuenta, '
           'cambia la contraseña y cierra las demás sesiones desde Perfil.',
     ],
   ),
@@ -98,6 +98,9 @@ List<_Section> _privacy() => [
     'Qué datos guardamos',
     [
       'Datos de la cuenta: nombre, correo y contraseña (guardada cifrada con un algoritmo de un solo sentido; nadie puede leerla).',
+      'Si entras con Google, recibimos de Google solo tu nombre, tu correo, si está verificado y un identificador de tu cuenta '
+          'de Google. No recibimos tu contraseña de Google ni accedemos a tu correo, contactos, archivos ni a ningún otro dato '
+          'de tu cuenta de Google.',
       'Datos financieros que tú registras: cuentas, saldos, movimientos, categorías, presupuestos, metas, suscripciones y '
           'archivos que decidas importar (CSV o extractos). No pedimos claves bancarias ni accedemos a tus bancos.',
       'Datos técnicos mínimos: registros de errores de la app (sin el contenido de tus movimientos) para poder corregir fallos, '
@@ -110,7 +113,9 @@ List<_Section> _privacy() => [
       'Solo para darte el servicio: mostrar tus resúmenes, calcular presupuestos y avisos, programar recordatorios en tu '
           'teléfono, proteger tu cuenta y responder tus solicitudes.',
       'No vendemos tus datos, no los usamos para publicidad y no los compartimos con terceros, salvo los proveedores que '
-          'alojan el servidor (con obligación de confidencialidad) o cuando una autoridad competente lo exija por ley.',
+          'alojan el servidor (con obligación de confidencialidad) o cuando una autoridad competente lo exija por ley. El uso '
+          'de la información recibida de las API de Google se ajusta a la Política de datos de usuario de los servicios de API '
+          'de Google, incluidos sus requisitos de uso limitado.',
     ],
   ),
   (
@@ -125,7 +130,7 @@ List<_Section> _privacy() => [
     'Seguridad',
     [
       'Las comunicaciones viajan cifradas (HTTPS), el servidor guarda copias de respaldo y el acceso está protegido con '
-          'contraseña y, si la activas, verificación en dos pasos. Ningún sistema es infalible: si detectamos un incidente que '
+          'contraseña o con tu cuenta de Google y, si la activas, verificación en dos pasos. Ningún sistema es infalible: si detectamos un incidente que '
           'afecte tus datos, te avisaremos.',
     ],
   ),
@@ -133,9 +138,10 @@ List<_Section> _privacy() => [
     'Tus derechos',
     [
       'De acuerdo con la Ley 1581 de 2012 de Colombia (habeas data) y normas afines, puedes conocer, actualizar, rectificar '
-          'y exportar tus datos (Movimientos → Exportar CSV), revocar esta autorización y pedir que eliminemos tu cuenta y '
-          'todos tus datos. Para ejercerlos, $_contact. Respondemos en un máximo de 15 días hábiles.',
-      'Cuando eliminamos una cuenta, borramos sus datos del servidor; las copias de respaldo se sobrescriben en un máximo de 30 días.',
+          'y exportar tus datos (Movimientos → Exportar CSV), revocar esta autorización y eliminar tu cuenta y todos '
+          'tus datos desde Perfil → Eliminar cuenta. Para cualquier solicitud, $_contact. Respondemos en un máximo de 15 días hábiles.',
+      'Cuando eliminamos una cuenta, borramos sus datos del servidor; las copias de respaldo se sobrescriben en un máximo de 30 días. '
+          'Si entraste con Google, también puedes quitar el acceso de Alvea desde tu cuenta de Google (Seguridad → Apps de terceros).',
     ],
   ),
   ('Menores de edad', ['Alvea no está dirigida a menores de 18 años y no recopilamos a sabiendas datos de menores.']),
