@@ -66,7 +66,9 @@ APP_URL=http://localhost:8090 API_URL=http://localhost:8101 ALVEA_EMAIL=ci@examp
 
 `Dockerfile` (Flutter fijado por tag de git + nginx) y `docker-compose.yml` (servicio `alvea2-web`, unido a la red
 `coolify` para alcanzar `alvea-api`). Variable opcional: `API_UPSTREAM` (por defecto `http://alvea-api:8000`).
-Dominio: https://alvea2.softlane.click (puerto 80 del servicio `alvea2-web`).
+Dominio (retirado): la web de Flutter se publicaba en alvea2.softlane.click. La web pública ahora es la React
+(https://alvea.softlane.click); este proyecto se usa para la app Android, que habla con el servidor a través de esa misma
+dirección.
 La versión de Flutter debe coincidir en `Dockerfile` (`FLUTTER_VERSION`), CI y el entorno local.
 
 Licencias: Manrope, Instrument Serif y JetBrains Mono (SIL OFL, textos en `assets/fonts/OFL-*.txt`) y un subconjunto de

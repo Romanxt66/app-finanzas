@@ -23,7 +23,7 @@ jobs:
       contents: write # publicar el APK en la pre-release
     env:
       # Servidor de la app: variable del repositorio ALVEA_API_URL o, si no existe, el de producción
-      API_URL: ${{ vars.ALVEA_API_URL || 'https://alvea2.softlane.click' }}
+      API_URL: ${{ vars.ALVEA_API_URL || 'https://alvea.softlane.click' }}
       HAS_UPLOAD_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
       # Correo de soporte que muestran los textos legales (variable del repositorio ALVEA_SUPPORT_EMAIL)
       SUPPORT_EMAIL: ${{ vars.ALVEA_SUPPORT_EMAIL }}

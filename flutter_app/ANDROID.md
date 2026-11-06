@@ -4,7 +4,7 @@ La app Android sale del mismo código que la web (`flutter_app/`). No hace falta
 la compila en cada cambio (workflow `Android`, `.github/workflows/android.yml`).
 
 - Identificador: `click.softlane.alvea`. **No se puede cambiar después de publicar en Google Play.**
-- Servidor: `https://alvea2.softlane.click`, el mismo que la web. Para usar otro, crea la variable del repositorio
+- Servidor: `https://alvea.softlane.click` (la web React, que reenvía `/api` al backend). Para usar otro, crea la variable del repositorio
   `ALVEA_API_URL` (GitHub → Settings → Secrets and variables → Actions → Variables).
 - Android 7.0 o superior. Icono adaptativo con icono temático en Android 13 o superior.
 
@@ -55,7 +55,7 @@ repositorio: `.gitignore` ya excluye `*.jks` y `key.properties`. Con la firma co
 4. Completa la ficha:
    - Icono: `brand/play-store-icon-512.png`.
    - Capturas: puedes usar las del artefacto `capturas-flutter` de la CI.
-   - Política de privacidad: `https://alvea2.softlane.click/privacidad` (pública, dentro de la app).
+   - Política de privacidad: `https://alvea.softlane.click/privacidad` (pública, dentro de la app).
    - Textos de la ficha y respuestas de «Seguridad de los datos»: ver `PLAY_STORE.md`.
 5. Cuando las pruebas vayan bien, promociona la versión a **Producción**.
 
@@ -87,8 +87,8 @@ Con Flutter 3.47.5 y Android Studio:
 
 ```bash
 cd flutter_app
-flutter run --dart-define=API_URL=https://alvea2.softlane.click        # en un teléfono conectado por USB
-flutter build apk --release --dart-define=API_URL=https://alvea2.softlane.click
+flutter run --dart-define=API_URL=https://alvea.softlane.click        # en un teléfono conectado por USB
+flutter build apk --release --dart-define=API_URL=https://alvea.softlane.click
 ```
 
 Sin `--dart-define=API_URL`, la app nativa no sabe a qué servidor conectarse y lo dice al primer intento.
