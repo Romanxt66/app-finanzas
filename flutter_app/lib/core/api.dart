@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show ValueNotifier, kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -57,6 +57,13 @@ class ApiClient {
   /// Lecturas recientes: las pantallas que piden lo mismo a la vez (o casi) comparten la respuesta.
   /// Cualquier escritura las descarta, así que nunca se ve un dato anterior a un cambio propio.
   final _recent = <String, (DateTime, Future<dynamic>)>{};
+
+  /// Último fallo al leer datos (sin conexión o servidor caído), para avisar en vez de mostrar ceros.
+  /// Vuelve a null en cuanto una lectura sale bien.
+  final loadError = ValueNotifier<ApiError?>(null);
+
+  /// Esperas entre reintentos de una lectura que falla por algo pasajero.
+  static List<Duration> retryDelays = const [Duration(milliseconds: 600), Duration(milliseconds: 1800)];
   static const _reuseFor = Duration(seconds: 2);
 
   /// [remember] indefinido conserva el almacén actual (al renovar el token no cambia de lugar).
@@ -150,9 +157,38 @@ class ApiClient {
     return future;
   }
 
+  /// Fallo pasajero: sin conexión, proxy o servidor reiniciando.
+  static bool _transient(int status) => status == 0 || status == 502 || status == 503 || status == 504;
+
+  /// Las lecturas (GET) se reintentan solas ante un fallo pasajero: un corte de un segundo o un reinicio
+  /// del servidor no deben dejar la pantalla en cero. Las escrituras no se repiten (podrían duplicarse).
+  Future<http.Response> _sendWithRetry(String method, Uri uri, Object? body, bool auth) async {
+    final delays = method == 'GET' ? retryDelays : const <Duration>[];
+    for (var attempt = 0; ; attempt++) {
+      try {
+        final res = await _send(method, uri, body, auth);
+        if (!_transient(res.statusCode) || attempt >= delays.length) return res;
+      } on ApiError {
+        if (attempt >= delays.length) rethrow;
+      }
+      await Future<void>.delayed(delays[attempt]);
+    }
+  }
+
   Future<dynamic> _call(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) async {
+    try {
+      final result = await _callOnce(method, path, body: body, query: query, auth: auth);
+      if (method == 'GET') loadError.value = null;
+      return result;
+    } on ApiError catch (e) {
+      if (method == 'GET' && (_transient(e.status) || e.status >= 500)) loadError.value = e;
+      rethrow;
+    }
+  }
+
+  Future<dynamic> _callOnce(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) async {
     final uri = _uri(path, query);
-    var res = await _send(method, uri, body, auth);
+    var res = await _sendWithRetry(method, uri, body, auth);
     if (res.statusCode == 401 && auth && _refresh != null) {
       _refreshing ??= _refreshTokens().whenComplete(() => _refreshing = null);
       if (await _refreshing!) res = await _send(method, uri, body, auth);
