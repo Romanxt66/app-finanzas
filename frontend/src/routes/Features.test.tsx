@@ -352,6 +352,7 @@ describe('exportar CSV', () => {
     URL.revokeObjectURL = vi.fn()
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     renderApp(<TransactionsPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Filtros' }))
     await userEvent.selectOptions(await screen.findByLabelText('Tipo'), 'expense')
     await userEvent.click(screen.getByRole('button', { name: 'Exportar CSV' }))
     await waitFor(() => expect(click).toHaveBeenCalled())

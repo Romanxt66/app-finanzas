@@ -2,7 +2,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { useChangePassword, useLogoutAll, useUpdateProfile } from '../api/hooks'
-import { Button, Card, ErrorText, Input, Segmented, useTheme, type ThemeChoice } from '../design'
+import {
+  Button,
+  Card,
+  ErrorText,
+  Input,
+  Segmented,
+  useTheme,
+  type ThemeChoice,
+  PageTitle,
+} from '../design'
 import { useAuth } from '../features/authContext'
 import { DeleteAccountCard } from '../features/DeleteAccount'
 import { PasswordRules } from '../features/PasswordRules'
@@ -40,7 +49,7 @@ export function ProfilePage() {
 
   return (
     <>
-      <h1 className="title">Perfil</h1>
+      <PageTitle title="Perfil" headline="Tu cuenta, *tus reglas*." />
       <Card title="Datos personales">
         <form
           className="cr-stack"

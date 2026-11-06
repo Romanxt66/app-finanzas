@@ -20,6 +20,7 @@ import {
   Skeleton,
   FormDialog,
   CreateSection,
+  PageTitle,
 } from '../design'
 import { RenameForm } from '../features/RenameForm'
 import { categoryIcon } from '../lib/categoryIcon'
@@ -46,7 +47,7 @@ export function CategoriesPage() {
 
   return (
     <>
-      <h1 className="title">Categorías</h1>
+      <PageTitle title="Categorías" headline="Ordena tu dinero *a tu manera*." />
       <CreateSection title="Nueva categoría" hasData={!!categories?.length}>
         <form
           className="cr-stack"

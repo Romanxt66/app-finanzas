@@ -120,7 +120,7 @@ for (const vp of viewports) {
       await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
 
       // objetivos táctiles de al menos 44 px en botones principales
-      const btn = await page.getByRole('button', { name: 'Salir' }).boundingBox()
+      const btn = await page.getByRole('button', { name: /^Tema:/ }).boundingBox()
       expect(btn!.height).toBeGreaterThanOrEqual(34)
 
       if (process.env.SHOTS) {

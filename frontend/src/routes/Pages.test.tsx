@@ -53,7 +53,10 @@ describe('Layout', () => {
     for (const desktopOnly of ['Presupuestos', 'Recurrentes', 'Categorías'])
       expect(count(desktopOnly)).toBe(1)
     expect(count('Más')).toBe(1) // solo móvil
-    expect(screen.getByRole('link', { name: 'Ana Test' })).toHaveAttribute('href', '/profile')
+    expect(screen.getByRole('link', { name: /Perfil de\s*Ana Test/ })).toHaveAttribute(
+      'href',
+      '/profile',
+    )
     await userEvent.click(screen.getByRole('button', { name: 'Salir' }))
     expect(await screen.findByText('Pantalla login')).toBeInTheDocument()
     expect(localStorage.getItem('access_token')).toBeNull()
@@ -197,6 +200,7 @@ describe('TransactionsPage', () => {
     renderApp(<TransactionsPage />)
     await screen.findByText('No hay transacciones.')
     await userEvent.type(screen.getByLabelText('Buscar'), 'café')
+    await userEvent.click(screen.getByRole('button', { name: 'Filtros' }))
     await userEvent.selectOptions(screen.getByLabelText('Tipo'), 'income')
     await waitFor(() => {
       const last = calls.filter((c) => c.path === '/transactions').at(-1)!

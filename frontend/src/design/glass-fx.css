@@ -1,6 +1,6 @@
-/* Efectos de cristal: grano, borde biselado, reflejo que sigue al cursor, parallax del fondo,
-   indicador deslizante de la navegación y paleta de comandos. Solo presentación; el movimiento
-   se apaga con «reducir movimiento» y el reflejo/parallax solo corren con puntero fino (useGlassFx). */
+/* Efectos de cristal: grano, borde biselado, indicador deslizante de la navegación y paleta de
+   comandos. Solo presentación; el movimiento se apaga con «reducir movimiento». Sin reflejos que
+   sigan al puntero: el cristal no se ilumina al pasar el ratón (como en la app Android). */
 
 :root {
   --cr-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -8,34 +8,10 @@
   --cr-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Propiedades registradas SIN herencia: al mover el cursor solo se recalcula el módulo bajo el puntero
-   (una variable normal invalidaría el estilo de todo su contenido en cada fotograma). */
-@property --mx {
-  syntax: '<length-percentage>';
-  inherits: false;
-  initial-value: 50%;
-}
-@property --my {
-  syntax: '<length-percentage>';
-  inherits: false;
-  initial-value: 0%;
-}
-@property --hl {
-  syntax: '<number>';
-  inherits: false;
-  initial-value: 0;
-}
-
-/* Vidrio: reflejo del cursor (capa de fondo), grano y borde de luz biselado.
+/* Vidrio: grano y borde de luz biselado.
    El desenfoque es más corto que el de los tokens: el coste crece con el radio y sale igual de esmerilado. */
 .cr-glass {
-  background-image:
-    radial-gradient(
-      340px circle at var(--mx) var(--my),
-      rgba(255, 255, 255, calc(0.22 * var(--hl))),
-      transparent 62%
-    ),
-    var(--cr-grain);
+  background-image: var(--cr-grain);
   -webkit-backdrop-filter: blur(var(--blur-md));
   backdrop-filter: blur(var(--blur-md));
 }
@@ -155,6 +131,7 @@
 }
 .cr-nav[data-ind] a[aria-current='page'] {
   background: transparent;
+  color: var(--on-brand);
 }
 /* El texto de la pestaña que se activa cambia a blanco cuando la píldora ya casi ha llegado */
 .cr-nav a {

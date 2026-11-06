@@ -7,16 +7,18 @@ import {
   Donut,
   Empty,
   Icon,
-  Input,
   Segmented,
   StatTile,
   TransactionList,
   TransactionRow,
+  PageTitle,
+  MonthPill,
 } from '../design'
 import { DailyAllowanceCard } from '../features/DailyAllowanceCard'
 import { GhostTeaser } from '../features/GhostTeaser'
 import { LifeHoursCard } from '../features/LifeHoursCard'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
+import { MoodCard } from '../features/MoodCard'
 import { formatDate, formatMoney, monthLabel, monthStart } from '../lib/format'
 import { Link } from 'react-router-dom'
 
@@ -140,7 +142,7 @@ export function DashboardPage() {
   return (
     <>
       <div className="cr-page-head">
-        <h1 className="title">Resumen</h1>
+        <PageTitle title="Resumen" headline="Tu dinero, *claro*." />
         {currencies.length > 1 && (
           <Segmented
             label="Moneda"
@@ -149,15 +151,15 @@ export function DashboardPage() {
             onChange={setChosenCurrency}
           />
         )}
-        <div className="cr-month">
-          <Input
-            label="Mes"
-            type="month"
-            value={month.slice(0, 7)}
-            onChange={(e) => e.target.value && setMonth(`${e.target.value}-01`)}
-          />
-        </div>
+        <MonthPill value={month} onChange={setMonth} />
       </div>
+
+      <MoodCard
+        month={month}
+        income={Number(summary?.income ?? 0)}
+        expense={Number(summary?.expense ?? 0)}
+        balance={total}
+      />
 
       <GettingStarted
         hasAccounts={allAccounts.length > 0}

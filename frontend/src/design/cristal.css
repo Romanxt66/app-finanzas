@@ -568,7 +568,6 @@
     box-shadow 0.2s ease;
 }
 .cr-select:hover .cr-select-face {
-  background: var(--glass-strong);
   border-color: var(--glass-highlight);
 }
 .cr-select-value {
@@ -768,7 +767,8 @@
   flex: 1;
 }
 .cr-user {
-  display: none;
+  display: flex;
+  align-items: center;
 }
 .cr-main {
   flex: 1;
@@ -989,9 +989,7 @@
 .cr-more li + li {
   border-top: 1px solid var(--hairline);
 }
-.cr-more a:hover {
-  background: var(--glass);
-}
+
 .cr-more a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
@@ -1089,9 +1087,7 @@ a.cr-user:focus-visible {
   text-decoration: none;
   background: var(--glass);
 }
-.cr-steps a:hover {
-  background: var(--glass-strong);
-}
+
 .cr-steps a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -1217,9 +1213,7 @@ a.cr-user:focus-visible {
     background 0.2s ease,
     box-shadow 0.2s ease;
 }
-.cr-input:hover:not(:disabled) {
-  background: var(--glass-strong);
-}
+
 .cr-input:focus-visible {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px var(--brand-soft);
@@ -1304,11 +1298,10 @@ a.cr-user:focus-visible {
   max-width: 11em;
 }
 .cr-hero-title em {
-  font-style: normal;
-  background: linear-gradient(120deg, var(--brand), var(--ink-muted));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink);
 }
 .cr-hero-copy {
   margin: 0;
@@ -1990,4 +1983,319 @@ a.cr-user:focus-visible {
   width: 24px;
   height: 24px;
   stroke-width: 2.4;
+}
+
+/* ---- Alvi: la gotita del resumen ---- */
+.cr-alvi {
+  overflow: visible;
+  flex: none;
+}
+.cr-alvi-body {
+  transform-box: view-box;
+  transform-origin: 0 1px;
+  animation: cr-alvi-breathe 3.6s ease-in-out infinite;
+}
+.cr-alvi.is-bouncy .cr-alvi-body {
+  animation: cr-alvi-hop 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+.cr-alvi.is-nervous .cr-alvi-body {
+  animation:
+    cr-alvi-breathe 3.6s ease-in-out infinite,
+    cr-alvi-shiver 0.18s linear infinite;
+}
+.cr-alvi-eye {
+  transform-box: view-box;
+  animation: cr-alvi-blink 4.2s infinite;
+}
+.cr-alvi-wave {
+  transform-box: view-box;
+}
+.cr-alvi-sweat,
+.cr-alvi-tear {
+  animation: cr-alvi-slide 1.8s ease-in infinite;
+}
+.cr-alvi-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cr-alvi-twinkle 1.4s ease-in-out infinite;
+}
+.cr-alvi-shadow {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.cr-alvi.is-bouncy .cr-alvi-shadow {
+  animation: cr-alvi-shadow 1.2s ease-in-out infinite;
+}
+@keyframes cr-alvi-breathe {
+  50% {
+    transform: scale(1.04, 0.96);
+  }
+}
+@keyframes cr-alvi-hop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  45% {
+    transform: translateY(-0.28px) scale(0.97, 1.03);
+  }
+}
+@keyframes cr-alvi-shadow {
+  45% {
+    transform: scale(0.75);
+    opacity: 0.18;
+  }
+}
+@keyframes cr-alvi-shiver {
+  50% {
+    translate: 0.03px 0;
+  }
+}
+@keyframes cr-alvi-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  93% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes cr-alvi-slide {
+  from {
+    translate: 0 0;
+    opacity: 1;
+  }
+  to {
+    translate: 0 0.4px;
+    opacity: 0;
+  }
+}
+@keyframes cr-alvi-twinkle {
+  50% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cr-alvi *,
+  .cr-alvi .cr-alvi-body {
+    animation: none !important;
+  }
+}
+
+/* Tarjeta de ánimo: Alvi y su bocadillo de cristal */
+.cr-mood {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.cr-mood-alvi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--ink-faint);
+  font: 500 11px/1 var(--font-mono, ui-monospace, monospace);
+  border-radius: var(--radius-md);
+  transition: transform 0.11s ease;
+}
+.cr-mood-alvi:active {
+  transform: scale(0.95);
+}
+.cr-mood-alvi:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+.cr-mood-bubble {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+}
+.cr-mood-says {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.cr-mood-line {
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+.cr-mood-hint {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* ---- Encabezado de página (etiqueta + titular con acento) ---- */
+.cr-page-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.cr-page-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  font:
+    400 12px/1 'JetBrains Mono',
+    ui-monospace,
+    monospace;
+  color: var(--ink-muted);
+}
+.cr-page-tag::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.cr-headline {
+  margin: 0;
+  font-size: clamp(28px, 5.2vw, 40px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--ink);
+}
+.cr-headline em {
+  font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0;
+}
+/* Selector de mes en píldora */
+.cr-month-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+}
+.cr-month-pill span {
+  min-width: 128px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+.cr-month-pill button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.cr-month-pill button:first-child svg {
+  transform: rotate(180deg);
+}
+.cr-month-pill button svg {
+  width: 18px;
+  height: 18px;
+}
+.cr-month-pill button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Fuentes de la app (autoalojadas por la CSP; licencias OFL junto a los archivos) */
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/InstrumentSerif-Italic.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+}
+.cr-mood-hop {
+  display: block;
+  animation: cr-mood-hop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes cr-mood-hop {
+  40% {
+    transform: translateY(-14px) scale(0.96, 1.04);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cr-mood-hop {
+    animation: none;
+  }
+}
+
+/* Avatar con iniciales (barra superior) */
+.cr-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ink) 22%, transparent),
+    color-mix(in srgb, var(--ink) 8%, transparent)
+  );
+  color: var(--ink);
+  font: 700 12px/1 var(--font-sans);
+  letter-spacing: 0.02em;
+}
+@media (max-width: 899px) {
+  .cr-wide-only {
+    display: none !important;
+  }
+}
+
+/* Historial: búsqueda y botón de filtros en una fila */
+.cr-filterbar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.cr-filterbar > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.cr-filterbar > .cr-btn {
+  height: 44px;
+  flex: none;
+}
+
+@media (max-width: 899px) {
+  a.cr-user {
+    padding: 4px;
+  }
+  /* En el móvil solo el avatar; el nombre sigue para lectores de pantalla */
+  .cr-user .cr-user-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

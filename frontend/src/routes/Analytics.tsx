@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import { useAccounts, useCategories, type Summary } from '../api/hooks'
 import { api } from '../api/client'
-import { Card, ErrorText, Icon, Segmented, Skeleton, StatTile } from '../design'
+import { Card, ErrorText, Icon, Segmented, Skeleton, StatTile, PageTitle } from '../design'
 import { categoryIcon } from '../lib/categoryIcon'
 import { formatMoney, monthLabel } from '../lib/format'
 import { combinePeriod, lastMonths } from '../lib/period'
@@ -76,7 +76,7 @@ export function AnalyticsPage() {
   return (
     <>
       <div className="cr-page-head">
-        <h1 className="title">Análisis</h1>
+        <PageTitle title="Análisis" headline="Tus números, *en perspectiva*." />
       </div>
       <Segmented<Period> label="Periodo" options={PERIODS} value={period} onChange={setPeriod} />
       <ErrorText error={error} />
