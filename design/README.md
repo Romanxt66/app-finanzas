@@ -6,9 +6,9 @@
 - **Web:** `npm run gen:tokens` (en `frontend/`) genera `frontend/src/design/tokens.css`. No editar ese archivo a mano.
   Los componentes viven en `frontend/src/design/` y solo usan variables CSS (`var(--brand)`, `var(--space-4)`…).
 - **Android:** dos caminos, sin cambiar este archivo:
-  1. *Empaquetar la web* con Capacitor: reutiliza todo el frontend. La app ya es móvil primero, respeta
+  1. _Empaquetar la web_ con Capacitor: reutiliza todo el frontend. La app ya es móvil primero, respeta
      `safe-area-inset-*` y no depende de CDNs (la fuente Manrope va incluida).
-  2. *App nativa (Jetpack Compose)*: leer `tokens.json` y generar el tema (`Color`, `Typography`,
+  2. _App nativa (Jetpack Compose)_: leer `tokens.json` y generar el tema (`Color`, `Typography`,
      `Shapes`). Los nombres de token son los mismos en ambas plataformas.
 - Cambiar un token = editar `tokens.json` y regenerar; ambas plataformas quedan alineadas.
 

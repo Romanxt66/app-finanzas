@@ -4,12 +4,14 @@ import { z } from 'zod'
 import { useChangePassword, useLogoutAll, useUpdateProfile } from '../api/hooks'
 import { Button, Card, ErrorText, Input, Segmented, useTheme, type ThemeChoice } from '../design'
 import { useAuth } from '../features/authContext'
+import { DeleteAccountCard } from '../features/DeleteAccount'
 import { PasswordRules } from '../features/PasswordRules'
 import { passwordProblem } from '../lib/password'
 
 const nameSchema = z.object({ full_name: z.string().min(1, 'Requerido').max(120) })
 const passwordSchema = z.object({
-  current_password: z.string().min(1, 'Requerida'),
+  // Vacía solo en cuentas de Google sin contraseña (el servidor lo comprueba)
+  current_password: z.string(),
   new_password: z.string().superRefine((value, ctx) => {
     const problem = passwordProblem(value)
     if (problem) ctx.addIssue({ code: 'custom', message: problem })
@@ -59,20 +61,22 @@ export function ProfilePage() {
         </form>
       </Card>
 
-      <Card title="Cambiar contraseña">
+      <Card title={user?.email_login === false ? 'Crear contraseña' : 'Cambiar contraseña'}>
         <form
           className="cr-stack"
           onSubmit={pwForm.handleSubmit((d) =>
             change.mutate(d, { onSuccess: () => pwForm.reset() }),
           )}
         >
-          <Input
-            label="Contraseña actual"
-            type="password"
-            autoComplete="current-password"
-            error={pwForm.formState.errors.current_password?.message}
-            {...pwForm.register('current_password')}
-          />
+          {user?.email_login !== false && (
+            <Input
+              label="Contraseña actual"
+              type="password"
+              autoComplete="current-password"
+              error={pwForm.formState.errors.current_password?.message}
+              {...pwForm.register('current_password')}
+            />
+          )}
           <Input
             label="Contraseña nueva"
             type="password"
@@ -107,6 +111,7 @@ export function ProfilePage() {
         </Button>
       </div>
       <ErrorText error={logoutAll.error} />
+      <DeleteAccountCard />
     </>
   )
 }

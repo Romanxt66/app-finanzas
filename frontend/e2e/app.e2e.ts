@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { reveal } from './helpers'
 
 // Datos generados por ejecución: nada fijo en el código ni en la BD
 const run = Date.now()
@@ -9,6 +10,7 @@ async function signUp(page: Page) {
   await page.getByLabel('Nombre').fill(creds.name)
   await page.getByLabel('Correo').fill(creds.email)
   await page.getByLabel('Contraseña', { exact: true }).fill(creds.password)
+  await page.getByRole('checkbox', { name: /acepto los/ }).check()
   await page.getByRole('button', { name: 'Crear cuenta' }).click()
   await expect(page.getByText(creds.name)).toBeVisible()
 }
@@ -37,6 +39,7 @@ test('registro: cada contraseña inválida explica el motivo', async ({ page }) 
   ]
   for (const [password, reason] of cases) {
     await page.getByLabel('Contraseña', { exact: true }).fill(password)
+    await page.getByRole('checkbox', { name: /acepto los/ }).check()
     await page.getByRole('button', { name: 'Crear cuenta' }).click()
     await expect(page.getByText(reason).first()).toBeVisible()
   }
@@ -68,6 +71,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
 
   // Cuentas
   await goTo(page, 'Cuentas')
+  await reveal(page, 'Nueva cuenta')
   await page.getByLabel('Nombre').fill('Cuenta principal')
   await page.getByLabel('Moneda').selectOption('EUR')
   await page.getByLabel('Saldo inicial').fill('1000')
@@ -84,6 +88,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
 
   // Categorías
   await goTo(page, 'Categorías')
+  await reveal(page, 'Nueva categoría')
   await page.getByLabel('Nombre').fill('Supermercado')
   await page.getByRole('button', { name: 'Añadir' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: 'Supermercado' })).toBeVisible()
@@ -134,6 +139,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
 
   // Presupuesto del mes actual
   await goTo(page, 'Presupuestos')
+  await reveal(page, 'Nuevo presupuesto')
   await page.getByLabel('Categoría de gasto').selectOption({ label: 'Supermercado' })
   await page.getByLabel('Monto').fill('150')
   await page.getByRole('button', { name: 'Añadir' }).click()

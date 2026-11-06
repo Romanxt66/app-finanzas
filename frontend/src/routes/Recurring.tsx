@@ -23,6 +23,7 @@ import {
   Select,
   Skeleton,
   TransactionRow,
+  CreateSection,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
 import { formatDate, todayISO } from '../lib/format'
@@ -79,7 +80,7 @@ export function RecurringPage() {
   return (
     <>
       <h1 className="title">Recurrentes</h1>
-      <Card title="Nuevo movimiento recurrente">
+      <CreateSection title="Nuevo movimiento recurrente" hasData={!!rules?.length}>
         <form
           className="cr-stack"
           onSubmit={handleSubmit((d) =>
@@ -172,7 +173,7 @@ export function RecurringPage() {
           </div>
           <ErrorText error={create.error} />
         </form>
-      </Card>
+      </CreateSection>
 
       {isLoading ? (
         <Skeleton lines={3} />

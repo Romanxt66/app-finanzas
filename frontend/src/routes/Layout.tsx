@@ -14,13 +14,16 @@ import {
   useTheme,
   type Command,
   type NavItem,
+  BrandLogo,
 } from '../design'
 import { useAuth } from '../features/authContext'
+import { LegalNotice } from '../features/LegalNotice'
 import { APP_NAME } from '../lib/brand'
 
 const DESKTOP_NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/transactions', label: 'Movimientos', icon: 'list' },
+  { to: '/analytics', label: 'Análisis', icon: 'chart' },
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
   { to: '/budgets', label: 'Presupuestos', icon: 'target' },
   { to: '/goals', label: 'Metas', icon: 'chart' },
@@ -34,7 +37,7 @@ const MOBILE_NAV: NavItem[] = [
   { to: '/transactions', label: 'Movimientos', icon: 'list' },
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
   { to: '/goals', label: 'Metas', icon: 'chart' },
-  { to: '/more', label: 'Más', icon: 'plus' },
+  { to: '/more', label: 'Más', icon: 'dots' },
 ]
 
 export function Layout() {
@@ -64,9 +67,7 @@ export function Layout() {
       <div className="cr-shell">
         <Glass as="header" className="cr-topbar">
           <span className="cr-brand">
-            <span className="cr-brand-mark">
-              <Icon name="wallet" />
-            </span>
+            <BrandLogo />
             {APP_NAME}
           </span>
           <TopNav items={DESKTOP_NAV} />
@@ -94,12 +95,25 @@ export function Layout() {
           </p>
         )}
         <main className="cr-main">
+          <LegalNotice />
           <Suspense fallback={<Skeleton lines={3} height={96} />}>
             <Outlet />
           </Suspense>
         </main>
         <div className="cr-bottom">
-          <TabBar items={MOBILE_NAV} />
+          <TabBar
+            items={MOBILE_NAV}
+            center={
+              <Link
+                to="/transactions"
+                state={{ nuevo: true }}
+                className="cr-tab-add"
+                aria-label="Anotar un movimiento"
+              >
+                <Icon name="plus" />
+              </Link>
+            }
+          />
         </div>
       </div>
     </Backdrop>

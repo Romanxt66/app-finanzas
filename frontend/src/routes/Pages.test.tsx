@@ -185,8 +185,10 @@ describe('TransactionsPage', () => {
     renderApp(<TransactionsPage />)
     expect(await screen.findByText('Almuerzo')).toBeInTheDocument()
     expect(screen.getByText('Pago')).toBeInTheDocument()
-    expect(screen.getByText(/^−/)).toBeInTheDocument()
-    expect(screen.getByText(/^\+/)).toBeInTheDocument()
+    // Agrupados por día: los montos van en la lista del día; el neto del día va en su encabezado
+    const list = screen.getByRole('list', { name: /^Movimientos del/ })
+    expect(within(list).getByText(/^−/)).toBeInTheDocument()
+    expect(within(list).getByText(/^\+/)).toBeInTheDocument()
     expect(screen.getByText('2 resultados')).toBeInTheDocument()
   })
 

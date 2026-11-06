@@ -175,7 +175,7 @@ describe('Donut', () => {
     const opacities = Array.from(container.querySelectorAll('.cr-donut-seg')).map((c) =>
       c.getAttribute('stroke-opacity'),
     )
-    expect(opacities).toEqual(['1', '1', '1', '1', '0.55', '0.55'])
+    expect(opacities).toEqual(['1', '1', '1', '1', '1', '0.55'])
   })
 })
 

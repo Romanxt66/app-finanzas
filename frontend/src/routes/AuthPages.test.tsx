@@ -64,8 +64,20 @@ describe('RegisterPage', () => {
     await userEvent.type(screen.getByLabelText('Nombre'), 'Ana')
     await userEvent.type(screen.getByLabelText('Correo'), 'ana@example.com')
     await userEvent.type(screen.getByLabelText('Contraseña'), password)
+    await userEvent.click(screen.getByRole('checkbox'))
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
   }
+
+  it('sin aceptar los términos no se crea la cuenta', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+    setup('/register')
+    await userEvent.type(screen.getByLabelText('Nombre'), 'Ana')
+    await userEvent.type(screen.getByLabelText('Correo'), 'ana@example.com')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'clave-segura-1')
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+    expect(await screen.findByText('Para crear la cuenta debes aceptarlos')).toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 
   it.each([
     ['corta1', 'al menos 8 caracteres'],

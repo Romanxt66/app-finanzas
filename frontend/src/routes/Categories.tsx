@@ -14,12 +14,15 @@ import {
   ConfirmDialog,
   Empty,
   ErrorText,
+  Icon,
   Input,
   Select,
   Skeleton,
   FormDialog,
+  CreateSection,
 } from '../design'
 import { RenameForm } from '../features/RenameForm'
+import { categoryIcon } from '../lib/categoryIcon'
 
 const schema = z.object({
   name: z.string().min(1, 'Requerido').max(80),
@@ -35,6 +38,7 @@ export function CategoriesPage() {
   const rename = useRenameCategory()
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null)
   const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
+  const [query, setQuery] = useState('')
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(schema),
     defaultValues: { kind: 'expense' as const },
@@ -43,7 +47,7 @@ export function CategoriesPage() {
   return (
     <>
       <h1 className="title">Categorías</h1>
-      <Card title="Nueva categoría">
+      <CreateSection title="Nueva categoría" hasData={!!categories?.length}>
         <form
           className="cr-stack"
           onSubmit={handleSubmit((d) =>
@@ -64,17 +68,32 @@ export function CategoriesPage() {
           </div>
           <ErrorText error={create.error} />
         </form>
-      </Card>
+      </CreateSection>
+      {(categories?.length ?? 0) > 6 && (
+        <Input
+          label="Buscar categoría"
+          icon="search"
+          placeholder="Comida, transporte…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      )}
       {isLoading ? (
         <Skeleton lines={3} />
       ) : (
         <div className="cr-grid-cols">
           {(['expense', 'income'] as const).map((kind) => {
-            const items = categories?.filter((c) => c.kind === kind) ?? []
+            const q = query.trim().toLowerCase()
+            const items =
+              categories?.filter(
+                (c) => c.kind === kind && (!q || c.name.toLowerCase().includes(q)),
+              ) ?? []
             return (
               <Card key={kind} title={KIND_LABELS[kind]}>
                 {!items.length ? (
-                  <Empty>Sin categorías.</Empty>
+                  <Empty>
+                    {query.trim() ? `Ninguna coincide con «${query.trim()}».` : 'Sin categorías.'}
+                  </Empty>
                 ) : (
                   <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                     {items.map((c) => (
@@ -83,7 +102,12 @@ export function CategoriesPage() {
                         className="cr-row-split"
                         style={{ padding: 'var(--space-2) 0' }}
                       >
-                        <span className="body">{c.name}</span>
+                        <span className="cr-cat-name">
+                          <span className="cr-glyph" aria-hidden="true">
+                            <Icon name={categoryIcon(c.name, c.kind)} />
+                          </span>
+                          <span className="body">{c.name}</span>
+                        </span>
                         <span className="cr-actions-inline">
                           <Button
                             variant="ghost"

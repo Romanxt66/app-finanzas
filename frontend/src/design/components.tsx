@@ -1,4 +1,6 @@
+import { DONUT_COLORS } from './donutColors'
 import {
+  Fragment,
   forwardRef,
   useId,
   useLayoutEffect,
@@ -325,14 +327,19 @@ export interface NavItem {
 }
 
 /** Barra de pestañas flotante (móvil). En pantallas anchas se usa la navegación superior. */
-export function TabBar({ items }: { items: NavItem[] }) {
+/** Barra de pestañas del móvil. `center` (p. ej. el «+» de anotar) va en medio de las pestañas. */
+export function TabBar({ items, center }: { items: NavItem[]; center?: ReactNode }) {
+  const half = Math.floor(items.length / 2)
   return (
     <Glass as="nav" className="cr-tabbar" aria-label="Navegación principal">
-      {items.map((t) => (
-        <NavLink key={t.to} to={t.to} end={t.end} className="cr-tab">
-          <Icon name={t.icon} />
-          {t.label}
-        </NavLink>
+      {items.map((t, i) => (
+        <Fragment key={t.to}>
+          {center && i === half && center}
+          <NavLink to={t.to} end={t.end} className="cr-tab">
+            <Icon name={t.icon} />
+            {t.label}
+          </NavLink>
+        </Fragment>
       ))}
     </Glass>
   )
@@ -553,8 +560,6 @@ export function ProgressCard(props: {
   )
 }
 
-const DONUT_COLORS = ['var(--brand)', 'var(--amber)', 'var(--negative)', 'var(--ink-muted)']
-
 /** Dona de participación. El color no es la única pista: el significado va en la leyenda (lista) contigua. */
 export function Donut({
   data,
@@ -600,5 +605,62 @@ export function Donut({
           return el
         })}
     </svg>
+  )
+}
+
+/** Logotipo de Alvea (la «A» plateada con la línea de tendencia). */
+export function BrandLogo({ size = 34 }: { size?: number }) {
+  return (
+    <img
+      className="cr-brand-logo"
+      src={size > 64 ? '/brand/logo-256.png' : '/brand/logo-128.png'}
+      width={size}
+      height={size}
+      alt=""
+      decoding="async"
+    />
+  )
+}
+
+/**
+ * Alta plegable: sin datos se muestra abierta (es lo primero que hay que hacer); con datos queda tras
+ * un botón con el mismo título, para que la lista sea lo primero. Una vez abierta, se queda abierta.
+ */
+export function CreateSection({
+  title,
+  hasData,
+  children,
+}: {
+  title: string
+  hasData: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState<boolean | null>(null)
+  const shown = open ?? !hasData
+  if (!shown) {
+    return (
+      <div>
+        <Button variant="primary" icon="plus" onClick={() => setOpen(true)}>
+          {title}
+        </Button>
+      </div>
+    )
+  }
+  return (
+    // Al empezar a escribir queda abierta aunque lleguen datos después (no se pliega bajo los dedos)
+    <div onFocusCapture={() => open === null && setOpen(true)}>
+      <Card
+        title={title}
+        action={
+          hasData ? (
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+              Cerrar
+            </Button>
+          ) : undefined
+        }
+      >
+        {children}
+      </Card>
+    </div>
   )
 }

@@ -128,9 +128,15 @@ export const Select = forwardRef<
   useLayoutEffect(() => {
     if (!open) return
     measure()
-    // El menú tiene su propio scroll: solo cierra el de la página (o el de otro contenedor)
+    // El menú tiene su propio scroll: solo cierra el de la página (o el de otro contenedor). Y solo si
+    // el campo se movió de verdad: un reajuste mínimo (datos que llegan y mueven la página un píxel)
+    // también lanza «scroll» y cerraba el menú recién abierto.
+    const top = () =>
+      field.current?.querySelector('.cr-select-face')?.getBoundingClientRect().top ?? 0
+    const openedAt = top()
     const close = (event: Event) => {
       if (event.target instanceof Node && menuRef.current?.contains(event.target)) return
+      if (Math.abs(top() - openedAt) < 8) return
       setOpen(false)
     }
     window.addEventListener('resize', measure)

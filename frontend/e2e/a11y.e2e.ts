@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
+import { reveal } from './helpers'
 
 // Auditoría WCAG 2.1 AA automática de cada pantalla, en claro y oscuro, móvil y escritorio.
 async function seed(page: Page) {
@@ -110,6 +111,7 @@ for (const scheme of ['dark', 'light'] as const) {
       }
       // pantallas con diálogo abierto
       await page.goto('/goals')
+      await reveal(page, 'Nueva meta')
       await page.getByLabel('Nombre').fill('Casa')
       await page.getByRole('button', { name: 'Crear meta' }).click()
       await page.getByRole('button', { name: 'Aportar' }).first().click()

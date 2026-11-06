@@ -3,6 +3,25 @@
 
 export const LEGAL_VERSION = '2026-11-06'
 
+const ACCEPTED_KEY = 'legal_accepted'
+
+/** Versión de los textos aceptada en este navegador (null = ninguna). */
+export function acceptedLegal(): string | null {
+  try {
+    return localStorage.getItem(ACCEPTED_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function acceptLegal() {
+  try {
+    localStorage.setItem(ACCEPTED_KEY, LEGAL_VERSION)
+  } catch {
+    // sin almacenamiento (modo privado estricto): se volverá a pedir
+  }
+}
+
 /** Correo de soporte (VITE_SUPPORT_EMAIL al compilar); si no hay, se remite a la ficha de la tienda. */
 export const SUPPORT_EMAIL: string = import.meta.env.VITE_SUPPORT_EMAIL ?? ''
 

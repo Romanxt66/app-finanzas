@@ -3,10 +3,20 @@ import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
-import { Backdrop, Button, Checkbox, ErrorText, Icon, Input, PasswordInput } from '../design'
+import {
+  Backdrop,
+  Button,
+  Checkbox,
+  ErrorText,
+  Icon,
+  Input,
+  PasswordInput,
+  BrandLogo,
+} from '../design'
 import { useAuth } from '../features/authContext'
 import { PasswordRules } from '../features/PasswordRules'
 import { APP_NAME } from '../lib/brand'
+import { acceptLegal } from '../lib/legal'
 import { passwordProblem } from '../lib/password'
 
 const loginSchema = z.object({
@@ -16,6 +26,7 @@ const loginSchema = z.object({
 })
 const registerSchema = loginSchema.omit({ remember: true }).extend({
   full_name: z.string().min(1, 'Requerido').max(120),
+  accepted: z.boolean().refine((v) => v, 'Para crear la cuenta debes aceptarlos'),
   password: z.string().superRefine((value, ctx) => {
     const problem = passwordProblem(value)
     if (problem) ctx.addIssue({ code: 'custom', message: problem })
@@ -62,9 +73,7 @@ function Shell({
       <main className="cr-login">
         <section className="cr-login-hero">
           <span className="cr-brand cr-brand-lg">
-            <span className="cr-brand-mark">
-              <Icon name="wallet" />
-            </span>
+            <BrandLogo />
             {APP_NAME}
           </span>
           <p className="cr-hero-title">
@@ -136,19 +145,6 @@ export function LoginPage() {
           <Icon name="arrow" />
         </Button>
       </form>
-      <div className="cr-login-or">
-        <span>o entra con</span>
-      </div>
-      <div className="cr-login-alt">
-        <Button disabled title="Próximamente" aria-label="Huella (próximamente)">
-          <Icon name="fingerprint" />
-          Huella
-        </Button>
-        <Button disabled title="Próximamente" aria-label="Passkey (próximamente)">
-          <Icon name="key" />
-          Passkey
-        </Button>
-      </div>
     </Shell>
   )
 }
@@ -175,7 +171,9 @@ export function RegisterPage() {
         className="cr-stack"
         onSubmit={handleSubmit((d) => {
           setError(null)
-          return signUp(d).catch(setError)
+          const { accepted: _accepted, ...data } = d
+          acceptLegal()
+          return signUp(data).catch(setError)
         })}
       >
         <Input
@@ -201,6 +199,21 @@ export function RegisterPage() {
           {...register('password')}
         />
         <PasswordRules value={password ?? ''} />
+        <Checkbox
+          label={
+            <>
+              Soy mayor de edad y acepto los <Link to="/terminos">términos</Link> y la{' '}
+              <Link to="/privacidad">política de privacidad</Link>
+            </>
+          }
+          aria-invalid={formState.errors.accepted ? true : undefined}
+          {...register('accepted')}
+        />
+        {formState.errors.accepted && (
+          <p className="cr-error" role="alert">
+            {formState.errors.accepted.message}
+          </p>
+        )}
         <ErrorText error={error} />
         <Button type="submit" variant="primary" disabled={formState.isSubmitting}>
           Crear cuenta
