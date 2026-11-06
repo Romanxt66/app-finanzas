@@ -19,10 +19,10 @@ Guía para la ficha y los formularios de Play Console. La compilación y la firm
 
 | Campo | Valor |
 |---|---|
-| Política de privacidad | `https://alvea2.softlane.click/privacidad` |
-| Eliminación de la cuenta (URL) | `https://alvea2.softlane.click/privacidad` (sección «Tus derechos») |
-| Términos (opcional) | `https://alvea2.softlane.click/terminos` |
-| Sitio web | `https://alvea2.softlane.click` |
+| Política de privacidad | `https://alvea.softlane.click/privacidad` |
+| Eliminación de la cuenta (URL) | `https://alvea.softlane.click/privacidad` (sección «Tus derechos») |
+| Términos (opcional) | `https://alvea.softlane.click/terminos` |
+| Sitio web | `https://alvea.softlane.click` |
 
 ## Ficha de la tienda
 
