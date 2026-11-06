@@ -47,7 +47,8 @@ void main() {
     await pump(tester, const LegalScreen(LegalDoc.privacy));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Tus derechos'), findsOneWidget);
-    expect(find.textContaining('eliminemos tu cuenta'), findsWidgets);
+    expect(find.textContaining('Eliminar cuenta'), findsWidgets);
+    expect(find.textContaining('Si entras con Google'), findsOneWidget);
     expect(find.textContaining(legalVersion), findsOneWidget);
   });
 }
