@@ -568,7 +568,6 @@
     box-shadow 0.2s ease;
 }
 .cr-select:hover .cr-select-face {
-  background: var(--glass-strong);
   border-color: var(--glass-highlight);
 }
 .cr-select-value {
@@ -989,9 +988,7 @@
 .cr-more li + li {
   border-top: 1px solid var(--hairline);
 }
-.cr-more a:hover {
-  background: var(--glass);
-}
+
 .cr-more a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
@@ -1089,9 +1086,7 @@ a.cr-user:focus-visible {
   text-decoration: none;
   background: var(--glass);
 }
-.cr-steps a:hover {
-  background: var(--glass-strong);
-}
+
 .cr-steps a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
@@ -1217,9 +1212,7 @@ a.cr-user:focus-visible {
     background 0.2s ease,
     box-shadow 0.2s ease;
 }
-.cr-input:hover:not(:disabled) {
-  background: var(--glass-strong);
-}
+
 .cr-input:focus-visible {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px var(--brand-soft);

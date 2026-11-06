@@ -16,7 +16,6 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
 import { Icon, type IconName } from './Icon'
 import { useCountUp } from './useCountUp'
-import { useGlassFx } from './useGlassFx'
 import { usePerfGuard } from './usePerfGuard'
 
 const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(' ')
@@ -24,7 +23,6 @@ const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boo
 /** Raíz de tema: aplica tipografía y variables de Cristal a todo lo que contiene. */
 export function Backdrop({ children }: { children: ReactNode }) {
   usePerfGuard()
-  useGlassFx()
   return <div className="cr cr-backdrop">{children}</div>
 }
 
