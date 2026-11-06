@@ -2299,3 +2299,21 @@ a.cr-user:focus-visible {
     white-space: nowrap;
   }
 }
+
+/* Aviso de datos que no cargaron (en vez de mostrar ceros) */
+.cr-load-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-color: var(--ink-faint);
+}
+.cr-load-error p {
+  margin: 0;
+  flex: 1 1 260px;
+  color: var(--ink-muted);
+}
+.cr-load-error strong {
+  color: var(--ink);
+}

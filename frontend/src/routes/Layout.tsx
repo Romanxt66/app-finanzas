@@ -18,6 +18,7 @@ import {
 } from '../design'
 import { useAuth } from '../features/authContext'
 import { LegalNotice } from '../features/LegalNotice'
+import { LoadErrorBanner } from '../features/LoadErrorBanner'
 import { APP_NAME } from '../lib/brand'
 
 const DESKTOP_NAV: NavItem[] = [
@@ -108,6 +109,7 @@ export function Layout() {
           </p>
         )}
         <main className="cr-main">
+          <LoadErrorBanner />
           <LegalNotice />
           <Suspense fallback={<Skeleton lines={3} height={96} />}>
             <Outlet />
