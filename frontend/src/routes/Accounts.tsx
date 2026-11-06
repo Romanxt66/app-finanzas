@@ -24,6 +24,7 @@ import {
   DONUT_COLORS,
   FormDialog,
   CreateSection,
+  PageTitle,
 } from '../design'
 import { CurrencySelect } from '../features/CurrencySelect'
 import { RenameForm } from '../features/RenameForm'
@@ -52,7 +53,7 @@ export function AccountsPage() {
 
   return (
     <>
-      <h1 className="title">Cuentas</h1>
+      <PageTitle title="Cuentas" headline="Tus cuentas, *de un vistazo*." />
       <CreateSection title="Nueva cuenta" hasData={!!accounts?.length}>
         <form
           className="cr-stack"

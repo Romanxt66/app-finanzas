@@ -662,3 +662,51 @@ export function CreateSection({
     </div>
   )
 }
+
+/**
+ * Encabezado de página como en la app Android: etiqueta pequeña con el nombre y un titular con una
+ * parte en serif cursiva (`*así*`). El nombre accesible del h1 es el título corto («Movimientos»).
+ */
+export function PageTitle({ title, headline }: { title: string; headline: string }) {
+  const parts = headline.split('*')
+  return (
+    <div className="cr-page-title">
+      <span className="cr-page-tag" aria-hidden="true">
+        {title.toLowerCase()}
+      </span>
+      <h1 className="cr-headline" aria-label={title}>
+        {parts.map((part, i) => (i % 2 ? <em key={i}>{part}</em> : <span key={i}>{part}</span>))}
+      </h1>
+    </div>
+  )
+}
+
+/** Selector de mes en píldora (‹ noviembre 2026 ›), como en la app. `value` es yyyy-MM-01. */
+export function MonthPill({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (month: string) => void
+}) {
+  const [y, m] = value.split('-').map(Number)
+  const shift = (n: number) => {
+    const d = new Date(y, m - 1 + n, 1)
+    onChange(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`)
+  }
+  const label = new Date(y, m - 1, 1).toLocaleDateString('es-CO', {
+    month: 'long',
+    year: 'numeric',
+  })
+  return (
+    <Glass className="cr-month-pill" role="group" aria-label="Mes">
+      <button type="button" aria-label="Mes anterior" onClick={() => shift(-1)}>
+        <Icon name="chevron" />
+      </button>
+      <span aria-live="polite">{label.replace(' de ', ' ')}</span>
+      <button type="button" aria-label="Mes siguiente" onClick={() => shift(1)}>
+        <Icon name="chevron" />
+      </button>
+    </Glass>
+  )
+}

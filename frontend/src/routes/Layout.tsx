@@ -40,6 +40,15 @@ const MOBILE_NAV: NavItem[] = [
   { to: '/more', label: 'Más', icon: 'dots' },
 ]
 
+/** Iniciales para el avatar («Ana María Pérez» → «AP»). */
+function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (!words.length) return '·'
+  const first = words[0][0]
+  const last = words.length > 1 ? words[words.length - 1][0] : (words[0][1] ?? '')
+  return (first + last).toUpperCase()
+}
+
 export function Layout() {
   const { user, loading, logout } = useAuth()
   const theme = useTheme()
@@ -73,8 +82,10 @@ export function Layout() {
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
           <CommandPalette items={DESKTOP_NAV} actions={actions} />
-          <Link to="/profile" className="label cr-muted cr-user" title="Perfil">
-            <Icon name="user" />
+          <Link to="/profile" className="label cr-muted cr-user" title="Perfil" aria-label="Perfil">
+            <span className="cr-avatar" aria-hidden="true">
+              {initials(user.full_name)}
+            </span>
             <span className="cr-user-name">{user.full_name}</span>
           </Link>
           <Button
@@ -84,7 +95,8 @@ export function Layout() {
             aria-label={`Tema: ${{ system: 'automático', light: 'claro', dark: 'oscuro' }[theme.choice]}. Cambiar`}
             onClick={theme.cycle}
           />
-          <Button variant="ghost" size="sm" icon="logout" onClick={logout}>
+          {/* En el móvil «Salir» vive en Más y en Perfil (el avatar lleva a Perfil), como en la app */}
+          <Button variant="ghost" size="sm" icon="logout" onClick={logout} className="cr-wide-only">
             Salir
           </Button>
         </Glass>

@@ -24,6 +24,7 @@ import {
   Skeleton,
   TransactionRow,
   CreateSection,
+  PageTitle,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
 import { formatDate, todayISO } from '../lib/format'
@@ -79,7 +80,7 @@ export function RecurringPage() {
 
   return (
     <>
-      <h1 className="title">Recurrentes</h1>
+      <PageTitle title="Recurrentes" headline="Lo que se repite, *se registra solo*." />
       <CreateSection title="Nuevo movimiento recurrente" hasData={!!rules?.length}>
         <form
           className="cr-stack"

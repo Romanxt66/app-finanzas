@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom'
 import { useGhostSubscriptions } from '../api/hooks'
-import { Badge, Card, Empty, ErrorText, Glass, Icon, Skeleton, TransactionList } from '../design'
+import {
+  Badge,
+  Card,
+  Empty,
+  ErrorText,
+  Glass,
+  Icon,
+  Skeleton,
+  TransactionList,
+  PageTitle,
+} from '../design'
 import { ALERT_ICONS, CADENCE_LABELS, alertText } from '../features/ghostLabels'
 import { formatDate, formatMoney } from '../lib/format'
 
@@ -12,7 +22,7 @@ export function SubscriptionsPage() {
 
   return (
     <>
-      <h1 className="title">Suscripciones</h1>
+      <PageTitle title="Suscripciones" headline="Cobros que *no ves venir*." />
       <ErrorText error={error} />
       {isLoading ? (
         <Skeleton lines={3} height={72} />

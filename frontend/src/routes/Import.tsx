@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAccounts, useBulkImport } from '../api/hooks'
-import { Badge, Button, Card, Empty, ErrorText, Glass, Select } from '../design'
+import { Badge, Button, Card, Empty, ErrorText, Glass, Select, PageTitle } from '../design'
 import {
   detectDelimiter,
   guessDateFormat,
@@ -122,7 +122,7 @@ export function ImportPage() {
 
   return (
     <>
-      <h1 className="title">Importar movimientos</h1>
+      <PageTitle title="Importar movimientos" headline="Trae tu banco *en segundos*." />
       <Card title="1. Cuenta y archivo">
         <div className="cr-stack">
           <Select

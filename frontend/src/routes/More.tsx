@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Glass, Icon, type IconName } from '../design'
+import { Button, Glass, Icon, type IconName, PageTitle } from '../design'
+import { useAuth } from '../features/authContext'
 
 const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: '/analytics', label: 'Análisis', icon: 'chart' },
@@ -18,9 +19,10 @@ const LEGAL: { to: string; label: string; icon: IconName }[] = [
 
 /** Destinos que no caben en la barra de pestañas del móvil. */
 export function MorePage() {
+  const { logout } = useAuth()
   return (
     <>
-      <h1 className="title">Más</h1>
+      <PageTitle title="Más" headline="Todo lo *demás*." />
       <Glass size="md" as="ul" className="cr-more">
         {LINKS.map((l) => (
           <li key={l.to}>
@@ -47,6 +49,11 @@ export function MorePage() {
         ))}
       </Glass>
       <p className="caption cr-muted">alvea · hecho en Colombia</p>
+      <div>
+        <Button variant="ghost" icon="logout" onClick={logout}>
+          Cerrar sesión
+        </Button>
+      </div>
     </>
   )
 }

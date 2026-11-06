@@ -18,6 +18,7 @@ import {
   ProgressCard,
   Skeleton,
   CreateSection,
+  PageTitle,
 } from '../design'
 import { CurrencySelect } from '../features/CurrencySelect'
 import { formatDate, formatMoney, todayISO } from '../lib/format'
@@ -113,7 +114,7 @@ export function GoalsPage() {
 
   return (
     <>
-      <h1 className="title">Metas</h1>
+      <PageTitle title="Metas" headline="Ahorra para lo que *importa*." />
       <CreateSection title="Nueva meta" hasData={!!goals?.length}>
         <form
           className="cr-stack"

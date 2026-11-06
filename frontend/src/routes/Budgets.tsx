@@ -20,6 +20,8 @@ import {
   Skeleton,
   FormDialog,
   CreateSection,
+  PageTitle,
+  MonthPill,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
 import { RenameForm } from '../features/RenameForm'
@@ -47,15 +49,8 @@ export function BudgetsPage() {
   return (
     <>
       <div className="cr-page-head">
-        <h1 className="title">Presupuestos</h1>
-        <div className="cr-month">
-          <Input
-            label="Mes"
-            type="month"
-            value={month.slice(0, 7)}
-            onChange={(e) => e.target.value && setMonth(`${e.target.value}-01`)}
-          />
-        </div>
+        <PageTitle title="Presupuestos" headline="Límites que *te cuidan*." />
+        <MonthPill value={month} onChange={setMonth} />
       </div>
       <CreateSection title="Nuevo presupuesto" hasData={!!budgets?.length}>
         <form

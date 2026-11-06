@@ -25,6 +25,7 @@ import {
   TransactionList,
   TransactionRow,
   StatTile,
+  PageTitle,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
 import { WeekStrip } from '../features/WeekStrip'
@@ -211,6 +212,8 @@ export function TransactionsPage() {
     date_to: '',
   })
   const [page, setPage] = useState(0)
+  // Búsqueda siempre a mano; tipo, cuenta y fechas tras «Filtros» (con cuántos hay activos)
+  const [filtersOpen, setFiltersOpen] = useState(false)
   // El «+» de la barra abre el alta (aunque ya estemos en esta pantalla: cada toque es una navegación nueva)
   const location = useLocation()
   const wantsNew = (location.state as { nuevo?: boolean } | null)?.nuevo === true
@@ -241,12 +244,18 @@ export function TransactionsPage() {
       setFilters((f) => ({ ...f, [key]: e.target.value }))
       setPage(0)
     }
+  const activeFilters = [
+    filters.type,
+    filters.account_id,
+    filters.date_from,
+    filters.date_to,
+  ].filter(Boolean).length
   const pages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1
 
   return (
     <>
       <div className="cr-page-head">
-        <h1 className="title">Movimientos</h1>
+        <PageTitle title="Movimientos" headline="Cada movimiento, *en su sitio*." />
         <div className="cr-row">
           <Button
             variant="ghost"
@@ -285,39 +294,69 @@ export function TransactionsPage() {
           onDone={() => setForm(null)}
         />
       )}
-      <Card title="Filtros">
-        <div className="cr-form-grid">
-          <Input label="Buscar" value={filters.search} onChange={setFilter('search')} />
-          <Select label="Tipo" value={filters.type} onChange={setFilter('type')}>
-            <option value="">Todos</option>
-            {Object.entries(TYPE_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </Select>
-          <Select label="Cuenta" value={filters.account_id} onChange={setFilter('account_id')}>
-            <option value="">Todas</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </Select>
-          <Input
-            label="Desde"
-            type="date"
-            value={filters.date_from}
-            onChange={setFilter('date_from')}
-          />
-          <Input
-            label="Hasta"
-            type="date"
-            value={filters.date_to}
-            onChange={setFilter('date_to')}
-          />
-        </div>
-      </Card>
+      <div className="cr-filterbar">
+        <Input
+          label="Buscar"
+          icon="search"
+          placeholder="Descripción, categoría…"
+          value={filters.search}
+          onChange={setFilter('search')}
+        />
+        <Button
+          variant="glass"
+          icon="list"
+          aria-expanded={filtersOpen}
+          onClick={() => setFiltersOpen((o) => !o)}
+        >
+          {activeFilters ? `Filtros (${activeFilters})` : 'Filtros'}
+        </Button>
+      </div>
+      {filtersOpen && (
+        <Card>
+          <div className="cr-form-grid">
+            <Select label="Tipo" value={filters.type} onChange={setFilter('type')}>
+              <option value="">Todos</option>
+              {Object.entries(TYPE_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </Select>
+            <Select label="Cuenta" value={filters.account_id} onChange={setFilter('account_id')}>
+              <option value="">Todas</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </Select>
+            <Input
+              label="Desde"
+              type="date"
+              value={filters.date_from}
+              onChange={setFilter('date_from')}
+            />
+            <Input
+              label="Hasta"
+              type="date"
+              value={filters.date_to}
+              onChange={setFilter('date_to')}
+            />
+          </div>
+          {activeFilters > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilters((f) => ({ ...f, type: '', account_id: '', date_from: '', date_to: '' }))
+                setPage(0)
+              }}
+            >
+              Quitar filtros
+            </Button>
+          )}
+        </Card>
+      )}
       <MonthTotals />
       <WeekStrip
         selected={
