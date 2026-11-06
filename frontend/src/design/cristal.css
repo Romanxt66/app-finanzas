@@ -767,7 +767,8 @@
   flex: 1;
 }
 .cr-user {
-  display: none;
+  display: flex;
+  align-items: center;
 }
 .cr-main {
   flex: 1;
@@ -2114,19 +2115,7 @@ a.cr-user:focus-visible {
   position: relative;
   flex: 1;
   min-width: 0;
-}
-.cr-mood-bubble::before {
-  content: '';
-  position: absolute;
-  left: -9px;
-  top: 34px;
-  width: 16px;
-  height: 16px;
-  background: inherit;
-  border-left: 1px solid var(--glass-border);
-  border-bottom: 1px solid var(--glass-border);
-  transform: rotate(45deg);
-  border-radius: 0 0 0 4px;
+  padding: var(--space-4) var(--space-5);
 }
 .cr-mood-says {
   margin: 0 0 4px;
@@ -2294,4 +2283,19 @@ a.cr-user:focus-visible {
 .cr-filterbar > .cr-btn {
   height: 44px;
   flex: none;
+}
+
+@media (max-width: 899px) {
+  a.cr-user {
+    padding: 4px;
+  }
+  /* En el móvil solo el avatar; el nombre sigue para lectores de pantalla */
+  .cr-user .cr-user-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

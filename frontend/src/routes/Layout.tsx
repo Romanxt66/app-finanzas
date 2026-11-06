@@ -82,10 +82,11 @@ export function Layout() {
           <TopNav items={DESKTOP_NAV} />
           <span className="cr-spacer" />
           <CommandPalette items={DESKTOP_NAV} actions={actions} />
-          <Link to="/profile" className="label cr-muted cr-user" title="Perfil" aria-label="Perfil">
+          <Link to="/profile" className="label cr-muted cr-user" title="Perfil">
             <span className="cr-avatar" aria-hidden="true">
               {initials(user.full_name)}
             </span>
+            <span className="cr-sr-only">Perfil de </span>
             <span className="cr-user-name">{user.full_name}</span>
           </Link>
           <Button

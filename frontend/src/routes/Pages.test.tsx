@@ -53,7 +53,10 @@ describe('Layout', () => {
     for (const desktopOnly of ['Presupuestos', 'Recurrentes', 'Categorías'])
       expect(count(desktopOnly)).toBe(1)
     expect(count('Más')).toBe(1) // solo móvil
-    expect(screen.getByRole('link', { name: 'Perfil' })).toHaveAttribute('href', '/profile')
+    expect(screen.getByRole('link', { name: /Perfil de\s*Ana Test/ })).toHaveAttribute(
+      'href',
+      '/profile',
+    )
     await userEvent.click(screen.getByRole('button', { name: 'Salir' }))
     expect(await screen.findByText('Pantalla login')).toBeInTheDocument()
     expect(localStorage.getItem('access_token')).toBeNull()
