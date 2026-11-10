@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
+from app.core.idempotency import IdempotencyMiddleware
 from app.core.observability import init_sentry, install_observability
 from app.db.session import get_session
 
@@ -22,6 +23,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # Reenvíos de la app sin conexión: la misma `Idempotency-Key` no aplica un cambio dos veces
+    app.add_middleware(IdempotencyMiddleware)
     register_error_handlers(app)
     install_observability(app)
     app.include_router(api_router)

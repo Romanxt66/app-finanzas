@@ -2,6 +2,7 @@ from app.models.account import Account, AccountType
 from app.models.budget import Budget
 from app.models.category import Category, CategoryKind
 from app.models.goal import Goal, GoalContribution
+from app.models.idempotency import IdempotencyRecord
 from app.models.life_hours import LifeHoursProfile
 from app.models.recurring import Frequency, RecurringRule
 from app.models.transaction import SpendingMood, Transaction, TransactionType
@@ -16,6 +17,7 @@ __all__ = [
     "Frequency",
     "Goal",
     "GoalContribution",
+    "IdempotencyRecord",
     "CategoryKind",
     "LifeHoursProfile",
     "RecurringRule",

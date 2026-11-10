@@ -11,6 +11,7 @@ from app.models import (
     Category,
     Goal,
     GoalContribution,
+    IdempotencyRecord,
     LifeHoursProfile,
     RecurringRule,
     Transaction,
@@ -135,6 +136,7 @@ def regenerate_recovery_codes(user: User, code: str) -> list[str]:
 # Orden de borrado: primero lo que apunta a otras tablas del usuario (las claves foráneas no tienen
 # ON DELETE CASCADE), al final las cuentas y el propio usuario.
 _OWNED = (
+    IdempotencyRecord,
     GoalContribution,
     Transaction,
     Budget,
