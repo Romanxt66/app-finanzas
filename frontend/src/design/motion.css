@@ -95,22 +95,6 @@
     stroke-dashoffset: 0;
   }
 }
-@keyframes cr-drift-a {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(-8vmax, 10vmax, 0) scale(1.15);
-  }
-}
-@keyframes cr-drift-b {
-  from {
-    transform: translate3d(0, 0, 0) scale(1.1);
-  }
-  to {
-    transform: translate3d(10vmax, -8vmax, 0) scale(0.95);
-  }
-}
 
 /* Cada pantalla entra con sus módulos escalonados */
 .cr-main > * {
@@ -240,7 +224,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  background: rgba(5, 5, 5, 0.55);
+  background: var(--scrim);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   animation: cr-fade 0.2s ease both;
@@ -283,8 +267,6 @@
   .cr-dialog,
   .cr-menu,
   .cr-menu-item,
-  .cr-backdrop::before,
-  .cr-backdrop::after,
   .cr-login-card,
   .cr-login-hero > *,
   .cr-hero-card,
