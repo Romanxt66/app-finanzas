@@ -30,8 +30,12 @@ class Transaction {
       amount = money(j['amount']),
       description = j['description'] ?? '',
       occurredOn = j['occurred_on'],
-      mood = j['mood'];
+      mood = j['mood'],
+      pending = j['pending'] == true;
   final String id, type, accountId, description, occurredOn, amountRaw;
+
+  /// Hecho sin conexión: aún no ha llegado al servidor.
+  final bool pending;
   final String? transferAccountId, categoryId;
 
   /// Ánimo al gastar (`happy`, `calm`, `stressed`, `sad`, `bored`) o null.

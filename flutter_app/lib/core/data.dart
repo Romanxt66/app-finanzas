@@ -68,8 +68,15 @@ class Data {
 
   /// Ejecuta una escritura, avisa con un toast y recarga lo cargado.
   Future<T> mutate<T>(Future<T> Function() action, String message) async {
+    final before = _api.outbox.version;
     final result = await action();
-    if (message.isNotEmpty) app.onToast?.call(message);
+    // Sin conexión el cambio quedó en la cola del teléfono: se dice para que no sorprenda
+    final queued = _api.outbox.version != before;
+    if (queued) {
+      app.onToast?.call('Guardado sin conexión: se enviará al volver la señal');
+    } else if (message.isNotEmpty) {
+      app.onToast?.call(message);
+    }
     app.invalidate();
     return result;
   }

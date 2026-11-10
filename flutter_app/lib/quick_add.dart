@@ -234,22 +234,19 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
       'occurred_on': todayISO(),
     };
     try {
+      // Sin conexión el movimiento queda en la cola del teléfono y se envía solo al volver la señal
+      final before = app.api.outbox.version;
       final res = await app.api.post('/transactions', body: body) as Map<String, dynamic>?;
       _savedId = res?['id'] as String?;
-      _queued = false;
+      _queued = app.api.outbox.version != before;
     } on ApiError catch (e) {
-      if (e.status != 0) {
-        if (mounted) {
-          setState(() {
-            _error = e;
-            _busy = false;
-          });
-        }
-        return;
+      if (mounted) {
+        setState(() {
+          _error = e;
+          _busy = false;
+        });
       }
-      // Sin conexión: queda guardado en el teléfono y se envía al abrir la app con conexión
-      await app.pending.add(body);
-      _queued = true;
+      return;
     }
     app.invalidate();
     await _prefs.setString('quick_account', account);
@@ -555,7 +552,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
         CrHeadlineLite('Listo, *anotado*.', accent: const Color(0xFFFFFFFF), size: 26),
         const SizedBox(height: 6),
         Text(
-          _queued ? '$what\nSin conexión: se enviará al abrir Alvea con internet.' : what,
+          _queued ? '$what\nSin conexión: guardado en el teléfono, se enviará al volver la señal.' : what,
           textAlign: TextAlign.center,
           style: CrText.body(muted),
         ),
@@ -563,7 +560,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
         Row(
           children: [
             Expanded(
-              child: _GhostButton(label: 'Deshacer', onPressed: _queued ? null : _undo),
+              child: _GhostButton(label: 'Deshacer', onPressed: _undo),
             ),
             const SizedBox(width: 8),
             Expanded(
