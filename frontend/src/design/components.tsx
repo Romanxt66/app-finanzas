@@ -1,4 +1,5 @@
 import { DONUT_COLORS } from './donutColors'
+import { monotonePath } from './motionUtils'
 import {
   Fragment,
   forwardRef,
@@ -106,18 +107,23 @@ export function Delta({ value, invert }: { value: number; invert?: boolean }) {
   )
 }
 
+/** Mini gráfico de tendencia: área con degradado, línea que se dibuja de izquierda a derecha y punto final. */
 export function Sparkline({ data, label }: { data: number[]; label: string }) {
+  const gid = useId().replace(/:/g, '')
   const w = 120
   const h = 40
   const pad = 3
   if (data.length < 2) return null
   const min = Math.min(...data)
   const span = Math.max(...data) - min || 1
-  const pts = data.map((v, i) => [
-    pad + (i * (w - pad * 2)) / (data.length - 1),
-    pad + (1 - (v - min) / span) * (h - pad * 2),
-  ])
-  const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
+  const pts = data.map(
+    (v, i) =>
+      [
+        pad + (i * (w - pad * 2)) / (data.length - 1),
+        pad + (1 - (v - min) / span) * (h - pad * 2),
+      ] as [number, number],
+  )
+  const line = monotonePath(pts)
   const last = pts[pts.length - 1]
   return (
     <svg
@@ -128,20 +134,28 @@ export function Sparkline({ data, label }: { data: number[]; label: string }) {
       role="img"
       aria-label={label}
     >
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="currentColor" stopOpacity={0.22} />
+          <stop offset="1" stopColor="currentColor" stopOpacity={0} />
+        </linearGradient>
+      </defs>
       <path
         d={`${line} L${last[0]} ${h} L${pts[0][0]} ${h} Z`}
-        fill="currentColor"
-        opacity={0.12}
+        fill={`url(#${gid})`}
+        className="cr-spark-area"
       />
       <path
         d={line}
+        pathLength={1}
         fill="none"
         stroke="currentColor"
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="cr-spark-line"
       />
-      <circle cx={last[0]} cy={last[1]} r={3} fill="currentColor" />
+      <circle cx={last[0]} cy={last[1]} r={3} fill="currentColor" className="cr-spark-dot" />
     </svg>
   )
 }

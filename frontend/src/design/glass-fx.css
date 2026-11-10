@@ -6,6 +6,12 @@
   --cr-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   --cr-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   --cr-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Canto biselado del vidrio (luz arriba-izquierda, rebote abajo-derecha) */
+  --bevel-hi: rgba(255, 255, 255, 0.55);
+  --bevel-mid: rgba(255, 255, 255, 0.35);
+  --bevel-lo: rgba(255, 255, 255, 0.04);
+  /* Velo detrás de diálogos y paleta */
+  --scrim: rgba(5, 5, 5, 0.55);
 }
 
 /* Vidrio: grano y borde de luz biselado.
@@ -24,10 +30,10 @@
   padding: 1px;
   background: linear-gradient(
     140deg,
-    rgba(255, 255, 255, 0.55),
-    rgba(255, 255, 255, 0.04) 38%,
-    rgba(255, 255, 255, 0.04) 62%,
-    rgba(255, 255, 255, 0.35)
+    var(--bevel-hi),
+    var(--bevel-lo) 38%,
+    var(--bevel-lo) 62%,
+    var(--bevel-mid)
   );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -45,25 +51,6 @@
 /* Las tarjetas de carbón no llevan reflejo (se ve sucio sobre oscuro sólido) */
 .cr-balance {
   background-image: var(--cr-grain);
-}
-
-/* Fondo: la sala difuminada vive en UNA capa fija (no se repinta al hacer scroll) y no se anima:
-   una capa que cambia cada fotograma obliga a re-desenfocar todo el vidrio que tiene encima. */
-.cr-backdrop {
-  background: var(--bg);
-}
-.cr-backdrop::before {
-  inset: 0;
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  filter: none;
-  opacity: 1;
-  background: var(--room);
-  animation: none;
-}
-.cr-backdrop::after {
-  display: none;
 }
 
 /* Entrada de cada pantalla: sube y aparece (solo opacidad y transform, que van en el compositor); al acabar, el módulo queda libre (inclinación 3D) */

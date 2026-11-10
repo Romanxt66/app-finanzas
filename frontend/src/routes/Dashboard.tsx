@@ -92,9 +92,9 @@ function GettingStarted(props: {
           </li>
         ))}
       </ol>
-      <p className="caption cr-muted" style={{ marginTop: 'var(--space-3)' }}>
+      <p className="caption cr-muted cr-onboard-note">
         ¿Vienes de otra app? Puedes{' '}
-        <Link to="/import" style={{ color: 'var(--brand)' }}>
+        <Link to="/import" className="cr-text-link">
           importar el CSV de tu banco
         </Link>
         .

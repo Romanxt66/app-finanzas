@@ -107,7 +107,7 @@ export function AnalyticsPage() {
                   <AreaChart data={report.trend.map((t) => ({ ...t, label: monthLabel(t.month) }))}>
                     <defs>
                       <linearGradient id="cr-flow" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
+                        <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.16} />
                         <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
                       </linearGradient>
                     </defs>

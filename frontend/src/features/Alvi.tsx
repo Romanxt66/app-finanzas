@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import type { Face } from '../lib/mood'
 
 // Alvi, la gotita de malvavisco del resumen (el mismo dibujo que en la app Android). Se pinta en SVG con
@@ -35,8 +35,34 @@ function star(x: number, y: number, k: number): string {
   return `M${x} ${y - k * 1.6} Q${x} ${y} ${x + k * 1.6} ${y} Q${x} ${y} ${x} ${y + k * 1.6} Q${x} ${y} ${x - k * 1.6} ${y} Q${x} ${y} ${x} ${y - k * 1.6}Z`
 }
 
+/** Pausa las animaciones infinitas cuando Alvi no se ve (fuera de pantalla o pestaña oculta). */
+function usePauseWhenHidden<T extends Element>() {
+  const ref = useRef<T>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let onScreen = true
+    const apply = () => el.toggleAttribute('data-paused', !onScreen || document.hidden)
+    const io =
+      typeof IntersectionObserver === 'undefined'
+        ? null
+        : new IntersectionObserver(([entry]) => {
+            onScreen = entry.isIntersecting
+            apply()
+          })
+    io?.observe(el)
+    document.addEventListener('visibilitychange', apply)
+    return () => {
+      io?.disconnect()
+      document.removeEventListener('visibilitychange', apply)
+    }
+  }, [])
+  return ref
+}
+
 export function Alvi({ face, size = 104, label }: { face: Face; size?: number; label?: string }) {
   const id = useId().replace(/:/g, '')
+  const host = usePauseWhenHidden<SVGSVGElement>()
   const f = {
     mouthOpen: 0,
     eyeHappy: 0,
@@ -94,6 +120,7 @@ export function Alvi({ face, size = 104, label }: { face: Face; size?: number; l
 
   return (
     <svg
+      ref={host}
       className={`cr-alvi ${motion}`}
       viewBox="-1.75 -1.95 3.5 3.3"
       width={size}
