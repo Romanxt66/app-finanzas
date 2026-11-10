@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -10,7 +11,6 @@ import 'app_lock.dart';
 import 'format.dart';
 import 'models.dart';
 import 'notices.dart';
-import 'pending.dart';
 import 'reminder_center.dart';
 import 'native_app.dart';
 import 'widget_sync.dart';
@@ -27,6 +27,9 @@ class AppState extends ChangeNotifier {
     themeMode = ThemeMode.values.where((m) => m.name == saved).firstOrNull ?? ThemeMode.system;
     balanceHidden = _prefs.getString('balance_hidden') == '1';
     reduceMotion = _prefs.getString('reduce_motion') == '1';
+    // Al volver la conexión se envía lo pendiente y se recargan las pantallas con datos frescos
+    api.reachable.addListener(_onReachable);
+    api.outbox.count.addListener(_onOutbox);
     accent = accentById(_prefs.getString('accent'));
     glow = glowById(_prefs.getString('glow'));
   }
@@ -40,9 +43,6 @@ class AppState extends ChangeNotifier {
 
   /// Avisos (cobros próximos, presupuestos, Sala de espera); se recargan con cada cambio de datos.
   late final NoticeCenter notices = NoticeCenter(_prefs, api);
-
-  /// Movimientos guardados sin conexión desde el recuadro rápido.
-  late final PendingQueue pending = PendingQueue(_prefs, api);
 
   /// Widgets del escritorio de Android (imágenes al día con los datos).
   late final WidgetSync widgets = WidgetSync(this);
@@ -126,17 +126,91 @@ class AppState extends ChangeNotifier {
       reminders.refresh();
       widgets.schedule();
     }
-    _sendPending();
+    await _claimOfflineData(user!.email.toLowerCase());
+    sync();
   }
 
-  /// Envía lo que el recuadro rápido guardó sin conexión.
-  Future<void> _sendPending() async {
-    if (pending.length == 0) return;
-    final sent = await pending.flush();
-    if (sent > 0) {
-      onToast?.call(sent == 1 ? 'Se guardó 1 movimiento que estaba pendiente' : 'Se guardaron $sent movimientos pendientes');
-      invalidate();
+  static const _ownerKey = 'offline_owner';
+
+  /// Lo guardado sin conexión es de una cuenta: si entra otra, se descarta (nunca se envía con la
+  /// sesión equivocada ni se enseña lo de otra persona).
+  Future<void> _claimOfflineData(String userId) async {
+    final owner = _prefs.getString(_ownerKey);
+    if (owner == userId) return;
+    if (owner != null) {
+      await api.cache.clear();
+      await api.outbox.clear();
     }
+    await _prefs.setString(_ownerKey, userId);
+  }
+
+  bool _syncing = false;
+  Timer? _syncTimer;
+
+  /// Envía los cambios hechos sin conexión. Lo llaman el arranque, la vuelta de la conexión y un
+  /// reintento cada 20 s mientras quede algo pendiente o no haya conexión.
+  Future<void> sync() async {
+    if (_syncing || user == null || quiet) return;
+    _syncing = true;
+    try {
+      if (api.outbox.isEmpty) {
+        // Sin nada que enviar solo se comprueba si el servidor ya responde
+        if (!api.reachable.value) await api.get('/auth/me').then((_) {}, onError: (Object _) {});
+        return;
+      }
+      final r = await api.flushOutbox();
+      if (r.sent > 0 || r.rejected > 0) {
+        final parts = [
+          if (r.sent > 0) r.sent == 1 ? '1 cambio sincronizado' : '${r.sent} cambios sincronizados',
+          if (r.rejected > 0) r.rejected == 1 ? '1 no se pudo aplicar' : '${r.rejected} no se pudieron aplicar',
+        ];
+        onToast?.call('${parts.join(' · ')}.');
+        invalidate();
+      }
+    } finally {
+      _syncing = false;
+      _scheduleSync();
+    }
+  }
+
+  void _onReachable() {
+    if (api.reachable.value) {
+      if (!api.outbox.isEmpty) {
+        sync();
+      } else if (_wasOffline) {
+        invalidate(); // datos frescos tras el corte
+      }
+      _wasOffline = false;
+    } else {
+      _wasOffline = true;
+    }
+    _scheduleSync();
+  }
+
+  bool _wasOffline = false;
+
+  /// Algo entró en la cola: si hay conexión se envía enseguida (p. ej. iba detrás de otro pendiente).
+  void _onOutbox() {
+    _scheduleSync();
+    if (api.reachable.value && !api.outbox.isEmpty) Future.microtask(sync);
+  }
+
+  void _scheduleSync() {
+    final needed = !quiet && user != null && (!api.outbox.isEmpty || !api.reachable.value);
+    if (!needed) {
+      _syncTimer?.cancel();
+      _syncTimer = null;
+    } else {
+      _syncTimer ??= Timer.periodic(const Duration(seconds: 20), (_) => sync());
+    }
+  }
+
+  @override
+  void dispose() {
+    _syncTimer?.cancel();
+    api.reachable.removeListener(_onReachable);
+    api.outbox.count.removeListener(_onOutbox);
+    super.dispose();
   }
 
   /// Vuelve a leer el usuario (p. ej. tras activar la verificación en dos pasos).
@@ -195,7 +269,9 @@ class AppState extends ChangeNotifier {
   Future<void> logout() async {
     await api.clearTokens();
     await _prefs.remove(_userCacheKey);
+    await api.cache.clear(); // lo leído era de esta cuenta
     user = null;
+    _scheduleSync();
     notices.clear();
     await reminders.clear();
     await NativeApp.clearWidgets();

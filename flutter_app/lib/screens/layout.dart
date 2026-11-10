@@ -107,9 +107,15 @@ class _AppLayoutState extends State<AppLayout> {
             Column(
               children: [
                 _TopBar(location: location, online: _online),
-                ValueListenableBuilder<bool>(
-                  valueListenable: _online,
-                  builder: (context, online, _) => online ? const SizedBox.shrink() : const _OfflineBanner(),
+                // Sin conexión (o con cambios aún por enviar): se dice qué pasa con lo que hagas
+                ListenableBuilder(
+                  listenable: Listenable.merge([_online, context.app.api.reachable, context.app.api.outbox.count]),
+                  builder: (context, _) {
+                    final api = context.app.api;
+                    final offline = !_online.value || !api.reachable.value;
+                    final pending = api.outbox.count.value;
+                    return offline || pending > 0 ? _OfflineBanner(offline: offline, pending: pending) : const SizedBox.shrink();
+                  },
                 ),
                 // Un fallo al cargar (servidor caído o reiniciando) se avisa: antes se veía todo en cero
                 ValueListenableBuilder<ApiError?>(
@@ -199,7 +205,16 @@ class _LoadErrorBanner extends StatelessWidget {
 }
 
 class _OfflineBanner extends StatelessWidget {
-  const _OfflineBanner();
+  const _OfflineBanner({required this.offline, required this.pending});
+  final bool offline;
+  final int pending;
+
+  String get _text {
+    final changes = pending == 1 ? '1 cambio' : '$pending cambios';
+    if (!offline) return 'Sincronizando $changes hechos sin conexión…';
+    if (pending == 0) return 'Sin conexión: ves tus últimos datos y lo que cambies se guarda en el teléfono.';
+    return 'Sin conexión · $changes por enviar. Se enviarán solos al volver la señal.';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +229,7 @@ class _OfflineBanner extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: space4, vertical: space2),
           decoration: BoxDecoration(color: c.amberSoft, borderRadius: BorderRadius.circular(radiusPill)),
           child: Text(
-            'Sin conexión: puedes ver lo ya cargado, pero los cambios no se guardarán hasta volver a conectarte.',
+            _text,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: fontFamily,

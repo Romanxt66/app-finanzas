@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart' show ValueNotifier, kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'offline.dart';
+
 /// URL base del backend. Vacío = mismo origen (nginx reenvía /api al backend, sin CORS).
 const _apiUrl = String.fromEnvironment('API_URL');
 
@@ -58,6 +60,15 @@ class ApiClient {
   /// Cualquier escritura las descarta, así que nunca se ve un dato anterior a un cambio propio.
   final _recent = <String, (DateTime, Future<dynamic>)>{};
 
+  /// Lecturas guardadas en el teléfono para cuando no hay conexión.
+  late final OfflineCache cache = OfflineCache(_prefs);
+
+  /// Cambios hechos sin conexión, a la espera de enviarse.
+  late final Outbox outbox = Outbox(_prefs);
+
+  /// ¿Responde el servidor? Baja al fallar la red (o el servidor caído) y vuelve con la primera respuesta.
+  final reachable = ValueNotifier<bool>(true);
+
   /// Último fallo al leer datos (sin conexión o servidor caído), para avisar en vez de mostrar ceros.
   /// Vuelve a null en cuanto una lectura sale bien.
   final loadError = ValueNotifier<ApiError?>(null);
@@ -101,15 +112,13 @@ class ApiClient {
   }
 
   Uri _uri(String path, Map<String, Object?>? query) {
-    final params = <String, String>{
-      for (final e in (query ?? {}).entries)
-        if (e.value != null && '${e.value}'.isNotEmpty) e.key: '${e.value}',
-    };
+    final params = _params(query);
     return Uri.parse('$_base/api/v1$path').replace(queryParameters: params.isEmpty ? null : params);
   }
 
-  Future<http.Response> _send(String method, Uri uri, Object? body, bool auth) async {
+  Future<http.Response> _send(String method, Uri uri, Object? body, bool auth, [String? idempotencyKey]) async {
     final req = http.Request(method, uri);
+    if (idempotencyKey != null) req.headers['Idempotency-Key'] = idempotencyKey;
     if (body != null) {
       req.headers['Content-Type'] = 'application/json';
       req.body = jsonEncode(body);
@@ -118,8 +127,11 @@ class ApiClient {
       req.headers['Authorization'] = 'Bearer $_access';
     }
     try {
-      return await http.Response.fromStream(await _http.send(req));
+      final res = await http.Response.fromStream(await _http.send(req));
+      reachable.value = !_transient(res.statusCode);
+      return res;
     } catch (_) {
+      reachable.value = false;
       throw ApiError(0, 'network', networkMessage);
     }
   }
@@ -141,7 +153,7 @@ class ApiClient {
   Future<dynamic> call(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) {
     if (method != 'GET' || !auth) {
       _recent.clear();
-      return _call(method, path, body: body, query: query, auth: auth).whenComplete(_recent.clear);
+      return _write(method, path, body: body, query: query, auth: auth).whenComplete(_recent.clear);
     }
     final key = _uri(path, query).toString();
     final now = DateTime.now();
@@ -157,16 +169,57 @@ class ApiClient {
     return future;
   }
 
+  /// Escritura: si no hay conexión y el cambio se puede hacer sin ella, queda en la cola del teléfono y
+  /// la app sigue como si se hubiera guardado (se envía sola al volver la señal).
+  Future<dynamic> _write(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) async {
+    final queueable = auth && (query == null || query.isEmpty) && isQueueable(method, path);
+    // Con cambios pendientes, los nuevos van detrás para respetar el orden
+    if (queueable && !outbox.isEmpty) return outbox.add(method, path, body);
+    final key = queueable ? newOfflineId() : null;
+    try {
+      return await _call(method, path, body: body, query: query, auth: auth, idempotencyKey: key);
+    } on ApiError catch (e) {
+      // Misma clave que el intento fallido: si sí llegó al servidor, al reenviarlo no se duplica
+      if (queueable && _transient(e.status)) return outbox.add(method, path, body, id: key);
+      rethrow;
+    }
+  }
+
+  /// Envía los cambios pendientes. Cada uno lleva su clave de idempotencia: si el servidor ya lo
+  /// recibió (y se perdió la respuesta), no lo aplica dos veces.
+  Future<FlushResult> flushOutbox() async {
+    if (outbox.isEmpty) return const FlushResult();
+    final result = await outbox.flush((item) async {
+      try {
+        return await _callOnce(item.method, item.path, body: item.body, idempotencyKey: item.id);
+      } on ApiError catch (e) {
+        throw OutboxSendError(e.status);
+      }
+    });
+    if (result.sent > 0 || result.rejected > 0) _recent.clear();
+    return result;
+  }
+
+  static String _cacheKey(String path, Map<String, String> params) {
+    final keys = params.keys.toList()..sort();
+    return keys.isEmpty ? path : '$path?${keys.map((k) => '$k=${params[k]}').join('&')}';
+  }
+
+  static Map<String, String> _params(Map<String, Object?>? query) => {
+    for (final e in (query ?? {}).entries)
+      if (e.value != null && '${e.value}'.isNotEmpty) e.key: '${e.value}',
+  };
+
   /// Fallo pasajero: sin conexión, proxy o servidor reiniciando.
   static bool _transient(int status) => status == 0 || status == 502 || status == 503 || status == 504;
 
   /// Las lecturas (GET) se reintentan solas ante un fallo pasajero: un corte de un segundo o un reinicio
   /// del servidor no deben dejar la pantalla en cero. Las escrituras no se repiten (podrían duplicarse).
-  Future<http.Response> _sendWithRetry(String method, Uri uri, Object? body, bool auth) async {
+  Future<http.Response> _sendWithRetry(String method, Uri uri, Object? body, bool auth, [String? idempotencyKey]) async {
     final delays = method == 'GET' ? retryDelays : const <Duration>[];
     for (var attempt = 0; ; attempt++) {
       try {
-        final res = await _send(method, uri, body, auth);
+        final res = await _send(method, uri, body, auth, idempotencyKey);
         if (!_transient(res.statusCode) || attempt >= delays.length) return res;
       } on ApiError {
         if (attempt >= delays.length) rethrow;
@@ -175,23 +228,49 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> _call(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) async {
+  Future<dynamic> _call(
+    String method,
+    String path, {
+    Object? body,
+    Map<String, Object?>? query,
+    bool auth = true,
+    String? idempotencyKey,
+  }) async {
+    final cacheable = method == 'GET' && auth;
+    final params = _params(query);
+    final key = _cacheKey(path, params);
     try {
-      final result = await _callOnce(method, path, body: body, query: query, auth: auth);
-      if (method == 'GET') loadError.value = null;
+      final result = await _callOnce(method, path, body: body, query: query, auth: auth, idempotencyKey: idempotencyKey);
+      if (cacheable) {
+        loadError.value = null;
+        cache.write(key, result);
+        return outbox.overlay(path, params, result);
+      }
       return result;
     } on ApiError catch (e) {
-      if (method == 'GET' && (_transient(e.status) || e.status >= 500)) loadError.value = e;
+      if (cacheable && _transient(e.status) && cache.has(key)) {
+        // Sin conexión: lo último que se leyó, con los cambios propios aún sin enviar encima
+        loadError.value = null;
+        return outbox.overlay(path, params, cache.read(key));
+      }
+      if (cacheable && (_transient(e.status) || e.status >= 500)) loadError.value = e;
       rethrow;
     }
   }
 
-  Future<dynamic> _callOnce(String method, String path, {Object? body, Map<String, Object?>? query, bool auth = true}) async {
+  Future<dynamic> _callOnce(
+    String method,
+    String path, {
+    Object? body,
+    Map<String, Object?>? query,
+    bool auth = true,
+    String? idempotencyKey,
+  }) async {
     final uri = _uri(path, query);
-    var res = await _sendWithRetry(method, uri, body, auth);
+    var res = await _sendWithRetry(method, uri, body, auth, idempotencyKey);
     if (res.statusCode == 401 && auth && _refresh != null) {
       _refreshing ??= _refreshTokens().whenComplete(() => _refreshing = null);
-      if (await _refreshing!) res = await _send(method, uri, body, auth);
+      if (await _refreshing!) res = await _send(method, uri, body, auth, idempotencyKey);
     }
     if (res.statusCode == 401 && auth) {
       await clearTokens();

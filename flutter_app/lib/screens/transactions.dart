@@ -512,6 +512,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       chips: [
         if (category != null) DealChip(category, dot: true, color: color),
         DealChip(formatDate(t.occurredOn), icon: 'calendar'),
+        if (t.pending) const DealChip('por enviar', icon: 'restore'),
         if (t.mood != null && spendingMoods[t.mood] != null)
           DealChip(spendingMoods[t.mood]!.label.toLowerCase(), color: spendingMoods[t.mood]!.face.color, dot: true),
       ],

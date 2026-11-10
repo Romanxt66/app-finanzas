@@ -53,7 +53,7 @@ void main() {
     expect(api.loadError.value, isNull);
   });
 
-  test('las escrituras no se repiten', () async {
+  test('las escrituras que necesitan al servidor no se repiten ni se encolan', () async {
     var calls = 0;
     final api = ApiClient(
       prefs,
@@ -63,8 +63,9 @@ void main() {
         return http.Response('', 503);
       }),
     );
-    await expectLater(api.post('/transactions', body: {}), throwsA(isA<ApiError>()));
+    await expectLater(api.post('/auth/logout-all', body: {}), throwsA(isA<ApiError>()));
     expect(calls, 1);
+    expect(api.outbox.isEmpty, isTrue);
     expect(api.loadError.value, isNull);
   });
 }

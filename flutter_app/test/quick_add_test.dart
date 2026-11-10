@@ -99,9 +99,13 @@ void main() {
       client: ApiClient(prefs, client: server([], offline: true), baseUrl: 'http://x'),
     );
     await addExpense(tester, state);
-    expect(state.pending.length, 1);
-    expect(state.pending.items.single['amount'], '18500');
+    final queued = state.api.outbox.items.single;
+    expect(queued.method, 'POST');
+    expect(queued.path, '/transactions');
+    expect((queued.body as Map)['amount'], '18500');
     expect(find.textContaining('Sin conexión'), findsOneWidget);
     await tester.pump(const Duration(seconds: 4));
+    await tester.pumpWidget(const SizedBox());
+    state.dispose(); // para el reintento periódico de envío
   });
 }
