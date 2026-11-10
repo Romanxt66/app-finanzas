@@ -1,5 +1,5 @@
 from app.models.account import Account, AccountType
-from app.models.budget import Budget
+from app.models.budget import Budget, BudgetPeriod
 from app.models.category import Category, CategoryKind
 from app.models.goal import Goal, GoalContribution
 from app.models.idempotency import IdempotencyRecord
@@ -13,6 +13,7 @@ __all__ = [
     "Account",
     "AccountType",
     "Budget",
+    "BudgetPeriod",
     "Category",
     "Frequency",
     "Goal",

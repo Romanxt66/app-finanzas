@@ -2382,3 +2382,57 @@ a.cr-user:focus-visible {
     color-mix(in srgb, var(--negative) 55%, transparent) 6px 11px
   );
 }
+
+/* Lista sin viñetas ni márgenes (tarjetas apiladas) */
+.cr-plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tarjeta de presupuesto del inicio: Hoy / Semana / Mes */
+.cr-budget-home-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.cr-budget-home-figures {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin: var(--space-4) 0 var(--space-3);
+}
+.cr-budget-home .cr-track {
+  height: 10px;
+}
+.cr-budget-home.is-warn .cr-fill {
+  background: var(--amber);
+}
+.cr-budget-home.is-over .cr-fill {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--negative) 0 6px,
+    color-mix(in srgb, var(--negative) 55%, transparent) 6px 11px
+  );
+}
+.cr-budget-home-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.cr-tight {
+  margin: 0;
+}
+
+/* El control segmentado de una página no se estira a todo el ancho */
+.cr-main > .cr-seg {
+  align-self: flex-start;
+}

@@ -255,7 +255,7 @@ describe('edición y borrado', () => {
       'PATCH /accounts/a1': account({ name: 'Nuevo' }),
     })
     renderApp(<AccountsPage />)
-    await userEvent.click(await screen.findByRole('button', { name: 'Renombrar Banco' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar Banco' }))
     const dialog = await screen.findByRole('dialog')
     const input = within(dialog).getByLabelText('Nombre')
     expect(input).toHaveValue('Banco')

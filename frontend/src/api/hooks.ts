@@ -173,15 +173,22 @@ export function useDeleteTransaction() {
   })
 }
 
-export const useBudgets = (month: string) =>
+export type BudgetPeriod = Schemas['BudgetPeriod']
+
+/** Presupuestos que rigen el día, la semana o el mes que contiene `date` (con los que se repiten). */
+export const useBudgetsFor = (period: BudgetPeriod, date: string) =>
   useQuery({
-    queryKey: [...keys.budgets, month],
-    queryFn: () => api<Budget[]>('/budgets', { query: { month } }),
+    queryKey: [...keys.budgets, period, date],
+    queryFn: () => api<Budget[]>('/budgets', { query: { period, date } }),
+    placeholderData: keepPreviousData,
   })
+
+/** Los mensuales de un mes (`yyyy-MM-01`). */
+export const useBudgets = (month: string) => useBudgetsFor('month', month)
 
 export function useCreateBudget() {
   const toast = useToast()
-  const invalidate = useInvalidate(keys.budgets)
+  const invalidate = useInvalidate(keys.budgets, keys.allowance)
   return useMutation({
     mutationFn: (body: Schemas['BudgetCreate']) =>
       api<Budget>('/budgets', { method: 'POST', body }),
@@ -238,10 +245,10 @@ export function useRenameCategory() {
 
 export function useUpdateBudget() {
   const toast = useToast()
-  const invalidate = useInvalidate(keys.budgets)
+  const invalidate = useInvalidate(keys.budgets, keys.allowance)
   return useMutation({
-    mutationFn: ({ id, amount }: { id: string; amount: string }) =>
-      api<Budget>(`/budgets/${id}`, { method: 'PATCH', body: { amount } }),
+    mutationFn: ({ id, ...body }: { id: string } & Schemas['BudgetUpdate']) =>
+      api<Budget>(`/budgets/${id}`, { method: 'PATCH', body }),
     onSuccess: () => {
       toast.success('Presupuesto actualizado')
       return invalidate()

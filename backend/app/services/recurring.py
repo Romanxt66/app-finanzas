@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import NotFoundError
+from app.core.errors import AppError, NotFoundError
 from app.models import Frequency, RecurringRule, Transaction
 from app.schemas.recurring import RecurringCreate, RecurringUpdate
 from app.schemas.transaction import TransactionCreate
@@ -92,8 +92,31 @@ async def update_rule(
     session: AsyncSession, user_id: uuid.UUID, rule_id: uuid.UUID, data: RecurringUpdate
 ) -> RecurringRule:
     rule = await get_owned(session, user_id, rule_id)
-    for field, value in data.model_dump(exclude_unset=True).items():
+    changes = data.model_dump(exclude_unset=True)
+    for field in ("amount", "description", "active", "account_id", "next_date"):
+        if field in changes and changes[field] is None:
+            del changes[field]  # obligatorios: null no los borra
+    for field, value in changes.items():
         setattr(rule, field, value)
+    if "next_date" in changes:
+        rule.anchor_day = rule.next_date.day
+        rule.anchor_month = rule.next_date.month
+    if rule.end_date is not None and rule.end_date < rule.next_date:
+        raise AppError("La fecha final no puede ser anterior al próximo cobro")
+    # Misma validación de cuentas y categoría que al crearla
+    await transactions.validate(
+        session,
+        user_id,
+        TransactionCreate(
+            type=rule.type,
+            account_id=rule.account_id,
+            transfer_account_id=rule.transfer_account_id,
+            category_id=rule.category_id,
+            amount=rule.amount,
+            description=rule.description,
+            occurred_on=rule.next_date,
+        ),
+    )
     await session.commit()
     return rule
 

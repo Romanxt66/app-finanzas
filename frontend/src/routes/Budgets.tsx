@@ -1,127 +1,196 @@
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 import {
-  useBudgets,
+  type Budget,
+  type BudgetPeriod,
+  useBudgetsFor,
   useCategories,
   useCreateBudget,
   useDeleteBudget,
   useUpdateBudget,
 } from '../api/hooks'
 import {
+  Badge,
   BudgetBar,
   Button,
   Card,
+  Checkbox,
   ConfirmDialog,
+  CreateSection,
   Empty,
   ErrorText,
-  Input,
-  Skeleton,
   FormDialog,
-  CreateSection,
+  Input,
   PageTitle,
-  MonthPill,
+  PeriodPill,
+  Segmented,
+  Skeleton,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
-import { RenameForm } from '../features/RenameForm'
-import { monthStart } from '../lib/format'
+import { EVERY, PERIOD_OPTIONS, periodLabel, shiftPeriod } from '../lib/budgetPeriod'
+import { todayISO } from '../lib/format'
 import { useDisplayCurrency } from '../lib/useCurrency'
 
-const schema = z.object({
-  category_id: z.string().min(1, 'Elige una categoría'),
-  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Monto positivo con hasta 2 decimales'),
-})
+const AMOUNT = /^\d+(\.\d{1,2})?$/
+const GENERAL = 'Todos los gastos'
+
+type Draft = { category_id: string; amount: string; recurring: boolean }
+
+/** Formulario de presupuesto: para qué (una categoría o todos los gastos), cuánto y si se repite. */
+function BudgetForm(props: {
+  period: BudgetPeriod
+  initial: Draft
+  submitLabel: string
+  pending: boolean
+  error: unknown
+  onSubmit: (draft: Draft) => void
+  onCancel?: () => void
+}) {
+  const [draft, setDraft] = useState(props.initial)
+  const [problem, setProblem] = useState<string | null>(null)
+  return (
+    <form
+      className="cr-stack"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const amount = draft.amount.trim().replace(',', '.')
+        if (!AMOUNT.test(amount) || Number(amount) <= 0) {
+          setProblem('Monto positivo con hasta 2 decimales')
+          return
+        }
+        setProblem(null)
+        props.onSubmit({ ...draft, amount })
+      }}
+    >
+      <div className="cr-form-grid">
+        <CategorySelect
+          kind="expense"
+          label="Para"
+          emptyLabel={`${GENERAL} (general)`}
+          value={draft.category_id}
+          onChange={(e) => setDraft({ ...draft, category_id: e.target.value })}
+        />
+        <Input
+          label="Monto"
+          inputMode="decimal"
+          value={draft.amount}
+          error={problem ?? undefined}
+          onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
+        />
+      </div>
+      <Checkbox
+        label={`Repetir ${EVERY[props.period]}`}
+        checked={draft.recurring}
+        onChange={(e) => setDraft({ ...draft, recurring: e.target.checked })}
+      />
+      <ErrorText error={props.error} />
+      <div className="cr-dialog-actions">
+        {props.onCancel && (
+          <Button variant="ghost" onClick={props.onCancel}>
+            Cancelar
+          </Button>
+        )}
+        <Button type="submit" variant="primary" disabled={props.pending}>
+          {props.submitLabel}
+        </Button>
+      </div>
+    </form>
+  )
+}
 
 export function BudgetsPage() {
-  const [month, setMonth] = useState(monthStart())
+  const [period, setPeriod] = useState<BudgetPeriod>('month')
+  const [date, setDate] = useState(todayISO())
   const currency = useDisplayCurrency()
-  const { data: budgets, isLoading } = useBudgets(month)
+  const { data: budgets, isLoading } = useBudgetsFor(period, date)
   const { data: categories = [] } = useCategories()
   const create = useCreateBudget()
   const remove = useDeleteBudget()
   const update = useUpdateBudget()
-  const [editing, setEditing] = useState<{ id: string; name: string; amount: string } | null>(null)
-  const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
-  const { register, handleSubmit, reset, formState } = useForm({ resolver: zodResolver(schema) })
+  const [editing, setEditing] = useState<Budget | null>(null)
+  const [pending, setPending] = useState<Budget | null>(null)
+  const [formKey, setFormKey] = useState(0)
   const names = new Map(categories.map((c) => [c.id, c.name]))
+  const nameOf = (b: Budget) =>
+    b.category_id ? (names.get(b.category_id) ?? 'Categoría') : GENERAL
+  // El general primero: es el límite de todo lo demás
+  const sorted = [...(budgets ?? [])].sort(
+    (a, b) => Number(a.category_id !== null) - Number(b.category_id !== null),
+  )
 
   return (
     <>
       <div className="cr-page-head">
         <PageTitle title="Presupuestos" headline="Límites que *te cuidan*." />
-        <MonthPill value={month} onChange={setMonth} />
+        <PeriodPill
+          name="Periodo del presupuesto"
+          label={periodLabel(period, date)}
+          onPrev={() => setDate(shiftPeriod(period, date, -1))}
+          onNext={() => setDate(shiftPeriod(period, date, 1))}
+        />
       </div>
+      <Segmented<BudgetPeriod>
+        label="Tipo de presupuesto"
+        options={PERIOD_OPTIONS}
+        value={period}
+        onChange={setPeriod}
+      />
       <CreateSection title="Nuevo presupuesto" hasData={!!budgets?.length}>
-        <form
-          className="cr-stack"
-          onSubmit={handleSubmit((d) =>
-            create.mutate({ ...d, month }, { onSuccess: () => reset() }),
-          )}
-        >
-          <div className="cr-form-grid">
-            <CategorySelect
-              kind="expense"
-              label="Categoría de gasto"
-              emptyLabel="Selecciona…"
-              error={formState.errors.category_id?.message}
-              {...register('category_id')}
-            />
-            <Input
-              label="Monto"
-              inputMode="decimal"
-              error={formState.errors.amount?.message}
-              {...register('amount')}
-            />
-          </div>
-          <div>
-            <Button type="submit" variant="primary" disabled={create.isPending}>
-              Añadir
-            </Button>
-          </div>
-          <ErrorText error={create.error} />
-        </form>
+        <BudgetForm
+          key={`${period}-${formKey}`}
+          period={period}
+          initial={{ category_id: '', amount: '', recurring: true }}
+          submitLabel="Añadir"
+          pending={create.isPending}
+          error={create.error}
+          onSubmit={(d) =>
+            create.mutate(
+              {
+                category_id: d.category_id || null,
+                period,
+                start: date,
+                amount: d.amount,
+                recurring: d.recurring,
+              },
+              { onSuccess: () => setFormKey((k) => k + 1) },
+            )
+          }
+        />
       </CreateSection>
       {isLoading ? (
         <Skeleton lines={2} />
-      ) : !budgets?.length ? (
+      ) : !sorted.length ? (
         <Card>
-          <Empty>No hay presupuestos para este mes.</Empty>
+          <Empty>
+            {period === 'day'
+              ? 'No hay presupuesto para este día.'
+              : period === 'week'
+                ? 'No hay presupuesto para esta semana.'
+                : 'No hay presupuestos para este mes.'}{' '}
+            Crea uno general para controlar todo lo que gastas, o uno por categoría.
+          </Empty>
         </Card>
       ) : (
-        <ul className="cr-stack" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-          {budgets.map((b) => (
+        <ul className="cr-stack cr-plain-list">
+          {sorted.map((b) => (
             <li key={b.id}>
               <BudgetBar
-                label={names.get(b.category_id) ?? 'Categoría'}
+                label={nameOf(b)}
                 spent={Number(b.spent)}
                 limit={Number(b.amount)}
                 currency={currency}
                 actions={
                   <span className="cr-actions-inline">
+                    {b.recurring && (
+                      <Badge icon="restore">{`Se repite ${EVERY[b.period as BudgetPeriod]}`}</Badge>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
                       icon="edit"
-                      aria-label={`Editar ${names.get(b.category_id) ?? 'presupuesto'}`}
-                      onClick={() =>
-                        setEditing({
-                          id: b.id,
-                          name: names.get(b.category_id) ?? 'presupuesto',
-                          amount: String(Number(b.amount)),
-                        })
-                      }
+                      aria-label={`Editar ${nameOf(b)}`}
+                      onClick={() => setEditing(b)}
                     />
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() =>
-                        setPending({
-                          id: b.id,
-                          name: names.get(b.category_id) ?? 'este presupuesto',
-                        })
-                      }
-                    >
+                    <Button variant="danger" size="sm" onClick={() => setPending(b)}>
                       Eliminar
                     </Button>
                   </span>
@@ -133,38 +202,50 @@ export function BudgetsPage() {
       )}
       <FormDialog
         open={!!editing}
-        title={`Editar presupuesto de ${editing?.name}`}
+        title={`Editar presupuesto · ${editing ? nameOf(editing) : ''}`}
         onClose={() => setEditing(null)}
       >
         {editing && (
-          <RenameForm
+          <BudgetForm
             key={editing.id}
-            initial={editing.amount}
-            label="Monto"
-            inputMode="decimal"
-            validate={(v) =>
-              /^\d+(\.\d{1,2})?$/.test(v) && Number(v) > 0
-                ? null
-                : 'Monto positivo con hasta 2 decimales'
-            }
+            period={editing.period as BudgetPeriod}
+            initial={{
+              category_id: editing.category_id ?? '',
+              amount: String(Number(editing.amount)),
+              recurring: !!editing.recurring,
+            }}
+            submitLabel="Guardar"
             pending={update.isPending}
             error={update.error}
             onCancel={() => setEditing(null)}
-            onSubmit={(amount) =>
-              update.mutate({ id: editing.id, amount }, { onSuccess: () => setEditing(null) })
+            onSubmit={(d) =>
+              update.mutate(
+                {
+                  // Solo lo que cambió
+                  id: editing.id,
+                  ...(Number(d.amount) !== Number(editing.amount) && { amount: d.amount }),
+                  ...((d.category_id || null) !== editing.category_id && {
+                    category_id: d.category_id || null,
+                  }),
+                  ...(d.recurring !== !!editing.recurring && { recurring: d.recurring }),
+                },
+                { onSuccess: () => setEditing(null) },
+              )
             }
           />
         )}
       </FormDialog>
       <ConfirmDialog
         open={!!pending}
-        title={`¿Eliminar el presupuesto de ${pending?.name}?`}
+        title={`¿Eliminar el presupuesto de ${pending ? nameOf(pending).toLowerCase() : ''}?`}
         onCancel={() => setPending(null)}
         onConfirm={() => {
           if (pending) remove.mutate(pending.id)
           setPending(null)
         }}
-      />
+      >
+        {pending?.recurring ? 'Se repite: dejará de aplicarse en todos los periodos.' : undefined}
+      </ConfirmDialog>
     </>
   )
 }

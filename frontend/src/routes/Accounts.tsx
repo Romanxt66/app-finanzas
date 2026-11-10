@@ -27,7 +27,6 @@ import {
   PageTitle,
 } from '../design'
 import { CurrencySelect } from '../features/CurrencySelect'
-import { RenameForm } from '../features/RenameForm'
 import { formatMoney } from '../lib/format'
 
 const schema = z.object({
@@ -118,7 +117,7 @@ export function AccountsPage() {
                   variant="ghost"
                   size="sm"
                   icon="edit"
-                  aria-label={`Renombrar ${a.name}`}
+                  aria-label={`Editar ${a.name}`}
                   onClick={() => setRenaming(a)}
                 />
                 <Button
@@ -140,17 +139,16 @@ export function AccountsPage() {
           ))}
         </Glass>
       )}
-      <FormDialog open={!!renaming} title="Renombrar cuenta" onClose={() => setRenaming(null)}>
+      <FormDialog open={!!renaming} title="Editar cuenta" onClose={() => setRenaming(null)}>
         {renaming && (
-          <RenameForm
+          <AccountEditForm
             key={renaming.id}
-            initial={renaming.name}
-            label="Nombre"
+            account={renaming}
             pending={update.isPending}
             error={update.error}
             onCancel={() => setRenaming(null)}
-            onSubmit={(name) =>
-              update.mutate({ id: renaming.id, name }, { onSuccess: () => setRenaming(null) })
+            onSubmit={(changes) =>
+              update.mutate({ id: renaming.id, ...changes }, { onSuccess: () => setRenaming(null) })
             }
           />
         )}
@@ -228,5 +226,78 @@ function BalancesDonut({ accounts }: { accounts: Account[] }) {
         </div>
       </div>
     </Card>
+  )
+}
+
+/** Editar una cuenta: nombre, tipo y saldo real de hoy (se cuadra sin inventar movimientos). */
+function AccountEditForm(props: {
+  account: Account
+  pending: boolean
+  error: unknown
+  onCancel: () => void
+  onSubmit: (changes: { name?: string; type?: Account['type']; balance?: string }) => void
+}) {
+  const a = props.account
+  const [name, setName] = useState(a.name)
+  const [type, setType] = useState<Account['type']>(a.type)
+  const [balance, setBalance] = useState(String(Number(a.balance)))
+  const [problem, setProblem] = useState<{ name?: string; balance?: string }>({})
+  return (
+    <form
+      className="cr-stack"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const value = balance.trim().replace(',', '.')
+        const errors = {
+          name: name.trim() ? undefined : 'Escribe un nombre',
+          balance: /^-?\d+(\.\d{1,2})?$/.test(value) ? undefined : 'Saldo con hasta 2 decimales',
+        }
+        setProblem(errors)
+        if (errors.name || errors.balance) return
+        // Solo se envía lo que cambió
+        props.onSubmit({
+          ...(name.trim() !== a.name && { name: name.trim() }),
+          ...(type !== a.type && { type }),
+          ...(Number(value) !== Number(a.balance) && { balance: value }),
+        })
+      }}
+    >
+      <Input
+        label="Nombre"
+        value={name}
+        error={problem.name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <Select
+        label="Tipo"
+        value={type}
+        onChange={(e) => setType(e.target.value as Account['type'])}
+      >
+        {Object.entries(TYPE_LABELS).map(([v, l]) => (
+          <option key={v} value={v}>
+            {l}
+          </option>
+        ))}
+      </Select>
+      <Input
+        label={`Saldo actual (${a.currency})`}
+        inputMode="decimal"
+        value={balance}
+        error={problem.balance}
+        onChange={(e) => setBalance(e.target.value)}
+      />
+      <p className="caption cr-muted cr-tight">
+        Si cambias el saldo se ajusta el saldo inicial; tus movimientos no se tocan.
+      </p>
+      <ErrorText error={props.error} />
+      <div className="cr-dialog-actions">
+        <Button variant="ghost" onClick={props.onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit" variant="primary" disabled={props.pending}>
+          Guardar
+        </Button>
+      </div>
+    </form>
   )
 }

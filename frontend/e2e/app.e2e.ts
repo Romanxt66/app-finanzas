@@ -140,7 +140,7 @@ test('flujo completo: registro, cuentas, categorías, transacciones, presupuesto
   // Presupuesto del mes actual
   await goTo(page, 'Presupuestos')
   await reveal(page, 'Nuevo presupuesto')
-  await page.getByLabel('Categoría de gasto').selectOption({ label: 'Supermercado' })
+  await page.getByLabel('Para').selectOption({ label: 'Supermercado' })
   await page.getByLabel('Monto').fill('150')
   await page.getByRole('button', { name: 'Añadir' }).click()
   await expect(page.getByText(/Excedido en/)).toBeVisible()

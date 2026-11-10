@@ -86,7 +86,7 @@ test('cuentas: renombrar, no eliminar con movimientos, eliminar vacía y exporta
     await expect(page.getByRole('listitem').filter({ hasText: name })).toBeVisible()
   }
   // renombrar
-  await page.getByRole('button', { name: 'Renombrar Principal' }).click()
+  await page.getByRole('button', { name: 'Editar Principal' }).click()
   await page.getByRole('dialog').getByLabel('Nombre').fill('Nómina')
   await page.getByRole('dialog').getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: 'Nómina' })).toBeVisible()

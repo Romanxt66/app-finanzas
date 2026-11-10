@@ -724,3 +724,28 @@ export function MonthPill({
     </Glass>
   )
 }
+
+/** Píldora para recorrer periodos (‹ etiqueta ›): días, semanas o meses. */
+export function PeriodPill({
+  label,
+  onPrev,
+  onNext,
+  name = 'Periodo',
+}: {
+  label: string
+  onPrev: () => void
+  onNext: () => void
+  name?: string
+}) {
+  return (
+    <Glass className="cr-month-pill" role="group" aria-label={name}>
+      <button type="button" aria-label="Anterior" onClick={onPrev}>
+        <Icon name="chevron" />
+      </button>
+      <span aria-live="polite">{label}</span>
+      <button type="button" aria-label="Siguiente" onClick={onNext}>
+        <Icon name="chevron" />
+      </button>
+    </Glass>
+  )
+}

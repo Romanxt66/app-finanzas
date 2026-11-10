@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
     Account,
-    Budget,
+    BudgetPeriod,
     Category,
     RecurringRule,
     TransactionType,
@@ -18,7 +18,7 @@ from app.models import (
     WaitingStatus,
 )
 from app.schemas.notification import BUDGET_WARNING_RATIO, Notification
-from app.services.budgets import _spent_by_budget
+from app.services.budgets import list_budgets
 from app.services.waiting_room import _aware
 
 _SEVERITY_ORDER = {"danger": 0, "warning": 1, "info": 2}
@@ -73,42 +73,51 @@ async def _recurring(
     return out
 
 
+_PERIOD_TEXT = {
+    BudgetPeriod.day: ("de hoy", "hoy", "Aún queda día"),
+    BudgetPeriod.week: ("de la semana", "esta semana", "Aún queda semana"),
+    BudgetPeriod.month: ("", "este mes", "Aún queda mes"),
+}
+
+
 async def _budgets(session: AsyncSession, user_id: uuid.UUID, today: date) -> list[Notification]:
-    month = today.replace(day=1)
-    rows = await session.execute(
-        select(Budget, Category.name)
-        .join(Category, Category.id == Budget.category_id)
-        .where(Budget.user_id == user_id, Budget.month == month)
-    )
-    pairs = [(budget, name) for budget, name in rows]
-    spent = await _spent_by_budget(session, user_id, [b for b, _ in pairs])
     out: list[Notification] = []
-    for budget, name in pairs:
-        used = spent.get(budget.id, Decimal(0))
-        if budget.amount <= 0 or used < budget.amount * BUDGET_WARNING_RATIO:
-            continue
-        percent = int(used * 100 / budget.amount)
-        exceeded = used > budget.amount
-        # El id cambia de «aviso» a «superado»: si leíste el primero, el segundo vuelve a salir
-        out.append(
-            Notification(
-                id=f"budget:{budget.id}:{'over' if exceeded else 'near'}",
-                kind="budget_exceeded" if exceeded else "budget_warning",
-                severity="danger" if exceeded else "warning",
-                title=(
-                    f"Te pasaste del presupuesto de {name}"
-                    if exceeded
-                    else f"Vas al {percent} % del presupuesto de {name}"
-                ),
-                body=(
-                    f"Llevas {percent} % de lo previsto este mes."
-                    if exceeded
-                    else "Aún queda mes: frena un poco los gastos de esta categoría."
-                ),
-                link="/budgets",
-                date=today,
+    names = {
+        c.id: c.name
+        for c in (await session.scalars(select(Category).where(Category.user_id == user_id))).all()
+    }
+    for period in BudgetPeriod:
+        for budget in await list_budgets(session, user_id, period=period, on=today):
+            used = budget.spent
+            if budget.amount <= 0 or used < budget.amount * BUDGET_WARNING_RATIO:
+                continue
+            percent = int(used * 100 / budget.amount)
+            exceeded = used > budget.amount
+            which, when, still = _PERIOD_TEXT[period]
+            suffix = f" {which}" if which else ""
+            subject = (
+                f"de tu presupuesto general{suffix}"
+                if budget.category_id is None
+                else f"del presupuesto{suffix} de {names.get(budget.category_id, 'una categoría')}"
             )
-        )
+            advice = " de esta categoría" if budget.category_id is not None else ""
+            # El id cambia de «aviso» a «superado» y con cada periodo: leído uno, el siguiente sale
+            state = "over" if exceeded else "near"
+            out.append(
+                Notification(
+                    id=f"budget:{budget.id}:{budget.start.isoformat()}:{state}",
+                    kind="budget_exceeded" if exceeded else "budget_warning",
+                    severity="danger" if exceeded else "warning",
+                    title=f"Te pasaste {subject}" if exceeded else f"Vas al {percent} % {subject}",
+                    body=(
+                        f"Llevas {percent} % de lo previsto {when}."
+                        if exceeded
+                        else f"{still}: frena un poco los gastos{advice}."
+                    ),
+                    link="/budgets",
+                    date=today,
+                )
+            )
     return out
 
 

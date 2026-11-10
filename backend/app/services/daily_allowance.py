@@ -8,12 +8,13 @@ from collections import defaultdict
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import NotFoundError
-from app.models import Account, Budget, RecurringRule, Transaction, TransactionType
+from app.models import Account, RecurringRule, Transaction, TransactionType
 from app.schemas.daily_allowance import Basis, DailyAllowance, Status
+from app.services import budgets
 from app.services.recurring import advance
 
 PATTERN_DAYS = 56  # ocho semanas de historial para medir el patrón semanal
@@ -163,12 +164,7 @@ async def daily_allowance(
         elif month_start <= occurred_on <= today:
             income += amount
 
-    budget_total = await session.scalar(
-        select(func.coalesce(func.sum(Budget.amount), 0)).where(
-            Budget.user_id == user_id, Budget.month == month_start
-        )
-    )
-    budget_total = Decimal(budget_total or 0)
+    budget_total = await budgets.monthly_total(session, user_id, month_start)
     rules = list(
         (
             await session.scalars(

@@ -83,8 +83,15 @@ async def update_account(
     session: AsyncSession, user_id: uuid.UUID, account_id: uuid.UUID, data: AccountUpdate
 ) -> AccountOut:
     account = await get_owned(session, user_id, account_id)
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(account, field, value)
+    changes = data.model_dump(exclude_unset=True)
+    target = changes.pop("balance", None)
+    for field, value in changes.items():
+        if value is not None or field not in ("name", "type", "archived", "initial_balance"):
+            setattr(account, field, value)
+    if target is not None:
+        # El saldo es inicial + movimientos: para que dé `target`, se mueve el inicial la diferencia
+        current = _out(account, await _balances(session, user_id)).balance
+        account.initial_balance = account.initial_balance + (target - current)
     await session.commit()
     return _out(account, await _balances(session, user_id))
 
