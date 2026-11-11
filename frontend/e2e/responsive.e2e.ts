@@ -121,7 +121,8 @@ for (const vp of viewports) {
 
       // objetivos táctiles de al menos 44 px en botones principales
       const btn = await page.getByRole('button', { name: /^Tema:/ }).boundingBox()
-      expect(btn!.height).toBeGreaterThanOrEqual(34)
+      // Redondeado: el navegador puede medir 33,999… px por la escala de las transiciones
+      expect(Math.round(btn!.height)).toBeGreaterThanOrEqual(34)
 
       if (process.env.SHOTS) {
         await page.screenshot({
