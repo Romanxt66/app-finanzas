@@ -350,7 +350,7 @@ describe('BudgetsPage', () => {
       'POST /budgets': { status: 201, body: budget() },
     })
     renderApp(<BudgetsPage />)
-    const select = await screen.findByLabelText('Categoría de gasto')
+    const select = await screen.findByLabelText('Para')
     await waitFor(() =>
       expect(within(select).getByRole('option', { name: 'Comida' })).toBeInTheDocument(),
     )
@@ -362,6 +362,8 @@ describe('BudgetsPage', () => {
     expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({
       category_id: 'c1',
       amount: '99',
+      period: 'month',
+      recurring: true,
     })
   })
 })

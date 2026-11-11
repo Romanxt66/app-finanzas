@@ -41,6 +41,10 @@ class RecurringUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=255)
     active: bool | None = None
     end_date: date | None = None
+    account_id: uuid.UUID | None = None
+    category_id: uuid.UUID | None = None
+    # Próximo cobro: también fija el día del mes (o del año) en que se repite
+    next_date: date | None = None
 
 
 class RecurringOut(Entity):

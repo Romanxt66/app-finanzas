@@ -18,6 +18,7 @@ import {
   ConfirmDialog,
   Empty,
   ErrorText,
+  FormDialog,
   Glass,
   Input,
   Select,
@@ -65,6 +66,7 @@ export function RecurringPage() {
   const update = useUpdateRecurring()
   const remove = useDeleteRecurring()
   const [pendingDelete, setPendingDelete] = useState<Recurring | null>(null)
+  const [editing, setEditing] = useState<Recurring | null>(null)
   const { register, handleSubmit, reset, control, formState } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -208,6 +210,13 @@ export function RecurringPage() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      icon="edit"
+                      aria-label={`Editar ${r.description || category || TYPE_LABELS[r.type]}`}
+                      onClick={() => setEditing(r)}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => update.mutate({ id: r.id, active: !r.active })}
                       aria-label={`${r.active ? 'Pausar' : 'Reanudar'} ${r.description || category || TYPE_LABELS[r.type]}`}
                     >
@@ -227,6 +236,25 @@ export function RecurringPage() {
           })}
         </Glass>
       )}
+      <FormDialog
+        open={!!editing}
+        title="Editar movimiento recurrente"
+        onClose={() => setEditing(null)}
+      >
+        {editing && (
+          <RecurringEditForm
+            key={editing.id}
+            rule={editing}
+            accounts={accounts.filter((a) => !a.archived || a.id === editing.account_id)}
+            pending={update.isPending}
+            error={update.error}
+            onCancel={() => setEditing(null)}
+            onSubmit={(changes) =>
+              update.mutate({ id: editing.id, ...changes }, { onSuccess: () => setEditing(null) })
+            }
+          />
+        )}
+      </FormDialog>
       <ConfirmDialog
         open={!!pendingDelete}
         title="¿Eliminar este movimiento recurrente?"
@@ -240,5 +268,106 @@ export function RecurringPage() {
       </ConfirmDialog>
       <ErrorText error={update.error ?? remove.error} />
     </>
+  )
+}
+
+type RecurringChanges = {
+  amount?: string
+  description?: string
+  account_id?: string
+  category_id?: string | null
+  next_date?: string
+  end_date?: string | null
+}
+
+/** Editar un recurrente: monto, nota, cuenta, categoría y fechas (el próximo cobro fija el día). */
+function RecurringEditForm(props: {
+  rule: Recurring
+  accounts: { id: string; name: string; currency: string }[]
+  pending: boolean
+  error: unknown
+  onCancel: () => void
+  onSubmit: (changes: RecurringChanges) => void
+}) {
+  const r = props.rule
+  const [amount, setAmount] = useState(String(Number(r.amount)))
+  const [description, setDescription] = useState(r.description)
+  const [account, setAccount] = useState(r.account_id)
+  const [category, setCategory] = useState(r.category_id ?? '')
+  const [next, setNext] = useState(r.next_date)
+  const [end, setEnd] = useState(r.end_date ?? '')
+  const [problem, setProblem] = useState<string | null>(null)
+  return (
+    <form
+      className="cr-stack"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const value = amount.trim().replace(',', '.')
+        if (!/^\d+(\.\d{1,2})?$/.test(value) || Number(value) <= 0) {
+          setProblem('Monto positivo con hasta 2 decimales')
+          return
+        }
+        setProblem(null)
+        props.onSubmit({
+          ...(Number(value) !== Number(r.amount) && { amount: value }),
+          ...(description !== r.description && { description }),
+          ...(account !== r.account_id && { account_id: account }),
+          ...(r.type !== 'transfer' &&
+            category !== (r.category_id ?? '') && { category_id: category || null }),
+          ...(next !== r.next_date && { next_date: next }),
+          ...(end !== (r.end_date ?? '') && { end_date: end || null }),
+        })
+      }}
+    >
+      <div className="cr-form-grid">
+        <Input
+          label="Monto"
+          inputMode="decimal"
+          value={amount}
+          error={problem ?? undefined}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+        <Input
+          label="Descripción"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <Select label="Cuenta" value={account} onChange={(e) => setAccount(e.target.value)}>
+          {props.accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name} ({a.currency})
+            </option>
+          ))}
+        </Select>
+        {r.type !== 'transfer' && (
+          <CategorySelect
+            kind={r.type === 'income' ? 'income' : 'expense'}
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+        )}
+        <Input
+          label="Próximo cobro"
+          type="date"
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+        />
+        <Input
+          label="Hasta (opcional)"
+          type="date"
+          value={end}
+          onChange={(e) => setEnd(e.target.value)}
+        />
+      </div>
+      <ErrorText error={props.error} />
+      <div className="cr-dialog-actions">
+        <Button variant="ghost" onClick={props.onCancel}>
+          Cancelar
+        </Button>
+        <Button type="submit" variant="primary" disabled={props.pending}>
+          Guardar
+        </Button>
+      </div>
+    </form>
   )
 }

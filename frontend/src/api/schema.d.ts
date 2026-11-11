@@ -464,7 +464,11 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** List Budgets */
+    /**
+     * List Budgets
+     * @description `period` + `date`: los presupuestos que rigen ese día, semana o mes (con los recurrentes).
+     *     `month` (compatibilidad): los mensuales de ese mes. Sin filtros: todos tal como se crearon.
+     */
     get: operations['list_budgets_api_v1_budgets_get']
     put?: never
     /** Create Budget */
@@ -912,6 +916,10 @@ export interface components {
       type?: components['schemas']['AccountType'] | null
       /** Archived */
       archived?: boolean | null
+      /** Initial Balance */
+      initial_balance?: number | string | null
+      /** Balance */
+      balance?: number | string | null
     }
     /** Alert */
     Alert: {
@@ -942,20 +950,27 @@ export interface components {
      * @enum {string}
      */
     Basis: 'budget' | 'income'
-    /** BudgetCreate */
+    /**
+     * BudgetCreate
+     * @description `start` es cualquier día del periodo (se lleva a su inicio). `month` se acepta por
+     *     compatibilidad con las apps anteriores (presupuestos mensuales).
+     */
     BudgetCreate: {
-      /**
-       * Category Id
-       * Format: uuid
-       */
-      category_id: string
-      /**
-       * Month
-       * Format: date
-       */
-      month: string
+      /** Category Id */
+      category_id?: string | null
+      /** @default month */
+      period: components['schemas']['BudgetPeriod']
+      /** Start */
+      start?: string | null
+      /** Month */
+      month?: string | null
       /** Amount */
       amount: number | string
+      /**
+       * Recurring
+       * @default false
+       */
+      recurring: boolean
     }
     /** BudgetOut */
     BudgetOut: {
@@ -969,16 +984,31 @@ export interface components {
        * Format: date-time
        */
       created_at: string
-      /**
-       * Category Id
-       * Format: uuid
-       */
-      category_id: string
+      /** Category Id */
+      category_id: string | null
+      period: components['schemas']['BudgetPeriod']
       /**
        * Month
        * Format: date
        */
       month: string
+      /**
+       * Start
+       * Format: date
+       */
+      start: string
+      /**
+       * End
+       * Format: date
+       */
+      end: string
+      /** Recurring */
+      recurring: boolean
+      /**
+       * Starts On
+       * Format: date
+       */
+      starts_on: string
       /** Amount */
       amount: string
       /** Spent */
@@ -986,10 +1016,19 @@ export interface components {
       /** Remaining */
       remaining: string
     }
+    /**
+     * BudgetPeriod
+     * @enum {string}
+     */
+    BudgetPeriod: 'day' | 'week' | 'month'
     /** BudgetUpdate */
     BudgetUpdate: {
       /** Amount */
-      amount: number | string
+      amount?: number | string | null
+      /** Category Id */
+      category_id?: string | null
+      /** Recurring */
+      recurring?: boolean | null
     }
     /** BulkCreate */
     BulkCreate: {
@@ -1583,6 +1622,12 @@ export interface components {
       active?: boolean | null
       /** End Date */
       end_date?: string | null
+      /** Account Id */
+      account_id?: string | null
+      /** Category Id */
+      category_id?: string | null
+      /** Next Date */
+      next_date?: string | null
     }
     /** RefreshIn */
     RefreshIn: {
@@ -3029,6 +3074,8 @@ export interface operations {
     parameters: {
       query?: {
         month?: string | null
+        period?: components['schemas']['BudgetPeriod'] | null
+        date?: string | null
       }
       header?: never
       path?: never

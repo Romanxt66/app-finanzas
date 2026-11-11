@@ -4,6 +4,7 @@ from datetime import date
 from fastapi import APIRouter, Response, status
 
 from app.api.deps import CurrentUser, SessionDep
+from app.models import BudgetPeriod
 from app.schemas.budget import BudgetCreate, BudgetOut, BudgetUpdate
 from app.services import budgets
 
@@ -12,9 +13,15 @@ router = APIRouter(prefix="/budgets", tags=["budgets"])
 
 @router.get("", response_model=list[BudgetOut])
 async def list_budgets(
-    user: CurrentUser, session: SessionDep, month: date | None = None
+    user: CurrentUser,
+    session: SessionDep,
+    month: date | None = None,
+    period: BudgetPeriod | None = None,
+    date: date | None = None,
 ) -> list[BudgetOut]:
-    return await budgets.list_budgets(session, user.id, month)
+    """`period` + `date`: los presupuestos que rigen ese día, semana o mes (con los recurrentes).
+    `month` (compatibilidad): los mensuales de ese mes. Sin filtros: todos tal como se crearon."""
+    return await budgets.list_budgets(session, user.id, month=month, period=period, on=date)
 
 
 @router.post("", response_model=BudgetOut, status_code=status.HTTP_201_CREATED)
@@ -26,7 +33,7 @@ async def create_budget(data: BudgetCreate, user: CurrentUser, session: SessionD
 async def update_budget(
     budget_id: uuid.UUID, data: BudgetUpdate, user: CurrentUser, session: SessionDep
 ) -> BudgetOut:
-    return await budgets.update_budget(session, user.id, budget_id, data.amount)
+    return await budgets.update_budget(session, user.id, budget_id, data)
 
 
 @router.delete("/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)

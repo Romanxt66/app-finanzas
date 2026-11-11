@@ -14,6 +14,7 @@ import {
   PageTitle,
   MonthPill,
 } from '../design'
+import { BudgetHomeCard } from '../features/BudgetHomeCard'
 import { DailyAllowanceCard } from '../features/DailyAllowanceCard'
 import { GhostTeaser } from '../features/GhostTeaser'
 import { LifeHoursCard } from '../features/LifeHoursCard'
@@ -185,6 +186,7 @@ export function DashboardPage() {
         onToggleHidden={toggleHidden}
       />
 
+      <BudgetHomeCard />
       <DailyAllowanceCard />
 
       <div className="cr-grid-kpi">

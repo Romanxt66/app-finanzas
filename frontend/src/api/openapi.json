@@ -1676,6 +1676,7 @@
       "get": {
         "tags": ["budgets"],
         "summary": "List Budgets",
+        "description": "`period` + `date`: los presupuestos que rigen ese día, semana o mes (con los recurrentes).\n`month` (compatibilidad): los mensuales de ese mes. Sin filtros: todos tal como se crearon.",
         "operationId": "list_budgets_api_v1_budgets_get",
         "security": [
           {
@@ -1698,6 +1699,39 @@
                 }
               ],
               "title": "Month"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/BudgetPeriod"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Period"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
             }
           }
         ],
@@ -3103,6 +3137,34 @@
               }
             ],
             "title": "Archived"
+          },
+          "initial_balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initial Balance"
+          },
+          "balance": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Balance"
           }
         },
         "type": "object",
@@ -3170,13 +3232,43 @@
       "BudgetCreate": {
         "properties": {
           "category_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Category Id"
           },
+          "period": {
+            "$ref": "#/components/schemas/BudgetPeriod",
+            "default": "month"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          },
           "month": {
-            "type": "string",
-            "format": "date",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Month"
           },
           "amount": {
@@ -3190,11 +3282,17 @@
               }
             ],
             "title": "Amount"
+          },
+          "recurring": {
+            "type": "boolean",
+            "title": "Recurring",
+            "default": false
           }
         },
         "type": "object",
-        "required": ["category_id", "month", "amount"],
-        "title": "BudgetCreate"
+        "required": ["amount"],
+        "title": "BudgetCreate",
+        "description": "`start` es cualquier día del periodo (se lleva a su inicio). `month` se acepta por\ncompatibilidad con las apps anteriores (presupuestos mensuales)."
       },
       "BudgetOut": {
         "properties": {
@@ -3209,14 +3307,43 @@
             "title": "Created At"
           },
           "category_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Category Id"
+          },
+          "period": {
+            "$ref": "#/components/schemas/BudgetPeriod"
           },
           "month": {
             "type": "string",
             "format": "date",
             "title": "Month"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "recurring": {
+            "type": "boolean",
+            "title": "Recurring"
+          },
+          "starts_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Starts On"
           },
           "amount": {
             "type": "string",
@@ -3232,8 +3359,26 @@
           }
         },
         "type": "object",
-        "required": ["id", "created_at", "category_id", "month", "amount", "spent", "remaining"],
+        "required": [
+          "id",
+          "created_at",
+          "category_id",
+          "period",
+          "month",
+          "start",
+          "end",
+          "recurring",
+          "starts_on",
+          "amount",
+          "spent",
+          "remaining"
+        ],
         "title": "BudgetOut"
+      },
+      "BudgetPeriod": {
+        "type": "string",
+        "enum": ["day", "week", "month"],
+        "title": "BudgetPeriod"
       },
       "BudgetUpdate": {
         "properties": {
@@ -3245,13 +3390,38 @@
               },
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Amount"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "recurring": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recurring"
           }
         },
         "type": "object",
-        "required": ["amount"],
         "title": "BudgetUpdate"
       },
       "BulkCreate": {
@@ -4718,6 +4888,42 @@
               }
             ],
             "title": "End Date"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "next_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Date"
           }
         },
         "type": "object",
