@@ -15,6 +15,7 @@ import '../ui/query.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'features.dart';
+import 'budgets.dart';
 import 'flow_chart.dart';
 import 'insights.dart';
 import 'reminders.dart';
@@ -98,6 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     hidden: app.balanceHidden,
                     onToggleHidden: app.toggleBalanceHidden,
                   ),
+                  const BudgetHomeCard(),
                   const DailyAllowanceCard(),
                   _KpiGrid(
                     children: [

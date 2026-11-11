@@ -300,7 +300,17 @@ Map<String, dynamic>? _synthetic(String collection, String id, Map body) {
     case 'categories':
       return {...b, 'id': id, 'pending': true};
     case 'budgets':
-      return {...b, 'id': id, 'amount': '${b['amount']}', 'spent': '0', 'pending': true};
+      return {
+        'category_id': null,
+        'period': 'month',
+        'recurring': false,
+        ...b,
+        'id': id,
+        'start': b['start'] ?? b['month'],
+        'amount': '${b['amount']}',
+        'spent': '0',
+        'pending': true,
+      };
     default:
       return null; // metas, recurrentes…: aparecen al sincronizar
   }

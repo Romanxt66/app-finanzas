@@ -272,7 +272,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         if (a.archived) const DealChip('archivada', icon: 'archive'),
       ],
       actions: [
-        CardAction(icon: 'edit', tooltip: 'Renombrar ${a.name}', onPressed: () => _rename(a)),
+        CardAction(icon: 'edit', tooltip: 'Editar ${a.name}', onPressed: () => _edit(a)),
         CardAction(
           icon: a.archived ? 'restore' : 'archive',
           tooltip: a.archived ? 'Restaurar ${a.name}' : 'Archivar ${a.name}',
@@ -293,12 +293,10 @@ class _AccountsScreenState extends State<AccountsScreen> {
     }
   }
 
-  Future<void> _rename(Account a) => showFieldDialog(
+  Future<void> _edit(Account a) => showCrDialog<void>(
     context,
-    title: 'Renombrar cuenta',
-    label: 'Nombre',
-    initial: a.name,
-    onSubmit: (name) => context.app.data.patch('/accounts/${a.id}', {'name': name}, 'Cuenta actualizada'),
+    title: 'Editar cuenta',
+    builder: (ctx) => _AccountEditForm(account: a),
   );
 
   Future<void> _delete(Account a) async {
@@ -378,6 +376,99 @@ class _BalancesDonut extends StatelessWidget {
         for (final a in top)
           DonutSlice(a.name, a.balance, note: accountTypeLabels[a.type] ?? a.type, trailing: formatMoney(a.balance, a.currency)),
         if (mine.length > 5) DonutSlice('Otras', rest, note: '${mine.length - 5} cuentas', trailing: formatMoney(rest, currency)),
+      ],
+    );
+  }
+}
+
+/// Editar una cuenta: nombre, tipo y saldo real de hoy (se cuadra sin inventar movimientos).
+class _AccountEditForm extends StatefulWidget {
+  const _AccountEditForm({required this.account});
+  final Account account;
+
+  @override
+  State<_AccountEditForm> createState() => _AccountEditFormState();
+}
+
+class _AccountEditFormState extends State<_AccountEditForm> {
+  late final Account a = widget.account;
+  late final _name = TextEditingController(text: a.name);
+  late String _type = a.type;
+  late final _balance = TextEditingController(text: formatPlain(a.balance));
+  bool _submitted = false;
+  bool _busy = false;
+  Object? _error;
+
+  String? get _balanceValue {
+    final v = _balance.text.trim().replaceAll(' ', '').replaceAll(',', '.');
+    return RegExp(r'^-?\d+(\.\d{1,2})?$').hasMatch(v) ? v : null;
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _submitted = true;
+      _error = null;
+    });
+    final name = _name.text.trim();
+    final balance = _balanceValue;
+    if (name.isEmpty || balance == null || _busy) return;
+    setState(() => _busy = true);
+    try {
+      // Solo lo que cambió
+      await context.app.data.patch('/accounts/${a.id}', {
+        if (name != a.name) 'name': name,
+        if (_type != a.type) 'type': _type,
+        if (double.parse(balance) != a.balance) 'balance': balance,
+      }, 'Cuenta actualizada');
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _balance.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Stack12(
+      children: [
+        CrTextField(
+          label: 'Nombre',
+          controller: _name,
+          error: _submitted && _name.text.trim().isEmpty ? 'Escribe un nombre' : null,
+          onChanged: (_) => setState(() {}),
+        ),
+        CrSelect<String>(
+          label: 'Tipo',
+          value: _type,
+          options: [for (final e in accountTypeLabels.entries) (e.key, e.value)],
+          onChanged: (v) => setState(() => _type = v),
+        ),
+        CrTextField(
+          label: 'Saldo actual (${a.currency})',
+          controller: _balance,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+          error: _submitted && _balanceValue == null ? 'Saldo con hasta 2 decimales' : null,
+          onChanged: (_) => setState(() {}),
+        ),
+        Text('Si cambias el saldo se ajusta el saldo inicial; tus movimientos no se tocan.', style: CrText.label(c.inkMuted)),
+        ErrorText(_error),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CrButton(label: 'Cancelar', variant: CrButtonVariant.ghost, onPressed: () => Navigator.pop(context)),
+            const SizedBox(width: space2),
+            CrButton(label: 'Guardar', variant: CrButtonVariant.primary, onPressed: _busy ? null : _save),
+          ],
+        ),
       ],
     );
   }

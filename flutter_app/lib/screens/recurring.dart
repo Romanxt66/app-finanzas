@@ -218,6 +218,15 @@ class _RecurringScreenState extends State<RecurringScreen> {
       ],
       actions: [
         CardAction(
+          icon: 'edit',
+          tooltip: 'Editar $title',
+          onPressed: () => showCrDialog<void>(
+            context,
+            title: 'Editar movimiento recurrente',
+            builder: (_) => _RecurringEditForm(rule: r),
+          ),
+        ),
+        CardAction(
           icon: r.active ? 'archive' : 'restore',
           tooltip: '${r.active ? 'Pausar' : 'Reanudar'} $title',
           onPressed: () async {
@@ -254,6 +263,102 @@ class _RecurringScreenState extends State<RecurringScreen> {
         ),
       ],
       semanticLabel: '$title, ${frequencyLabels[r.frequency]}, ${r.active ? 'próximo ${formatDate(r.nextDate)}' : 'pausado'}',
+    );
+  }
+}
+
+/// Editar un recurrente: monto, nota, cuenta, categoría y fechas (el próximo cobro fija el día).
+class _RecurringEditForm extends StatefulWidget {
+  const _RecurringEditForm({required this.rule});
+  final Recurring rule;
+
+  @override
+  State<_RecurringEditForm> createState() => _RecurringEditFormState();
+}
+
+class _RecurringEditFormState extends State<_RecurringEditForm> {
+  late final Recurring r = widget.rule;
+  late final _amount = TextEditingController(text: formatPlain(r.amount));
+  late final _description = TextEditingController(text: r.description);
+  late String _account = r.accountId;
+  late String _category = r.categoryId ?? '';
+  late String _next = r.nextDate;
+  late String _end = r.endDate ?? '';
+  bool _submitted = false;
+  bool _busy = false;
+  Object? _error;
+
+  String? get _endError => _end.isNotEmpty && _end.compareTo(_next) < 0 ? 'No puede ser antes del próximo cobro' : null;
+
+  Future<void> _save() async {
+    setState(() {
+      _submitted = true;
+      _error = null;
+    });
+    final amount = parseAmount(_amount.text);
+    if (amount == null || _next.isEmpty || _endError != null || _busy) return;
+    setState(() => _busy = true);
+    try {
+      final description = _description.text.trim();
+      await context.app.data.patch('/recurring/${r.id}', {
+        if (double.parse(amount) != r.amount) 'amount': amount,
+        if (description != r.description) 'description': description,
+        if (_account != r.accountId) 'account_id': _account,
+        if (r.type != 'transfer' && _category != (r.categoryId ?? '')) 'category_id': _category.isEmpty ? null : _category,
+        if (_next != r.nextDate) 'next_date': _next,
+        if (_end != (r.endDate ?? '')) 'end_date': _end.isEmpty ? null : _end,
+      }, 'Recurrente actualizado');
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _amount.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = context.ref;
+    final accounts = [
+      for (final a in ref.allAccounts)
+        if (!a.archived || a.id == r.accountId) (a.id, '${a.name} (${a.currency})'),
+    ];
+    return Stack12(
+      children: [
+        CrTextField(
+          label: 'Monto',
+          controller: _amount,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          error: _submitted && parseAmount(_amount.text) == null ? amountError : null,
+          onChanged: (_) => setState(() {}),
+        ),
+        CrTextField(label: 'Descripción', controller: _description),
+        CrSelect<String>(label: 'Cuenta', value: _account, options: accounts, onChanged: (v) => setState(() => _account = v)),
+        if (r.type != 'transfer')
+          CategorySelect(
+            kind: r.type == 'income' ? 'income' : 'expense',
+            value: _category,
+            onChanged: (v) => setState(() => _category = v),
+          ),
+        CrDateField(label: 'Próximo cobro', value: _next, onChanged: (v) => setState(() => _next = v ?? _next)),
+        CrDateField(label: 'Hasta', optional: true, value: _end, error: _endError, onChanged: (v) => setState(() => _end = v ?? '')),
+        ErrorText(_error),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CrButton(label: 'Cancelar', variant: CrButtonVariant.ghost, onPressed: () => Navigator.pop(context)),
+            const SizedBox(width: space2),
+            CrButton(label: 'Guardar', variant: CrButtonVariant.primary, onPressed: _busy ? null : _save),
+          ],
+        ),
+      ],
     );
   }
 }

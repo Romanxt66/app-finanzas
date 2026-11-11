@@ -53,9 +53,18 @@ class Budget {
   Budget.fromJson(Map<String, dynamic> j)
     : id = j['id'],
       categoryId = j['category_id'],
+      period = j['period'] ?? 'month',
+      start = j['start'] ?? j['month'] ?? '',
+      recurring = j['recurring'] == true,
       amount = money(j['amount']),
       spent = money(j['spent']);
-  final String id, categoryId;
+  final String id, period, start;
+
+  /// Null: presupuesto general (todos los gastos).
+  final String? categoryId;
+
+  /// Se repite cada día, semana o mes.
+  final bool recurring;
   final double amount, spent;
 }
 

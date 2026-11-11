@@ -143,3 +143,6 @@ double? monthlyNeeded({required DateTime? deadline, required double remaining, r
   final months = (deadline.year - n.year) * 12 + (deadline.month - n.month);
   return months <= 0 ? null : remaining / months;
 }
+
+/// Número para un campo editable: «44900», «12.5» (sin separadores de miles ni ceros de más).
+String formatPlain(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2).replaceAll(RegExp(r'0$'), '');
