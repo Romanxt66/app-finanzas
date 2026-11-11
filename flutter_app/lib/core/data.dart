@@ -23,6 +23,11 @@ class Data {
   Future<TransactionPage> transactions(Map<String, Object?> query) async =>
       TransactionPage.fromJson(await _api.get('/transactions', query: query) as Map<String, dynamic>);
 
+  /// Presupuestos que rigen el día, la semana o el mes que contiene [date] (con los que se repiten).
+  Future<List<Budget>> budgetsFor(String period, String date) async => [
+    for (final b in await _api.get('/budgets', query: {'period': period, 'date': date}) as List) Budget.fromJson(b),
+  ];
+
   Future<List<Budget>> budgets(String month) async => [
     for (final b in await _api.get('/budgets', query: {'month': month}) as List) Budget.fromJson(b),
   ];

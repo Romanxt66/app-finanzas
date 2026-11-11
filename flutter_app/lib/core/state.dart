@@ -333,6 +333,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Qué presupuesto se ve en el inicio: «day», «week» o «month» (de este dispositivo).
+  String get homeBudgetPeriod {
+    final v = _prefs.getString('home_budget_period');
+    return v == 'day' || v == 'week' ? v! : 'month';
+  }
+
+  void setHomeBudgetPeriod(String period) {
+    _prefs.setString('home_budget_period', period);
+    notifyListeners();
+  }
+
   void toggleBalanceHidden() {
     balanceHidden = !balanceHidden;
     _prefs.setString('balance_hidden', balanceHidden ? '1' : '0');
