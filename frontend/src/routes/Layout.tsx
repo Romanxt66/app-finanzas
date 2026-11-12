@@ -1,5 +1,5 @@
-import { Suspense, useMemo } from 'react'
-import { Link, Navigate, Outlet } from 'react-router-dom'
+import { Suspense, useMemo, useState } from 'react'
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useRunDueRecurring } from '../api/hooks'
 import {
   Backdrop,
@@ -20,6 +20,7 @@ import { useAuth } from '../features/authContext'
 import { LegalNotice } from '../features/LegalNotice'
 import { LoadErrorBanner } from '../features/LoadErrorBanner'
 import { APP_NAME } from '../lib/brand'
+import { LandingPage } from './Landing'
 
 const DESKTOP_NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
@@ -52,6 +53,10 @@ function initials(name: string): string {
 
 export function Layout() {
   const { user, loading, logout } = useAuth()
+  const { pathname } = useLocation()
+  // Si en esta visita hubo sesión, al cerrarla se va al acceso (no a la portada)
+  const [hadUser, setHadUser] = useState(false)
+  if (user && !hadUser) setHadUser(true)
   const theme = useTheme()
   const online = useOnline()
   useRunDueRecurring(!!user)
@@ -71,7 +76,10 @@ export function Layout() {
         </p>
       </Backdrop>
     )
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) {
+    // Quien llega sin sesión a la portada ve la página pública; tras cerrar sesión o en otra ruta, el acceso
+    return pathname === '/' && !hadUser ? <LandingPage /> : <Navigate to="/login" replace />
+  }
   return (
     <Backdrop>
       <div className="cr-shell">
