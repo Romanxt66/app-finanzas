@@ -18,13 +18,28 @@ describe('Layout', () => {
       <Route path="/login" element={<p>Pantalla login</p>} />
       <Route element={<Layout />}>
         <Route index element={<p>Contenido</p>} />
+        <Route path="accounts" element={<p>Cuentas</p>} />
       </Route>
     </Routes>
   )
 
-  it('redirige a login sin sesión', async () => {
+  it('sin sesión, la portada muestra la página pública con descarga y acceso', async () => {
     mockApi({})
     renderApp(app, { authed: false })
+    expect(
+      await screen.findByRole('heading', { level: 1, name: /Tu dinero, claro como el cristal/ }),
+    ).toBeInTheDocument()
+    const download = screen.getAllByRole('link', { name: /Descargar para Android/ })[0]
+    expect(download).toHaveAttribute('href', expect.stringContaining('alvea.apk'))
+    expect(screen.getAllByRole('link', { name: 'Iniciar sesión' })[0]).toHaveAttribute(
+      'href',
+      '/login',
+    )
+  })
+
+  it('sin sesión, las demás rutas llevan al acceso', async () => {
+    mockApi({})
+    renderApp(app, { authed: false, route: '/accounts' })
     expect(await screen.findByText('Pantalla login')).toBeInTheDocument()
   })
 
