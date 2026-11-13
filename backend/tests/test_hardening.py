@@ -291,3 +291,13 @@ def test_el_limitador_barre_claves_caducadas() -> None:
     now[0] = 120.0  # todas caducadas
     lim.record_failure("otra")  # la anotación 1000 barre
     assert set(lim._failures) == {"otra"}
+
+
+def test_eliminar_la_cuenta_cubre_todas_las_tablas_del_usuario() -> None:
+    """Una tabla nueva con user_id debe añadirse a _OWNED, o sus datos sobrevivirían al borrado."""
+    from app.db.base import Base
+    from app.services.auth import _OWNED
+
+    with_user = {t.name for t in Base.metadata.tables.values() if "user_id" in t.columns}
+    covered = {m.__table__.name for m in _OWNED}  # type: ignore[attr-defined]
+    assert with_user - covered == set()
