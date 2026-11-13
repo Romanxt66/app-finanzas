@@ -1,4 +1,3 @@
-import '@fontsource-variable/manrope'
 import './tokens.css'
 import './cristal.css'
 import './motion.css'
