@@ -30,6 +30,11 @@ def _clean(text: str) -> str:
     return _SECRETS.sub("[redacted]", text)
 
 
+def _one_line(text: str) -> str:
+    """Campos cortos sin saltos ni caracteres de control: no pueden fabricar líneas de registro."""
+    return "".join(c if c.isprintable() else " " for c in text)
+
+
 @router.post("", status_code=status.HTTP_204_NO_CONTENT)
 async def report(data: ClientError, request: Request) -> None:
     key = request.client.host if request.client else "?"
@@ -37,12 +42,13 @@ async def report(data: ClientError, request: Request) -> None:
         return
     report_limiter.record_failure(key)
     message = _clean(data.message)
-    route = _clean(data.route.split("?", 1)[0])
+    route = _one_line(_clean(data.route.split("?", 1)[0]))
+    release, platform = _one_line(data.release), _one_line(data.platform)
     client_log.warning(
         "client error route=%s release=%s platform=%s: %s\n%s",
         route,
-        data.release,
-        data.platform,
+        release,
+        platform,
         message,
         _clean(data.stack),
     )
@@ -52,8 +58,8 @@ async def report(data: ClientError, request: Request) -> None:
         with sentry_sdk.new_scope() as scope:
             scope.set_tag("source", "client")
             scope.set_tag("route", route)
-            scope.set_tag("platform", data.platform)
-            if data.release:
-                scope.set_tag("client_release", data.release)
+            scope.set_tag("platform", platform)
+            if release:
+                scope.set_tag("client_release", release)
             scope.set_extra("stack", _clean(data.stack))
             sentry_sdk.capture_message(message, level="error")

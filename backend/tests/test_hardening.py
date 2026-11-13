@@ -279,3 +279,15 @@ async def test_respuestas_de_la_api_no_se_guardan_en_cache(client: AsyncClient, 
     assert r.headers["cache-control"] == "no-store"
     err = await client.get("/api/v1/accounts")
     assert err.headers["cache-control"] == "no-store"
+
+
+def test_el_limitador_barre_claves_caducadas() -> None:
+    from app.core.ratelimit import FailureLimiter
+
+    now = [0.0]
+    lim = FailureLimiter(max_failures=5, window_seconds=60, clock=lambda: now[0])
+    for i in range(999):
+        lim.record_failure(f"correo-{i}@x.com")
+    now[0] = 120.0  # todas caducadas
+    lim.record_failure("otra")  # la anotación 1000 barre
+    assert set(lim._failures) == {"otra"}
