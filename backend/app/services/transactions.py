@@ -57,7 +57,9 @@ def build_conditions(
     if date_to:
         conditions.append(Transaction.occurred_on <= date_to)
     if search:
-        conditions.append(Transaction.description.ilike(f"%{search}%"))
+        # % y _ son comodines de LIKE: se escapan para buscar el texto tal cual («50%», «a_b»)
+        literal = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        conditions.append(Transaction.description.ilike(f"%{literal}%", escape="\\"))
     return conditions
 
 
