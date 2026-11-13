@@ -8,7 +8,7 @@ type User = Schemas['UserOut']
 export interface AuthValue {
   user: User | null
   loading: boolean
-  login: (email: string, password: string, remember?: boolean) => Promise<void>
+  login: (email: string, password: string, remember?: boolean, otp?: string) => Promise<void>
   register: (data: Schemas['RegisterIn']) => Promise<void>
   logout: () => void
 }
@@ -34,15 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => setUnauthorizedHandler(logout), [logout])
 
-  const login = useCallback(async (email: string, password: string, remember = true) => {
-    const pair = await api<Schemas['TokenPair']>('/auth/login', {
-      method: 'POST',
-      body: { email, password },
-      auth: false,
-    })
-    tokens.set(pair, remember)
-    setAuthed(true)
-  }, [])
+  const login = useCallback(
+    async (email: string, password: string, remember = true, otp?: string) => {
+      const pair = await api<Schemas['TokenPair']>('/auth/login', {
+        method: 'POST',
+        // otp: código de la app de autenticación (o de recuperación) si la cuenta lo pide
+        body: { email, password, ...(otp && { otp }) },
+        auth: false,
+      })
+      tokens.set(pair, remember)
+      setAuthed(true)
+    },
+    [],
+  )
 
   const register = useCallback(
     async (body: Schemas['RegisterIn']) => {
