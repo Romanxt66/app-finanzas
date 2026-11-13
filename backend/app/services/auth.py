@@ -76,7 +76,15 @@ async def google_user(session: AsyncSession, identity: GoogleIdentity) -> User:
             email=identity.email, hashed_password=None, full_name=name, google_sub=identity.sub
         )
         session.add(user)
-    await session.flush()
+    try:
+        await session.flush()
+    except IntegrityError as exc:
+        # Dos primeros accesos simultáneos con la misma cuenta de Google: el otro ya la creó
+        await session.rollback()
+        existing = await session.scalar(select(User).where(User.google_sub == identity.sub))
+        if existing is None:
+            raise ConflictError("No se pudo crear la cuenta; inténtalo de nuevo") from exc
+        return existing
     return user
 
 
