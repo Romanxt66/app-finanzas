@@ -13,6 +13,7 @@ FROM nginx:1.27-alpine
 # Plantilla: la imagen sustituye ${APP_REDIRECT_URL} al arrancar (las demás $variables son de nginx)
 ENV APP_REDIRECT_URL=""
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80

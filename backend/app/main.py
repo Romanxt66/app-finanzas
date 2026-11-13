@@ -16,7 +16,15 @@ from app.db.session import get_session
 def create_app() -> FastAPI:
     settings = get_settings()
     init_sentry(settings.sentry_dsn, settings.environment)
-    app = FastAPI(title="App de Finanzas", version="0.1.0")
+    # En producción no se publica la documentación interactiva (es un mapa de la API)
+    public_docs = settings.environment.lower() not in ("production", "prod")
+    app = FastAPI(
+        title="App de Finanzas",
+        version="0.1.0",
+        docs_url="/docs" if public_docs else None,
+        redoc_url="/redoc" if public_docs else None,
+        openapi_url="/openapi.json" if public_docs else None,
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
