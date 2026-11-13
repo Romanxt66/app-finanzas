@@ -21,7 +21,7 @@ class User(IdMixin, TimestampMixin, Base):
 
     # Verificación en dos pasos (TOTP). El secreto se guarda al iniciar la configuración y solo
     # se exige al entrar cuando `totp_enabled` es verdadero (tras confirmar un primer código).
-    totp_secret: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    totp_secret: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     # Último paso de tiempo aceptado: un mismo código no sirve dos veces
     totp_last_step: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)

@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { ApiError } from '../api/client'
 import { Link, Navigate } from 'react-router-dom'
 import { z } from 'zod'
 import {
@@ -101,6 +102,9 @@ function Shell({
 export function LoginPage() {
   const { user, login } = useAuth()
   const [error, setError] = useState<unknown>(null)
+  // Con verificación en dos pasos el servidor responde «otp_required»: se pide el código y se reenvía
+  const [needsCode, setNeedsCode] = useState(false)
+  const [code, setCode] = useState('')
   const { register, handleSubmit, formState } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { remember: true },
@@ -120,7 +124,11 @@ export function LoginPage() {
         className="cr-stack"
         onSubmit={handleSubmit((d) => {
           setError(null)
-          return login(d.email, d.password, d.remember).catch(setError)
+          const otp = needsCode ? code.replace(/\s/g, '') : undefined
+          return login(d.email, d.password, d.remember, otp).catch((e: unknown) => {
+            if (e instanceof ApiError && e.code === 'otp_required') setNeedsCode(true)
+            else setError(e)
+          })
         })}
       >
         <Input
@@ -138,9 +146,30 @@ export function LoginPage() {
           error={formState.errors.password?.message}
           {...register('password')}
         />
+        {needsCode && (
+          <>
+            <p className="caption cr-muted" role="status">
+              Tu cuenta tiene verificación en dos pasos: escribe los 6 dígitos de tu app de
+              autenticación o un código de recuperación.
+            </p>
+            <Input
+              label="Código de verificación"
+              icon="lock"
+              placeholder="123 456"
+              autoComplete="one-time-code"
+              maxLength={32}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          </>
+        )}
         <Checkbox label="Mantener sesión iniciada" {...register('remember')} />
         <ErrorText error={error} />
-        <Button type="submit" variant="primary" disabled={formState.isSubmitting}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={formState.isSubmitting || (needsCode && !code.trim())}
+        >
           Entrar
           <Icon name="arrow" />
         </Button>

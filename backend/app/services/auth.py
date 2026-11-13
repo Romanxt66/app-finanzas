@@ -1,10 +1,12 @@
+from cryptography.exceptions import InvalidTag
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import totp
+from app.core import secretbox, totp
 from app.core.errors import AppError, ConflictError, UnauthorizedError
 from app.core.google import GoogleIdentity
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password, needs_rehash, verify_password
 from app.models import (
     Account,
     Budget,
@@ -27,7 +29,12 @@ async def register(session: AsyncSession, data: RegisterIn) -> User:
         raise ConflictError("El correo ya está registrado")
     user = User(email=email, hashed_password=hash_password(data.password), full_name=data.full_name)
     session.add(user)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        # Dos altas simultáneas con el mismo correo: la segunda choca con el índice único
+        await session.rollback()
+        raise ConflictError("El correo ya está registrado") from exc
     return user
 
 
@@ -43,6 +50,9 @@ async def authenticate(session: AsyncSession, email: str, password: str) -> User
         raise UnauthorizedError("Credenciales incorrectas")
     if not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Credenciales incorrectas")
+    # Si Argon2 sube sus parámetros, el hash se renueva al entrar (el llamador hace commit)
+    if needs_rehash(user.hashed_password):
+        user.hashed_password = hash_password(password)
     return user
 
 
@@ -67,16 +77,38 @@ async def google_user(session: AsyncSession, identity: GoogleIdentity) -> User:
             email=identity.email, hashed_password=None, full_name=name, google_sub=identity.sub
         )
         session.add(user)
-    await session.flush()
+    try:
+        await session.flush()
+    except IntegrityError as exc:
+        # Dos primeros accesos simultáneos con la misma cuenta de Google: el otro ya la creó
+        await session.rollback()
+        existing = await session.scalar(select(User).where(User.google_sub == identity.sub))
+        if existing is None:
+            raise ConflictError("No se pudo crear la cuenta; inténtalo de nuevo") from exc
+        return existing
     return user
+
+
+def _totp_step(user: User, code: str) -> int | None:
+    """Paso TOTP del código, o None. Si el secreto no se puede descifrar (cambió SECRET_KEY),
+    ningún código de la app vale, pero los de recuperación siguen sirviendo para entrar."""
+    if not user.totp_secret:
+        return None
+    try:
+        secret = secretbox.unseal(user.totp_secret)
+    except (InvalidTag, ValueError):
+        return None
+    return totp.matching_step(secret, code)
 
 
 def check_second_factor(user: User, code: str) -> bool:
     """Valida un código TOTP o de recuperación y lo consume. El llamador hace commit."""
     if not user.totp_enabled or not user.totp_secret:
         return False
-    step = totp.matching_step(user.totp_secret, code)
+    step = _totp_step(user, code)
     if step is not None:
+        if not secretbox.is_sealed(user.totp_secret):  # guardado antes del cifrado: se cifra ya
+            user.totp_secret = secretbox.seal(user.totp_secret)
         if user.totp_last_step is not None and step <= user.totp_last_step:
             return False  # el mismo código (o uno anterior) ya se usó
         user.totp_last_step = step
@@ -94,9 +126,10 @@ def start_two_factor(user: User) -> str:
     """Genera un secreto nuevo, pendiente de confirmar con un primer código."""
     if user.totp_enabled:
         raise ConflictError("La verificación en dos pasos ya está activada")
-    user.totp_secret = totp.generate_secret()
+    secret = totp.generate_secret()
+    user.totp_secret = secretbox.seal(secret)  # en la base de datos, solo cifrado
     user.totp_last_step = None
-    return user.totp_secret
+    return secret
 
 
 def confirm_two_factor(user: User, code: str) -> list[str]:
@@ -105,7 +138,7 @@ def confirm_two_factor(user: User, code: str) -> list[str]:
         raise ConflictError("La verificación en dos pasos ya está activada")
     if not user.totp_secret:
         raise AppError("Primero genera el código QR")
-    step = totp.matching_step(user.totp_secret, code)
+    step = _totp_step(user, code)
     if step is None:
         raise AppError("El código no es correcto. Revisa la hora del móvil e inténtalo otra vez")
     codes = totp.generate_recovery_codes()

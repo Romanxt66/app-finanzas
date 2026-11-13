@@ -32,6 +32,7 @@ import { WeekStrip } from '../features/WeekStrip'
 import { dayLabel } from '../lib/dates'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { formatDate, formatMoney, monthStart, todayISO } from '../lib/format'
+import { useDebounced } from '../lib/useDebounced'
 
 const PAGE_SIZE = 20
 const TYPE_LABELS = { income: 'Ingreso', expense: 'Gasto', transfer: 'Transferencia' } as const
@@ -227,8 +228,10 @@ export function TransactionsPage() {
   }
   const { data: accounts = [] } = useAccounts(true)
   const { data: categories = [] } = useCategories()
+  // La búsqueda se pide al dejar de escribir, no con cada tecla
+  const search = useDebounced(filters.search.trim())
   const { data, isLoading } = useTransactions({
-    ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
+    ...Object.fromEntries(Object.entries({ ...filters, search }).filter(([, v]) => v)),
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
   })

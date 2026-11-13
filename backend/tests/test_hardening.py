@@ -241,3 +241,63 @@ async def test_respuestas_grandes_van_comprimidas(client: AsyncClient, auth: H) 
     assert len(big.json()["items"]) == 15
     small = await client.get("/health", headers={"Accept-Encoding": "gzip"})
     assert "content-encoding" not in small.headers
+
+
+async def test_busqueda_trata_comodines_como_texto(client: AsyncClient, auth: H) -> None:
+    acc = await _mk(
+        client,
+        auth,
+        "accounts",
+        {"name": "A", "type": "bank", "currency": "COP", "initial_balance": "0"},
+    )
+    for desc in ("descuento 50%", "café", "a_b"):
+        await _mk(
+            client,
+            auth,
+            "transactions",
+            {
+                "type": "expense",
+                "account_id": acc["id"],
+                "amount": "1",
+                "occurred_on": date.today().isoformat(),
+                "description": desc,
+            },
+        )
+
+    async def found(q: str) -> list[str]:
+        r = await client.get("/api/v1/transactions", headers=auth, params={"search": q})
+        return sorted(t["description"] for t in r.json()["items"])
+
+    assert await found("50%") == ["descuento 50%"]
+    assert await found("%") == ["descuento 50%"]
+    assert await found("_") == ["a_b"]
+    assert await found("caf") == ["café"]
+
+
+async def test_respuestas_de_la_api_no_se_guardan_en_cache(client: AsyncClient, auth: H) -> None:
+    r = await client.get("/api/v1/accounts", headers=auth)
+    assert r.headers["cache-control"] == "no-store"
+    err = await client.get("/api/v1/accounts")
+    assert err.headers["cache-control"] == "no-store"
+
+
+def test_el_limitador_barre_claves_caducadas() -> None:
+    from app.core.ratelimit import FailureLimiter
+
+    now = [0.0]
+    lim = FailureLimiter(max_failures=5, window_seconds=60, clock=lambda: now[0])
+    for i in range(999):
+        lim.record_failure(f"correo-{i}@x.com")
+    now[0] = 120.0  # todas caducadas
+    lim.record_failure("otra")  # la anotación 1000 barre
+    assert set(lim._failures) == {"otra"}
+
+
+def test_eliminar_la_cuenta_cubre_todas_las_tablas_del_usuario() -> None:
+    """Una tabla nueva con user_id debe añadirse a _OWNED, o sus datos sobrevivirían al borrado."""
+    from app.db.base import Base
+    from app.services.auth import _OWNED
+
+    with_user = {t.name for t in Base.metadata.tables.values() if "user_id" in t.columns}
+    covered = {m.__table__.name for m in _OWNED}  # type: ignore[attr-defined]
+    assert with_user - covered == set()

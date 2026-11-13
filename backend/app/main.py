@@ -10,6 +10,7 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.idempotency import IdempotencyMiddleware
+from app.core.no_store import NoStoreMiddleware
 from app.core.observability import init_sentry, install_observability
 from app.db.session import get_session
 
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     )
     # Reenvíos de la app sin conexión: la misma `Idempotency-Key` no aplica un cambio dos veces
     app.add_middleware(IdempotencyMiddleware)
+    app.add_middleware(NoStoreMiddleware)
     # El último añadido es el más externo: comprime al final (la idempotencia guarda el cuerpo sin
     # comprimir). Útil cuando la app Android llama a la API sin pasar por el nginx de la web.
     app.add_middleware(GZipMiddleware, minimum_size=1024)

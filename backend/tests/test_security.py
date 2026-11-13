@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 import jwt
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from app.core.config import get_settings
 from app.core.errors import UnauthorizedError
@@ -110,3 +111,41 @@ async def test_altas_limitadas_por_conexion(client: AsyncClient) -> None:
         json={"email": "masa-x@example.com", "password": "password-123", "full_name": "M"},
     )
     assert r.status_code == 429
+
+
+async def test_hash_debil_se_renueva_al_entrar(client: AsyncClient, engine: AsyncEngine) -> None:
+    from argon2 import PasswordHasher
+    from sqlalchemy import select, update
+
+    from app.core.security import needs_rehash
+    from app.models import User
+
+    await register_and_login(client)
+    weak = PasswordHasher(time_cost=1, memory_cost=8192).hash("password-123")
+    async with AsyncSession(engine) as s:
+        await s.execute(update(User).values(hashed_password=weak))
+        await s.commit()
+    r = await client.post(
+        "/api/v1/auth/login", json={"email": "a@example.com", "password": "password-123"}
+    )
+    assert r.status_code == 200
+    async with AsyncSession(engine) as s:
+        stored = await s.scalar(select(User.hashed_password))
+    assert stored is not None and stored != weak and not needs_rehash(stored)
+
+
+def test_hash_danado_no_entra_ni_falla() -> None:
+    assert verify_password("lo-que-sea", "esto-no-es-un-hash") is False
+
+
+async def test_altas_simultaneas_con_el_mismo_correo(client: AsyncClient) -> None:
+    import asyncio
+
+    body = {"email": "doble@example.com", "password": "password-123", "full_name": "D"}
+    codes = sorted(
+        r.status_code
+        for r in await asyncio.gather(
+            *(client.post("/api/v1/auth/register", json=body) for _ in range(4))
+        )
+    )
+    assert codes[0] == 201 and set(codes[1:]) == {409}

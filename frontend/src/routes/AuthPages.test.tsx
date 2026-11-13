@@ -56,6 +56,36 @@ describe('LoginPage', () => {
   })
 })
 
+describe('LoginPage con verificación en dos pasos', () => {
+  beforeEach(() => localStorage.clear())
+  afterEach(() => vi.restoreAllMocks())
+
+  it('pide el código y lo reenvía con el inicio de sesión', async () => {
+    const bodies: Record<string, unknown>[] = []
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      if (String(url).endsWith('/auth/login')) {
+        const body = JSON.parse(String(init?.body)) as Record<string, unknown>
+        bodies.push(body)
+        return body.otp === '123456'
+          ? json(200, { access_token: 'a', refresh_token: 'r', token_type: 'bearer' })
+          : json(401, { error: { code: 'otp_required', message: 'Escribe el código' } })
+      }
+      return json(200, { id: '1', email: 'x@example.com', full_name: 'X' })
+    })
+    setup()
+    await userEvent.type(screen.getByLabelText('Correo'), 'x@example.com')
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'secret123')
+    await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    const field = await screen.findByLabelText('Código de verificación')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    await userEvent.type(field, '123 456')
+    await userEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    expect(await screen.findByText('Panel')).toBeInTheDocument()
+    expect(bodies[0].otp).toBeUndefined()
+    expect(bodies[1].otp).toBe('123456')
+  })
+})
+
 describe('RegisterPage', () => {
   beforeEach(() => localStorage.clear())
   afterEach(() => vi.restoreAllMocks())
