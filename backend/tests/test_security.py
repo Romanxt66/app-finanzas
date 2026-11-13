@@ -3,10 +3,12 @@ from datetime import UTC, datetime, timedelta
 
 import jwt
 import pytest
+from httpx import AsyncClient
 
 from app.core.config import get_settings
 from app.core.errors import UnauthorizedError
 from app.core.security import create_token, decode_token, hash_password, verify_password
+from tests.conftest import register_and_login
 
 
 def test_password_hash_is_salted_and_verifiable() -> None:
@@ -58,3 +60,53 @@ def test_settings_require_long_secret(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SECRET_KEY", "corta")
     with pytest.raises(ValidationError):
         Settings()  # type: ignore[call-arg]
+
+
+async def test_cambiar_contrasena_con_la_actual_mal_se_bloquea_tras_5_intentos(
+    client: AsyncClient,
+) -> None:
+    headers = await register_and_login(client, "limite@example.com")
+    body = {"current_password": "no-es-esta-1", "new_password": "otra-clave-123"}
+    for _ in range(5):
+        r = await client.post("/api/v1/auth/change-password", headers=headers, json=body)
+        assert r.status_code == 400
+    blocked = await client.post("/api/v1/auth/change-password", headers=headers, json=body)
+    assert blocked.status_code == 429
+    # Ni siquiera la contraseña correcta pasa mientras dure el bloqueo
+    ok = {"current_password": "password-123", "new_password": "otra-clave-123"}
+    assert (
+        await client.post("/api/v1/auth/change-password", headers=headers, json=ok)
+    ).status_code == 429
+
+
+async def test_la_documentacion_no_se_publica_en_produccion(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from httpx import ASGITransport
+
+    from app.core.config import get_settings
+    from app.main import create_app
+
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    get_settings.cache_clear()
+    try:
+        app = create_app()
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://t") as c:
+            for path in ("/docs", "/redoc", "/openapi.json"):
+                assert (await c.get(path)).status_code == 404
+    finally:
+        get_settings.cache_clear()
+
+
+async def test_altas_limitadas_por_conexion(client: AsyncClient) -> None:
+    for i in range(30):
+        r = await client.post(
+            "/api/v1/auth/register",
+            json={"email": f"masa{i}@example.com", "password": "password-123", "full_name": "M"},
+        )
+        assert r.status_code == 201
+    r = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "masa-x@example.com", "password": "password-123", "full_name": "M"},
+    )
+    assert r.status_code == 429

@@ -33,6 +33,30 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # Por IP+correo (5/15 min); respaldo solo por correo si la IP se falsifica (X-Forwarded-For)
 login_limiter = FailureLimiter()
 email_limiter = FailureLimiter(max_failures=20)
+# Acciones que piden la contraseña o un código con la sesión ya abierta (cambiar contraseña, borrar
+# la cuenta, verificación en dos pasos): 5 fallos por usuario cada 15 min. Así un token robado no
+# sirve para probar contraseñas o códigos sin límite.
+sensitive_limiter = FailureLimiter()
+# Altas por IP: 30 por hora (evita crear cuentas en masa con un script)
+register_limiter = FailureLimiter(max_failures=30, window_seconds=60 * 60)
+
+
+class _Guarded:
+    """Cuenta como fallo un error de credenciales dentro del bloque y bloquea tras demasiados."""
+
+    def __init__(self, user: User) -> None:
+        self.key = str(user.id)
+
+    def __enter__(self) -> None:
+        wait = sensitive_limiter.retry_after(self.key)
+        if wait:
+            raise TooManyRequestsError(
+                f"Demasiados intentos fallidos. Inténtalo de nuevo en {-(-wait // 60)} min"
+            )
+
+    def __exit__(self, kind: type[BaseException] | None, *_: object) -> None:
+        if kind is not None and issubclass(kind, (AppError, UnauthorizedError)):
+            sensitive_limiter.record_failure(self.key)
 
 
 def _tokens(user: User) -> TokenPair:
@@ -43,7 +67,13 @@ def _tokens(user: User) -> TokenPair:
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-async def register(data: RegisterIn, session: SessionDep) -> User:
+async def register(data: RegisterIn, request: Request, session: SessionDep) -> User:
+    key = request.client.host if request.client else "?"
+    if register_limiter.retry_after(key):
+        raise TooManyRequestsError(
+            "Demasiadas cuentas creadas desde esta conexión. Prueba más tarde"
+        )
+    register_limiter.record_failure(key)
     return await auth.register(session, data)
 
 
@@ -124,7 +154,8 @@ async def update_profile(data: ProfileUpdate, user: CurrentUser, session: Sessio
 async def delete_me(data: DeleteAccountIn, user: CurrentUser, session: SessionDep) -> None:
     """Elimina la cuenta y todos sus datos. Pide la contraseña para confirmar."""
     google = await verify_google_token(data.google_id_token) if data.google_id_token else None
-    await auth.delete_account(session, user, data.password, google)
+    with _Guarded(user):
+        await auth.delete_account(session, user, data.password, google)
 
 
 @router.post("/change-password", response_model=TokenPair)
@@ -133,10 +164,11 @@ async def change_password(
 ) -> TokenPair:
     """Cambia la contraseña y cierra las demás sesiones; devuelve tokens nuevos para esta."""
     # Una cuenta creada con Google crea aquí su primera contraseña (no hay actual que comprobar)
-    if user.hashed_password is not None and not verify_password(
-        data.current_password, user.hashed_password
-    ):
-        raise AppError("La contraseña actual es incorrecta")
+    with _Guarded(user):
+        if user.hashed_password is not None and not verify_password(
+            data.current_password, user.hashed_password
+        ):
+            raise AppError("La contraseña actual es incorrecta")
     if data.current_password == data.new_password:
         raise AppError("La contraseña nueva debe ser distinta de la actual")
     user.hashed_password = hash_password(data.new_password)
@@ -165,7 +197,8 @@ async def two_factor_enable(
     data: TwoFactorCode, user: CurrentUser, session: SessionDep
 ) -> RecoveryCodes:
     """Confirma el primer código y devuelve los códigos de recuperación (solo esta vez)."""
-    codes = auth.confirm_two_factor(user, data.code)
+    with _Guarded(user):
+        codes = auth.confirm_two_factor(user, data.code)
     await session.commit()
     return RecoveryCodes(recovery_codes=codes)
 
@@ -174,7 +207,8 @@ async def two_factor_enable(
 async def two_factor_disable(
     data: TwoFactorDisable, user: CurrentUser, session: SessionDep
 ) -> None:
-    auth.disable_two_factor(user, data.password, data.code)
+    with _Guarded(user):
+        auth.disable_two_factor(user, data.password, data.code)
     await session.commit()
 
 
@@ -183,6 +217,7 @@ async def two_factor_recovery_codes(
     data: TwoFactorCode, user: CurrentUser, session: SessionDep
 ) -> RecoveryCodes:
     """Sustituye los códigos de recuperación por otros nuevos (los anteriores dejan de valer)."""
-    codes = auth.regenerate_recovery_codes(user, data.code)
+    with _Guarded(user):
+        codes = auth.regenerate_recovery_codes(user, data.code)
     await session.commit()
     return RecoveryCodes(recovery_codes=codes)

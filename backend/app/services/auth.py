@@ -31,9 +31,15 @@ async def register(session: AsyncSession, data: RegisterIn) -> User:
     return user
 
 
+# Hash de relleno: si el correo no existe se verifica contra él igualmente, para que la respuesta
+# tarde lo mismo y no se pueda averiguar por tiempos qué correos tienen cuenta
+_DUMMY_HASH = hash_password("relleno-para-igualar-tiempos")
+
+
 async def authenticate(session: AsyncSession, email: str, password: str) -> User:
     user = await session.scalar(select(User).where(User.email == email.lower()))
     if user is None or user.hashed_password is None:
+        verify_password(password, _DUMMY_HASH)
         raise UnauthorizedError("Credenciales incorrectas")
     if not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Credenciales incorrectas")

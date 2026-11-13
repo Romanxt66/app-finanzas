@@ -15,7 +15,12 @@ from sqlalchemy.pool import StaticPool
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite://"
 os.environ["SECRET_KEY"] = "test-secret-key-only-for-pytest-0123456789"
 
-from app.api.v1.auth import email_limiter, login_limiter  # noqa: E402
+from app.api.v1.auth import (  # noqa: E402
+    email_limiter,
+    login_limiter,
+    register_limiter,
+    sensitive_limiter,
+)
 from app.api.v1.client_errors import report_limiter  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.db.session import get_session  # noqa: E402
@@ -57,6 +62,8 @@ async def client(engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
     login_limiter._failures.clear()
     email_limiter._failures.clear()  # el límite es global al proceso: aislar cada test
     report_limiter._failures.clear()
+    sensitive_limiter._failures.clear()
+    register_limiter._failures.clear()
     maker = async_sessionmaker(engine, expire_on_commit=False)
 
     async def _session() -> AsyncIterator[AsyncSession]:
