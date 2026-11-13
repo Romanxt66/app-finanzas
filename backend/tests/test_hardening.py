@@ -272,3 +272,10 @@ async def test_busqueda_trata_comodines_como_texto(client: AsyncClient, auth: H)
     assert await found("%") == ["descuento 50%"]
     assert await found("_") == ["a_b"]
     assert await found("caf") == ["café"]
+
+
+async def test_respuestas_de_la_api_no_se_guardan_en_cache(client: AsyncClient, auth: H) -> None:
+    r = await client.get("/api/v1/accounts", headers=auth)
+    assert r.headers["cache-control"] == "no-store"
+    err = await client.get("/api/v1/accounts")
+    assert err.headers["cache-control"] == "no-store"
