@@ -1,4 +1,5 @@
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import totp
@@ -27,7 +28,12 @@ async def register(session: AsyncSession, data: RegisterIn) -> User:
         raise ConflictError("El correo ya está registrado")
     user = User(email=email, hashed_password=hash_password(data.password), full_name=data.full_name)
     session.add(user)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError as exc:
+        # Dos altas simultáneas con el mismo correo: la segunda choca con el índice único
+        await session.rollback()
+        raise ConflictError("El correo ya está registrado") from exc
     return user
 
 

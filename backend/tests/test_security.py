@@ -136,3 +136,16 @@ async def test_hash_debil_se_renueva_al_entrar(client: AsyncClient, engine: Asyn
 
 def test_hash_danado_no_entra_ni_falla() -> None:
     assert verify_password("lo-que-sea", "esto-no-es-un-hash") is False
+
+
+async def test_altas_simultaneas_con_el_mismo_correo(client: AsyncClient) -> None:
+    import asyncio
+
+    body = {"email": "doble@example.com", "password": "password-123", "full_name": "D"}
+    codes = sorted(
+        r.status_code
+        for r in await asyncio.gather(
+            *(client.post("/api/v1/auth/register", json=body) for _ in range(4))
+        )
+    )
+    assert codes[0] == 201 and set(codes[1:]) == {409}
