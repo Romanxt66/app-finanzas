@@ -1,8 +1,11 @@
 from unittest.mock import patch
 
 from httpx import AsyncClient
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-from app.core import totp
+from app.core import secretbox, totp
+from app.models import User
 from tests.conftest import register_and_login
 
 LOGIN = {"email": "a@example.com", "password": "password-123"}
@@ -111,3 +114,44 @@ async def test_regenerate_recovery_codes(client: AsyncClient) -> None:
     assert stale.status_code == 401
     fresh = await client.post("/api/v1/auth/login", json={**LOGIN, "otp": new[0]})
     assert fresh.status_code == 200
+
+
+async def _stored_secret(engine: AsyncEngine) -> str | None:
+    async with AsyncSession(engine) as s:
+        return await s.scalar(select(User.totp_secret))
+
+
+async def test_el_secreto_se_guarda_cifrado(client: AsyncClient, engine: AsyncEngine) -> None:
+    headers = await register_and_login(client)
+    secret, _ = await _enable(client, headers)
+    stored = await _stored_secret(engine)
+    assert stored is not None and stored.startswith("v1:") and secret not in stored
+    assert secretbox.unseal(stored) == secret
+
+
+async def test_un_secreto_antiguo_en_claro_sigue_valiendo_y_se_cifra(
+    client: AsyncClient, engine: AsyncEngine
+) -> None:
+    headers = await register_and_login(client)
+    secret, _ = await _enable(client, headers)
+    async with AsyncSession(engine) as s:  # como lo guardaba la versión anterior
+        await s.execute(update(User).values(totp_secret=secret))
+        await s.commit()
+    code = totp.code_at(secret, totp.current_step() + 1)
+    assert (await client.post("/api/v1/auth/login", json={**LOGIN, "otp": code})).status_code == 200
+    stored = await _stored_secret(engine)
+    assert stored is not None and stored.startswith("v1:")
+
+
+async def test_si_no_se_puede_descifrar_valen_los_de_recuperacion(
+    client: AsyncClient, engine: AsyncEngine
+) -> None:
+    headers = await register_and_login(client)
+    secret, codes = await _enable(client, headers)
+    async with AsyncSession(engine) as s:  # p. ej. cambió SECRET_KEY
+        await s.execute(update(User).values(totp_secret="v1:" + "A" * 80))
+        await s.commit()
+    code = totp.code_at(secret, totp.current_step() + 1)
+    assert (await client.post("/api/v1/auth/login", json={**LOGIN, "otp": code})).status_code == 401
+    ok = await client.post("/api/v1/auth/login", json={**LOGIN, "otp": codes[0]})
+    assert ok.status_code == 200

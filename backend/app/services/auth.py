@@ -1,8 +1,9 @@
+from cryptography.exceptions import InvalidTag
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core import totp
+from app.core import secretbox, totp
 from app.core.errors import AppError, ConflictError, UnauthorizedError
 from app.core.google import GoogleIdentity
 from app.core.security import hash_password, needs_rehash, verify_password
@@ -88,12 +89,26 @@ async def google_user(session: AsyncSession, identity: GoogleIdentity) -> User:
     return user
 
 
+def _totp_step(user: User, code: str) -> int | None:
+    """Paso TOTP del código, o None. Si el secreto no se puede descifrar (cambió SECRET_KEY),
+    ningún código de la app vale, pero los de recuperación siguen sirviendo para entrar."""
+    if not user.totp_secret:
+        return None
+    try:
+        secret = secretbox.unseal(user.totp_secret)
+    except (InvalidTag, ValueError):
+        return None
+    return totp.matching_step(secret, code)
+
+
 def check_second_factor(user: User, code: str) -> bool:
     """Valida un código TOTP o de recuperación y lo consume. El llamador hace commit."""
     if not user.totp_enabled or not user.totp_secret:
         return False
-    step = totp.matching_step(user.totp_secret, code)
+    step = _totp_step(user, code)
     if step is not None:
+        if not secretbox.is_sealed(user.totp_secret):  # guardado antes del cifrado: se cifra ya
+            user.totp_secret = secretbox.seal(user.totp_secret)
         if user.totp_last_step is not None and step <= user.totp_last_step:
             return False  # el mismo código (o uno anterior) ya se usó
         user.totp_last_step = step
@@ -111,9 +126,10 @@ def start_two_factor(user: User) -> str:
     """Genera un secreto nuevo, pendiente de confirmar con un primer código."""
     if user.totp_enabled:
         raise ConflictError("La verificación en dos pasos ya está activada")
-    user.totp_secret = totp.generate_secret()
+    secret = totp.generate_secret()
+    user.totp_secret = secretbox.seal(secret)  # en la base de datos, solo cifrado
     user.totp_last_step = None
-    return user.totp_secret
+    return secret
 
 
 def confirm_two_factor(user: User, code: str) -> list[str]:
@@ -122,7 +138,7 @@ def confirm_two_factor(user: User, code: str) -> list[str]:
         raise ConflictError("La verificación en dos pasos ya está activada")
     if not user.totp_secret:
         raise AppError("Primero genera el código QR")
-    step = totp.matching_step(user.totp_secret, code)
+    step = _totp_step(user, code)
     if step is None:
         raise AppError("El código no es correcto. Revisa la hora del móvil e inténtalo otra vez")
     codes = totp.generate_recovery_codes()
