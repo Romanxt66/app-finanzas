@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAccounts, useCategories, useRecurring, useSummary, useTransactions } from '../api/hooks'
 import {
   BalanceCard,
@@ -12,6 +11,7 @@ import {
   TransactionList,
   TransactionRow,
   PageTitle,
+  Skeleton,
   MonthPill,
 } from '../design'
 import { BudgetHomeCard } from '../features/BudgetHomeCard'
@@ -23,7 +23,8 @@ import { MoodCard } from '../features/MoodCard'
 import { formatDate, formatMoney, monthLabel, monthStart } from '../lib/format'
 import { Link } from 'react-router-dom'
 
-const compact = (n: number) => new Intl.NumberFormat('es-CO', { notation: 'compact' }).format(n)
+// recharts (~100 KB) llega aparte: el resto del resumen se pinta sin esperarlo
+const TrendChart = lazy(() => import('../features/TrendChart'))
 
 const HIDE_KEY = 'balance_hidden'
 
@@ -225,36 +226,9 @@ export function DashboardPage() {
       <div className="cr-grid-cols">
         <Card title="Tendencia (6 meses)">
           <div className="cr-chart">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid vertical={false} stroke="var(--hairline)" />
-                <XAxis
-                  dataKey="mes"
-                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={44}
-                  tickFormatter={(v) => compact(Number(v))}
-                />
-                <Tooltip
-                  cursor={{ fill: 'var(--glass)' }}
-                  contentStyle={{
-                    background: 'var(--surface-solid)',
-                    border: '1px solid var(--glass-border)',
-                    borderRadius: 12,
-                    color: 'var(--ink)',
-                  }}
-                  formatter={(v) => formatMoney(Number(v), currency)}
-                />
-                <Bar dataKey="Ingresos" className="cr-bar-in" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="Gastos" className="cr-bar-out" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<Skeleton lines={1} height={240} />}>
+              <TrendChart data={chartData} currency={currency} />
+            </Suspense>
           </div>
         </Card>
 

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Backdrop, BrandLogo, Icon, type IconName } from '../design'
 import { Alvi } from '../features/Alvi'
@@ -116,6 +117,16 @@ function AndroidButton({ className = '' }: { className?: string }) {
 
 /** Página pública: qué es Alvea, descarga para Android y acceso a la versión web. */
 export function LandingPage() {
+  // Con el navegador libre se adelanta la descarga del inicio de sesión: entrar es instantáneo
+  useEffect(() => {
+    const load = () => void import('./AuthPages')
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(load, { timeout: 3000 })
+      return () => cancelIdleCallback(id)
+    }
+    const id = setTimeout(load, 1500)
+    return () => clearTimeout(id)
+  }, [])
   return (
     <Backdrop>
       <div className="cr-lp">

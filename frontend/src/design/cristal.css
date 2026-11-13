@@ -2225,28 +2225,38 @@ a.cr-user:focus-visible {
   outline-offset: 2px;
 }
 
-/* Fuentes de la app (autoalojadas por la CSP; licencias OFL junto a los archivos) */
+/* Fuentes de la app (autoalojadas por la CSP; licencias OFL junto a los archivos). woff2 con solo
+   latín y signos del español: un tercio del peso de los TTF originales. */
 /* Manrope variable (200–800): la fuente de la app. Antes solo se nombraba y se veía la del sistema. */
 @font-face {
   font-family: Manrope;
   font-style: normal;
   font-weight: 200 800;
   font-display: swap;
-  src: url('../assets/fonts/Manrope.ttf') format('truetype');
+  src: url('../assets/fonts/Manrope.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2190-2193, U+2212, U+2215;
 }
 @font-face {
   font-family: 'Instrument Serif';
   font-style: italic;
   font-weight: 400;
   font-display: swap;
-  src: url('../assets/fonts/InstrumentSerif-Italic.ttf') format('truetype');
+  src: url('../assets/fonts/InstrumentSerif-Italic.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2190-2193, U+2212, U+2215;
 }
 @font-face {
   font-family: 'JetBrains Mono';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('../assets/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  src: url('../assets/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC,
+    U+2122, U+2190-2193, U+2212, U+2215;
 }
 .cr-mood-hop {
   display: block;
