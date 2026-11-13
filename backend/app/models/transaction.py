@@ -34,8 +34,9 @@ class Transaction(IdMixin, TimestampMixin, Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("accounts.id"), index=True)
+    # Indexada: se filtra por ella (saldos, borrar una cuenta) y la usa la comprobación de la FK
     transfer_account_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("accounts.id"), nullable=True
+        Uuid, ForeignKey("accounts.id"), nullable=True, index=True
     )
     category_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("categories.id"), nullable=True, index=True
