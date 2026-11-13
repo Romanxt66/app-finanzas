@@ -1,16 +1,18 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ApiError } from './api/client'
 import { ToastProvider } from './design'
 import { AuthProvider } from './features/auth'
-import { LoginPage, RegisterPage } from './routes/AuthPages'
 import { Layout } from './routes/Layout'
-import { LegalPage } from './routes/Legal'
 
 // Cada pantalla se descarga al visitarla; recharts solo viaja con el resumen
 const lazyPage = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, name: K) =>
   lazy(async () => ({ default: (await load())[name] }))
+// Inicio de sesión y textos legales también aparte: los formularios (zod, react-hook-form) no viajan con la portada
+const LoginPage = lazyPage(() => import('./routes/AuthPages'), 'LoginPage')
+const RegisterPage = lazyPage(() => import('./routes/AuthPages'), 'RegisterPage')
+const LegalPage = lazy(async () => ({ default: (await import('./routes/Legal')).LegalPage }))
 const AnalyticsPage = lazyPage(() => import('./routes/Analytics'), 'AnalyticsPage')
 const AccountsPage = lazyPage(() => import('./routes/Accounts'), 'AccountsPage')
 const BudgetsPage = lazyPage(() => import('./routes/Budgets'), 'BudgetsPage')
@@ -43,26 +45,28 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/terminos" element={<LegalPage kind="terms" />} />
-              <Route path="/privacidad" element={<LegalPage kind="privacy" />} />
-              <Route element={<Layout />}>
-                <Route index element={<DashboardPage />} />
-                <Route path="transactions" element={<TransactionsPage />} />
-                <Route path="analytics" element={<AnalyticsPage />} />
-                <Route path="accounts" element={<AccountsPage />} />
-                <Route path="categories" element={<CategoriesPage />} />
-                <Route path="budgets" element={<BudgetsPage />} />
-                <Route path="goals" element={<GoalsPage />} />
-                <Route path="recurring" element={<RecurringPage />} />
-                <Route path="subscriptions" element={<SubscriptionsPage />} />
-                <Route path="import" element={<ImportPage />} />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="more" element={<MorePage />} />
-              </Route>
-            </Routes>
+            <Suspense fallback={null}>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/terminos" element={<LegalPage kind="terms" />} />
+                <Route path="/privacidad" element={<LegalPage kind="privacy" />} />
+                <Route element={<Layout />}>
+                  <Route index element={<DashboardPage />} />
+                  <Route path="transactions" element={<TransactionsPage />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="accounts" element={<AccountsPage />} />
+                  <Route path="categories" element={<CategoriesPage />} />
+                  <Route path="budgets" element={<BudgetsPage />} />
+                  <Route path="goals" element={<GoalsPage />} />
+                  <Route path="recurring" element={<RecurringPage />} />
+                  <Route path="subscriptions" element={<SubscriptionsPage />} />
+                  <Route path="import" element={<ImportPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="more" element={<MorePage />} />
+                </Route>
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </AuthProvider>
       </ToastProvider>
