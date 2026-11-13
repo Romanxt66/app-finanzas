@@ -3728,6 +3728,7 @@
         "properties": {
           "current_password": {
             "type": "string",
+            "maxLength": 256,
             "title": "Current Password",
             "default": ""
           },
@@ -3941,7 +3942,8 @@
           "password": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 256
               },
               {
                 "type": "null"
@@ -4269,6 +4271,7 @@
           },
           "password": {
             "type": "string",
+            "maxLength": 256,
             "title": "Password"
           },
           "otp": {
@@ -4933,6 +4936,7 @@
         "properties": {
           "refresh_token": {
             "type": "string",
+            "maxLength": 2048,
             "title": "Refresh Token"
           }
         },
@@ -5406,6 +5410,7 @@
         "properties": {
           "password": {
             "type": "string",
+            "maxLength": 256,
             "title": "Password",
             "default": ""
           },

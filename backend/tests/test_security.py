@@ -149,3 +149,12 @@ async def test_altas_simultaneas_con_el_mismo_correo(client: AsyncClient) -> Non
         )
     )
     assert codes[0] == 201 and set(codes[1:]) == {409}
+
+
+async def test_contrasenas_enormes_se_rechazan_sin_hashear(client: AsyncClient) -> None:
+    r = await client.post(
+        "/api/v1/auth/login", json={"email": "a@example.com", "password": "x" * 100_000}
+    )
+    assert r.status_code == 422
+    r = await client.post("/api/v1/auth/refresh", json={"refresh_token": "x" * 10_000})
+    assert r.status_code == 422

@@ -625,7 +625,7 @@ export function BrandLogo({ size = 34 }: { size?: number }) {
   return (
     <img
       className="cr-brand-logo"
-      src={size > 64 ? '/brand/logo-256.png' : '/brand/logo-128.png'}
+      src={size > 64 ? '/brand/logo-256.webp' : '/brand/logo-128.webp'}
       width={size}
       height={size}
       alt=""
