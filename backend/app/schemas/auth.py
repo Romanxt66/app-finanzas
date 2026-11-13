@@ -32,9 +32,14 @@ class RegisterIn(BaseModel):
         return check_password_policy(v)
 
 
+# Las contraseñas que llegan para comprobarse se acotan (pasan por Argon2); la política de las
+# nuevas ya limita a PASSWORD_MAX: aquí hay margen por si alguna antigua fuera más larga
+_CHECKED_PASSWORD_MAX = 256
+
+
 class LoginIn(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(max_length=_CHECKED_PASSWORD_MAX)
     # Código de la app de autenticación (o de recuperación) si la cuenta tiene 2 pasos activos
     otp: str | None = Field(default=None, max_length=32)
 
@@ -45,7 +50,7 @@ class GoogleLoginIn(BaseModel):
 
 
 class RefreshIn(BaseModel):
-    refresh_token: str
+    refresh_token: str = Field(max_length=2048)
 
 
 class TokenPair(BaseModel):
@@ -72,13 +77,13 @@ class ProfileUpdate(BaseModel):
 
 class DeleteAccountIn(BaseModel):
     # Con contraseña si la cuenta la tiene; si solo entra con Google, un ID token reciente suyo
-    password: str | None = None
+    password: str | None = Field(default=None, max_length=_CHECKED_PASSWORD_MAX)
     google_id_token: str | None = Field(default=None, max_length=4096)
 
 
 class ChangePasswordIn(BaseModel):
     # Vacío solo si la cuenta (creada con Google) aún no tiene contraseña: así se crea la primera
-    current_password: str = ""
+    current_password: str = Field(default="", max_length=_CHECKED_PASSWORD_MAX)
     new_password: str
 
     @field_validator("new_password")
@@ -97,7 +102,7 @@ class TwoFactorCode(BaseModel):
 
 
 class TwoFactorDisable(BaseModel):
-    password: str = ""  # vacío en las cuentas de Google sin contraseña
+    password: str = Field(default="", max_length=_CHECKED_PASSWORD_MAX)  # vacío: cuenta de Google
     code: str = Field(min_length=6, max_length=32)
 
 
