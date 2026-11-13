@@ -213,3 +213,31 @@ async def test_balances_always_equal_initial_plus_movements(
     }
     assert got[a["id"]] == exp_a
     assert got[b["id"]] == exp_b
+
+
+# ---- compresión ---------------------------------------------------------------
+async def test_respuestas_grandes_van_comprimidas(client: AsyncClient, auth: H) -> None:
+    acc = await _mk(
+        client,
+        auth,
+        "accounts",
+        {"name": "A", "type": "bank", "currency": "COP", "initial_balance": "0"},
+    )
+    for i in range(15):
+        await _mk(
+            client,
+            auth,
+            "transactions",
+            {
+                "type": "expense",
+                "account_id": acc["id"],
+                "amount": "7",
+                "occurred_on": date.today().isoformat(),
+                "description": f"compra número {i}",
+            },
+        )
+    big = await client.get("/api/v1/transactions", headers={**auth, "Accept-Encoding": "gzip"})
+    assert big.headers.get("content-encoding") == "gzip"
+    assert len(big.json()["items"]) == 15
+    small = await client.get("/health", headers={"Accept-Encoding": "gzip"})
+    assert "content-encoding" not in small.headers

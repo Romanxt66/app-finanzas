@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +34,9 @@ def create_app() -> FastAPI:
     )
     # Reenvíos de la app sin conexión: la misma `Idempotency-Key` no aplica un cambio dos veces
     app.add_middleware(IdempotencyMiddleware)
+    # El último añadido es el más externo: comprime al final (la idempotencia guarda el cuerpo sin
+    # comprimir). Útil cuando la app Android llama a la API sin pasar por el nginx de la web.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     register_error_handlers(app)
     install_observability(app)
     app.include_router(api_router)
