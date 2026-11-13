@@ -2446,3 +2446,40 @@ a.cr-user:focus-visible {
 .cr-main > .cr-seg {
   align-self: flex-start;
 }
+
+/* Verificación en dos pasos (Perfil) */
+.cr-2fa-setup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+.cr-2fa-qr {
+  width: 184px;
+  height: 184px;
+  border-radius: var(--radius-md);
+  flex: none;
+}
+.cr-2fa-secret,
+.cr-2fa-codes {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--ink);
+}
+.cr-2fa-secret {
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  word-break: break-all;
+  user-select: all;
+}
+.cr-2fa-codes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  list-style: none;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  user-select: all;
+}

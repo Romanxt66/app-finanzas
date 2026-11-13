@@ -470,3 +470,45 @@ export const useDailyAllowance = () =>
       }
     },
   })
+
+// ---- verificación en dos pasos ------------------------------------------------
+/** Tras activar o desactivar, el perfil (`/auth/me`) cambia `two_factor_enabled`. */
+function useRefreshMe() {
+  const qc = useQueryClient()
+  return () => qc.invalidateQueries({ queryKey: ['me'] })
+}
+
+export function useTwoFactorSetup() {
+  return useMutation({
+    mutationFn: () => api<Schemas['TwoFactorSetup']>('/auth/2fa/setup', { method: 'POST' }),
+  })
+}
+
+export function useTwoFactorEnable() {
+  const refresh = useRefreshMe()
+  return useMutation({
+    mutationFn: (code: string) =>
+      api<Schemas['RecoveryCodes']>('/auth/2fa/enable', { method: 'POST', body: { code } }),
+    onSuccess: refresh,
+  })
+}
+
+export function useTwoFactorDisable() {
+  const refresh = useRefreshMe()
+  const toast = useToast()
+  return useMutation({
+    mutationFn: (body: Schemas['TwoFactorDisable']) =>
+      api<void>('/auth/2fa/disable', { method: 'POST', body }),
+    onSuccess: () => {
+      toast.success('Verificación en dos pasos desactivada')
+      return refresh()
+    },
+  })
+}
+
+export function useNewRecoveryCodes() {
+  return useMutation({
+    mutationFn: (code: string) =>
+      api<Schemas['RecoveryCodes']>('/auth/2fa/recovery-codes', { method: 'POST', body: { code } }),
+  })
+}

@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../features/authContext'
 import { DeleteAccountCard } from '../features/DeleteAccount'
 import { PasswordRules } from '../features/PasswordRules'
+import { TwoFactorCard } from '../features/TwoFactorCard'
 import { passwordProblem } from '../lib/password'
 
 const nameSchema = z.object({ full_name: z.string().min(1, 'Requerido').max(120) })
@@ -102,6 +103,8 @@ export function ProfilePage() {
           <ErrorText error={change.error} />
         </form>
       </Card>
+
+      <TwoFactorCard />
 
       <Card title="Apariencia">
         <Segmented label="Tema" options={THEMES} value={theme.choice} onChange={theme.set} />
