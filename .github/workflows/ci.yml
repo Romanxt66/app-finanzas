@@ -128,6 +128,7 @@ jobs:
         run: |
           command -v nginx || (sudo apt-get update && sudo apt-get install -y nginx)
           sudo mkdir -p /srv/alvea && sudo cp -r build/web/. /srv/alvea/
+          sudo mkdir -p /etc/nginx/snippets && sudo cp nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
           API_UPSTREAM=http://127.0.0.1:8101 envsubst '${API_UPSTREAM}' < nginx.conf \
             | sed 's#listen 80;#listen 8090;#; s#/usr/share/nginx/html#/srv/alvea#' > "$RUNNER_TEMP/site.conf"
           printf 'pid %s/nginx.pid;\nerror_log %s/nginx-error.log;\nevents {}\nhttp {\n  access_log off;\n  include %s/site.conf;\n}\n' \

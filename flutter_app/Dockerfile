@@ -33,6 +33,7 @@ RUN flutter build web --release --wasm --no-web-resources-cdn --dart-define=SUPP
 FROM nginx:1.27-alpine
 ENV API_UPSTREAM=http://alvea-api:8000
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/build/web /usr/share/nginx/html
 
 EXPOSE 80
