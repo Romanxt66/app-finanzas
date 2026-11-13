@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Solo conexiones cifradas (HTTPS) y solo con certificados del sistema, nunca los que instale el
+     usuario: así un proxy con certificado propio no puede leer el tráfico de la app. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

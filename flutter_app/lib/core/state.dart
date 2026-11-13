@@ -30,6 +30,11 @@ class AppState extends ChangeNotifier {
     // Al volver la conexión se envía lo pendiente y se recargan las pantallas con datos frescos
     api.reachable.addListener(_onReachable);
     api.outbox.count.addListener(_onOutbox);
+    // Con el PIN activado, la app no se ve en «Recientes» ni en capturas (solo la app principal)
+    if (!quiet) {
+      NativeApp.setSecure(lock.enabled);
+      lock.addListener(_syncSecure);
+    }
     accent = accentById(_prefs.getString('accent'));
     glow = glowById(_prefs.getString('glow'));
   }
@@ -189,6 +194,13 @@ class AppState extends ChangeNotifier {
 
   bool _wasOffline = false;
 
+  bool? _secure;
+  void _syncSecure() {
+    if (_secure == lock.enabled) return;
+    _secure = lock.enabled;
+    NativeApp.setSecure(lock.enabled);
+  }
+
   /// Algo entró en la cola: si hay conexión se envía enseguida (p. ej. iba detrás de otro pendiente).
   void _onOutbox() {
     _scheduleSync();
@@ -210,6 +222,7 @@ class AppState extends ChangeNotifier {
     _syncTimer?.cancel();
     api.reachable.removeListener(_onReachable);
     api.outbox.count.removeListener(_onOutbox);
+    if (!quiet) lock.removeListener(_syncSecure);
     super.dispose();
   }
 

@@ -53,4 +53,12 @@ class NativeApp {
       await channel.invokeMethod<void>('clearWidgets');
     } catch (_) {}
   }
+
+  /// Con el PIN activado, Android oculta la app en «Recientes» y no permite capturas de pantalla.
+  static Future<void> setSecure(bool secure) async {
+    if (!supported) return;
+    try {
+      await channel.invokeMethod<void>('setSecure', secure);
+    } catch (_) {}
+  }
 }
