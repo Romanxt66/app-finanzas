@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core import totp
 from app.core.errors import AppError, ConflictError, UnauthorizedError
 from app.core.google import GoogleIdentity
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password, needs_rehash, verify_password
 from app.models import (
     Account,
     Budget,
@@ -43,6 +43,9 @@ async def authenticate(session: AsyncSession, email: str, password: str) -> User
         raise UnauthorizedError("Credenciales incorrectas")
     if not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Credenciales incorrectas")
+    # Si Argon2 sube sus parámetros, el hash se renueva al entrar (el llamador hace commit)
+    if needs_rehash(user.hashed_password):
+        user.hashed_password = hash_password(password)
     return user
 
 

@@ -4,7 +4,7 @@ from typing import Literal, NamedTuple
 
 import jwt
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
+from argon2.exceptions import InvalidHashError, VerificationError
 
 from app.core.config import get_settings
 from app.core.errors import UnauthorizedError
@@ -21,7 +21,16 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     try:
         return _hasher.verify(hashed, password)
-    except VerifyMismatchError:
+    except (VerificationError, InvalidHashError):
+        # Contraseña distinta o hash dañado: en ningún caso se entra (ni se responde con un 500)
+        return False
+
+
+def needs_rehash(hashed: str) -> bool:
+    """True si el hash usa parámetros de Argon2 más débiles que los actuales."""
+    try:
+        return _hasher.check_needs_rehash(hashed)
+    except InvalidHashError:
         return False
 
 

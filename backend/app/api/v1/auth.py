@@ -101,6 +101,7 @@ async def login(data: LoginIn, request: Request, session: SessionDep) -> TokenPa
         login_limiter.record_failure(key)
         email_limiter.record_failure(email)
         raise
+    await session.commit()  # guarda el hash renovado, si lo hubo
     login_limiter.reset(key)
     email_limiter.reset(email)
     return _tokens(user)
