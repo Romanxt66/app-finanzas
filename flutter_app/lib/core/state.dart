@@ -119,7 +119,11 @@ class AppState extends ChangeNotifier {
 
   Future<void> _loadUser() async {
     final me = await api.get('/auth/me') as Map<String, dynamic>;
-    user = User.fromJson(me);
+    final next = User.fromJson(me);
+    // Antes de dar la sesión por buena: si lo guardado sin conexión era de otra cuenta, se descarta
+    // ya, para que ninguna sincronización ni lectura intermedia lo use con la sesión nueva.
+    await _claimOfflineData(next.email.toLowerCase());
+    user = next;
     // Solo si la sesión se guarda en el dispositivo; sin «mantener sesión» no queda nada en disco
     if (api.remembered) {
       await _prefs.setString(_userCacheKey, jsonEncode(me));
@@ -131,7 +135,6 @@ class AppState extends ChangeNotifier {
       reminders.refresh();
       widgets.schedule();
     }
-    await _claimOfflineData(user!.email.toLowerCase());
     sync();
   }
 
