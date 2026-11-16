@@ -24,6 +24,19 @@ void main() {
       expect(m.reasons, containsAll(['ahorras el 40 %', 'vas dentro de tu ritmo', 'ningún presupuesto excedido']));
     });
 
+    test('con un presupuesto pasado no llega a radiante (su mensaje sería falso)', () {
+      final m = financeMood(
+        income: 2000,
+        expense: 1200,
+        balance: 3000,
+        allowanceStatus: 'ok',
+        budgets: [_budget(300, 120), _budget(100, 150)],
+      );
+      expect(m.score, greaterThanOrEqualTo(80));
+      expect(m.level, 3);
+      expect(m.reasons, contains('1 presupuesto excedido'));
+    });
+
     test('gastar más de lo que entra y pasarse de todo: agobiada', () {
       final m = financeMood(income: 1000, expense: 1500, balance: -50, allowanceStatus: 'over', budgets: [_budget(100, 300)]);
       expect(m.level, 0);
