@@ -80,6 +80,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 child: CrTextField(
                   label: 'Buscar',
                   controller: _search,
+                  icon: 'search',
+                  hint: 'Ej.: mercado',
                   onChanged: (v) {
                     _debounce?.cancel();
                     _debounce = Timer(const Duration(milliseconds: 300), () => _setFilter(() => _searchText = v.trim()));

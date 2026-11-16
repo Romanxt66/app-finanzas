@@ -185,11 +185,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                 value: formatMoney(g.saved, g.currency),
                                 trailing: 'de ${formatMoney(g.target, g.currency)}',
                                 progress: ratio,
-                                chips: [
-                                  if (g.achieved) DealChip('lograda', icon: 'check', color: c.positive),
-                                  if (g.deadline != null) DealChip(formatDate(g.deadline!), icon: 'calendar'),
-                                  if (!g.achieved) DealChip('faltan ${formatMoney(g.remaining, g.currency)}', dot: true, color: c.amber),
-                                ],
+                                // Lo que falta y la fecha ya están en la nota (goalNote): repetirlos en chips duplicaba la cifra
+                                chips: [if (g.achieved) DealChip('lograda', icon: 'check', color: c.positive)],
                                 actions: [
                                   CardAction(icon: 'edit', tooltip: 'Editar ${g.name}', onPressed: () => _edit(g)),
                                   CardAction(icon: 'trash', tooltip: 'Eliminar ${g.name}', danger: true, onPressed: () => _delete(g)),
