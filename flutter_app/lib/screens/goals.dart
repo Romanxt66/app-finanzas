@@ -188,6 +188,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                 // Lo que falta y la fecha ya están en la nota (goalNote): repetirlos en chips duplicaba la cifra
                                 chips: [if (g.achieved) DealChip('lograda', icon: 'check', color: c.positive)],
                                 actions: [
+                                  CardAction(icon: 'list', tooltip: 'Historial de ${g.name}', onPressed: () => _history(g)),
                                   CardAction(icon: 'edit', tooltip: 'Editar ${g.name}', onPressed: () => _edit(g)),
                                   CardAction(icon: 'trash', tooltip: 'Eliminar ${g.name}', danger: true, onPressed: () => _delete(g)),
                                 ],
@@ -245,6 +246,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
     context,
     title: 'Editar «${g.name}»',
     builder: (_) => _GoalEditForm(goal: g),
+  );
+
+  Future<void> _history(Goal g) => showCrDialog<void>(
+    context,
+    title: 'Aportes a «${g.name}»',
+    builder: (_) => ContributionHistory(goal: g),
   );
 
   Future<void> _contribution(Goal g, bool withdraw) => showCrDialog<void>(
@@ -452,6 +459,122 @@ class _GoalsSummary extends StatelessWidget {
           value: '$done/${goals.length}',
           note: done == goals.length ? '¡todas cumplidas!' : '${goals.length - done} en camino',
           progress: goals.isEmpty ? 0 : done / goals.length,
+        ),
+      ],
+    );
+  }
+}
+
+/// Aportes y retiros de una meta, del más reciente al más antiguo; se puede borrar uno hecho por error
+/// (con un segundo toque de confirmación).
+class ContributionHistory extends StatefulWidget {
+  const ContributionHistory({super.key, required this.goal});
+  final Goal goal;
+
+  @override
+  State<ContributionHistory> createState() => _ContributionHistoryState();
+}
+
+class _ContributionHistoryState extends State<ContributionHistory> {
+  List<Map<String, dynamic>>? _items;
+  Object? _error;
+  String? _pending;
+  bool _busy = false;
+
+  // `context.app` depende de un InheritedWidget: no se puede leer dentro de initState
+  late final _api = context.app.api;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_items == null && _error == null) _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final raw = await _api.get('/goals/${widget.goal.id}/contributions') as List<dynamic>;
+      final items = [for (final r in raw) Map<String, dynamic>.from(r as Map)]
+        ..sort((a, b) => '${b['occurred_on']}'.compareTo('${a['occurred_on']}'));
+      if (mounted) setState(() => _items = items);
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    }
+  }
+
+  Future<void> _remove(String id) async {
+    setState(() => _busy = true);
+    try {
+      await context.app.data.delete('/goals/${widget.goal.id}/contributions/$id', 'Aporte eliminado');
+      if (mounted) setState(() => _items = _items?.where((c) => c['id'] != id).toList());
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _pending = null;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final items = _items;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (items == null && _error == null)
+          const Skeleton(lines: 3, height: 40)
+        else if (items != null && items.isEmpty)
+          CrEmpty('Aún no hay aportes en esta meta.')
+        else if (items != null)
+          for (final (i, item) in items.indexed)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: space2),
+              decoration: BoxDecoration(
+                border: i == 0 ? null : Border(top: BorderSide(color: c.hairline)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(formatDate('${item['occurred_on']}'), style: CrText.body(c.ink)),
+                        if ('${item['note'] ?? ''}'.isNotEmpty) Text('${item['note']}', style: CrText.caption(c.inkMuted)),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    formatMoney(double.parse('${item['amount']}'), widget.goal.currency, true),
+                    style: CrText.amountSm(double.parse('${item['amount']}') < 0 ? c.negative : c.positive),
+                  ),
+                  const SizedBox(width: space2),
+                  _pending == item['id']
+                      ? CrButton(
+                          variant: CrButtonVariant.danger,
+                          small: true,
+                          label: 'Eliminar',
+                          onPressed: _busy ? null : () => _remove('${item['id']}'),
+                        )
+                      : CrButton(
+                          variant: CrButtonVariant.ghost,
+                          small: true,
+                          icon: 'trash',
+                          tooltip: 'Eliminar aporte del ${formatDate('${item['occurred_on']}')}',
+                          onPressed: () => setState(() => _pending = '${item['id']}'),
+                        ),
+                ],
+              ),
+            ),
+        ErrorText(_error),
+        const SizedBox(height: space3),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: CrButton(variant: CrButtonVariant.ghost, label: 'Cerrar', onPressed: () => Navigator.of(context).pop()),
         ),
       ],
     );
