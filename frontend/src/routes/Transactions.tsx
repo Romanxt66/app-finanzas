@@ -34,6 +34,7 @@ import { dayLabel } from '../lib/dates'
 import { categoryIcon } from '../lib/categoryIcon'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { formatDate, formatMoney, monthStart, todayISO } from '../lib/format'
+import { SPENDING_MOODS } from '../lib/spendingMoods'
 import { useDebounced } from '../lib/useDebounced'
 
 const PAGE_SIZE = 20
@@ -454,6 +455,10 @@ export function TransactionsPage() {
                         formatDate(t.occurred_on),
                         target ? `${account?.name} → ${target}` : account?.name,
                         category,
+                        // Cómo te sentías al gastar (como el chip de la app)
+                        t.type === 'expense' && t.mood
+                          ? SPENDING_MOODS[t.mood]?.label.toLowerCase()
+                          : undefined,
                         t.type === 'expense'
                           ? lifeNote(Number(t.amount), account?.currency)
                           : undefined,

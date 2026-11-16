@@ -191,7 +191,7 @@ describe('TransactionsPage', () => {
     mockApi({
       ...base,
       'GET /transactions': page([
-        transaction(),
+        transaction({ mood: 'stressed' }),
         transaction({
           id: 't2',
           type: 'income',
@@ -209,6 +209,8 @@ describe('TransactionsPage', () => {
     expect(within(list).getByText(/^−/)).toBeInTheDocument()
     expect(within(list).getByText(/^\+/)).toBeInTheDocument()
     expect(screen.getByText('2 resultados')).toBeInTheDocument()
+    // El ánimo con que se gastó aparece en el detalle
+    expect(within(list).getByText(/· estresado/)).toBeInTheDocument()
   })
 
   it('«Repetir hoy» abre un alta con los mismos datos y la fecha de hoy', async () => {
