@@ -17,6 +17,7 @@ import {
 import { BudgetHomeCard } from '../features/BudgetHomeCard'
 import { DailyAllowanceCard } from '../features/DailyAllowanceCard'
 import { GhostTeaser } from '../features/GhostTeaser'
+import { WaitingTeaser } from '../features/WaitingTeaser'
 import { LifeHoursCard } from '../features/LifeHoursCard'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { MoodCard } from '../features/MoodCard'
@@ -292,6 +293,7 @@ export function DashboardPage() {
       <div className="cr-grid-cols">
         <LifeHoursCard month={month} />
         <GhostTeaser />
+        <WaitingTeaser />
       </div>
 
       {upcoming.length > 0 && (
