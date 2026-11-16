@@ -24,6 +24,16 @@ const generalBudgetLabel = 'Todos los gastos';
 /// Nombre que se muestra de un presupuesto: su categoría o «Todos los gastos».
 String budgetName(RefData ref, Budget b) => b.categoryId == null ? generalBudgetLabel : ref.categoryName(b.categoryId);
 
+/// El general primero (es el límite de todo lo demás); luego los más gastados, así lo excedido
+/// queda a la vista en vez de al final de la lista.
+List<Budget> sortBudgets(List<Budget> list) {
+  double used(Budget b) => b.amount > 0 ? b.spent / b.amount : 0;
+  return [...list]..sort((a, b) {
+    final general = (a.categoryId == null ? 0 : 1) - (b.categoryId == null ? 0 : 1);
+    return general != 0 ? general : used(b).compareTo(used(a));
+  });
+}
+
 class BudgetsScreen extends StatefulWidget {
   const BudgetsScreen({super.key});
 
@@ -108,7 +118,7 @@ class _BudgetsScreenState extends State<BudgetsScreen> {
       load: () => app.data.budgetsFor(_period, periodIso(_period, _date)),
       builder: (context, q) {
         // El general primero: es el límite de todo lo demás
-        final budgets = [...?q.data]..sort((a, b) => (a.categoryId == null ? 0 : 1) - (b.categoryId == null ? 0 : 1));
+        final budgets = sortBudgets(q.data ?? const []);
         return PageScaffold(
           children: [
             PageHead(
