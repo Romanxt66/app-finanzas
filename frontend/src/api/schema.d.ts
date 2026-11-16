@@ -311,7 +311,10 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** List Transactions */
+    /**
+     * List Transactions
+     * @description Por defecto los más recientes primero; con `order=amount`, los de mayor importe.
+     */
     get: operations['list_transactions_api_v1_transactions_get']
     put?: never
     /** Create Transaction */
@@ -2669,6 +2672,7 @@ export interface operations {
         search?: string | null
         limit?: number
         offset?: number
+        order?: 'recent' | 'amount'
       }
       header?: never
       path?: never

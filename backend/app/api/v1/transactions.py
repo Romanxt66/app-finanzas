@@ -1,6 +1,6 @@
 import uuid
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query, Response, status
 
@@ -32,7 +32,9 @@ async def list_transactions(
     search: Annotated[str | None, Query(max_length=100)] = None,
     limit: Annotated[int, Query(ge=1, le=200)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
+    order: Literal["recent", "amount"] = "recent",
 ) -> TransactionPage:
+    """Por defecto los más recientes primero; con `order=amount`, los de mayor importe."""
     items, total = await transactions.list_transactions(
         session,
         user.id,
@@ -44,6 +46,7 @@ async def list_transactions(
         search=search,
         limit=limit,
         offset=offset,
+        order=order,
     )
     return TransactionPage(
         items=[TransactionOut.model_validate(t) for t in items],
