@@ -236,8 +236,10 @@ describe('TransactionsPage', () => {
   it('envía filtros a la API y reinicia la página', async () => {
     const calls = mockApi({ ...base, 'GET /transactions': page([]) })
     renderApp(<TransactionsPage />)
-    await screen.findByText('No hay transacciones.')
+    await screen.findByText(/Aún no hay movimientos/)
     await userEvent.type(screen.getByLabelText('Buscar'), 'café')
+    // El vacío explica que es la búsqueda la que no encuentra nada
+    expect(await screen.findByText(/Nada coincide con «café»/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Filtros' }))
     await userEvent.selectOptions(screen.getByLabelText('Tipo'), 'income')
     await waitFor(() => {
