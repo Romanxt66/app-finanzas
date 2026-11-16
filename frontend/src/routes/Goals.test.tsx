@@ -46,3 +46,25 @@ test('con el plazo vencido no dice «para el …» como si aún hubiera tiempo',
   expect(await screen.findByText(/el plazo venció el/)).toBeInTheDocument()
   expect(screen.queryByText(/para el/)).not.toBeInTheDocument()
 })
+
+test('el historial lista los aportes y deja borrar uno con confirmación', async () => {
+  const calls = mockApi({
+    'GET /auth/me': user,
+    'GET /goals': [goal],
+    'GET /goals/g1/contributions': [
+      { id: 'c1', goal_id: 'g1', amount: '50000.00', occurred_on: '2026-10-01', note: 'Prima' },
+      { id: 'c2', goal_id: 'g1', amount: '-20000.00', occurred_on: '2026-11-02', note: '' },
+    ],
+    'DELETE /goals/g1/contributions/c2': { status: 204, body: null },
+  })
+  renderApp(<GoalsPage />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Historial de Viaje' }))
+  const list = await screen.findByRole('list', { name: 'Aportes' })
+  // Del más reciente al más antiguo
+  const rows = within(list).getAllByRole('listitem')
+  expect(rows[0]).toHaveTextContent(/2 de nov/)
+  expect(rows[1]).toHaveTextContent('Prima')
+  await userEvent.click(within(rows[0]).getByRole('button', { name: /Eliminar aporte/ }))
+  await userEvent.click(within(rows[0]).getByRole('button', { name: 'Eliminar' }))
+  await vi.waitFor(() => expect(calls.some((c) => c.method === 'DELETE')).toBe(true))
+})

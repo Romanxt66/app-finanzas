@@ -4,7 +4,9 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import {
   useContribute,
+  useContributions,
   useCreateGoal,
+  useDeleteContribution,
   useDeleteGoal,
   useGoals,
   useUpdateGoal,
@@ -174,6 +176,7 @@ export function GoalsPage() {
   const create = useCreateGoal()
   const remove = useDeleteGoal()
   const [contribution, setContribution] = useState<{ goal: Goal; withdraw: boolean } | null>(null)
+  const [history, setHistory] = useState<Goal | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Goal | null>(null)
   const [editing, setEditing] = useState<Goal | null>(null)
   const [showAchieved, setShowAchieved] = useState(true)
@@ -257,6 +260,13 @@ export function GoalsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          icon="list"
+                          aria-label={`Historial de ${g.name}`}
+                          onClick={() => setHistory(g)}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           icon="edit"
                           aria-label={`Editar ${g.name}`}
                           onClick={() => setEditing(g)}
@@ -296,6 +306,13 @@ export function GoalsPage() {
         )}
       </FormDialog>
       <FormDialog
+        open={!!history}
+        title={history ? `Aportes a «${history.name}»` : ''}
+        onClose={() => setHistory(null)}
+      >
+        {history && <ContributionHistory goal={history} onClose={() => setHistory(null)} />}
+      </FormDialog>
+      <FormDialog
         open={!!editing}
         title={editing ? `Editar «${editing.name}»` : ''}
         onClose={() => setEditing(null)}
@@ -317,6 +334,76 @@ export function GoalsPage() {
       </ConfirmDialog>
       <ErrorText error={remove.error} />
     </>
+  )
+}
+
+/** Aportes y retiros de una meta, del más reciente al más antiguo; se puede borrar uno hecho por error. */
+function ContributionHistory({ goal, onClose }: { goal: Goal; onClose: () => void }) {
+  const { data, isLoading } = useContributions(goal.id)
+  const remove = useDeleteContribution()
+  const [pending, setPending] = useState<string | null>(null)
+  const close = (
+    <div>
+      <Button variant="ghost" onClick={onClose}>
+        Cerrar
+      </Button>
+    </div>
+  )
+  if (isLoading) return <Skeleton lines={3} height={40} />
+  if (!data?.length)
+    return (
+      <>
+        <Empty>Aún no hay aportes en esta meta.</Empty>
+        {close}
+      </>
+    )
+  const items = [...data].sort((a, b) => b.occurred_on.localeCompare(a.occurred_on))
+  return (
+    <div className="cr-stack">
+      <ul className="cr-plain-list cr-stack" aria-label="Aportes">
+        {items.map((c) => {
+          const amount = Number(c.amount)
+          return (
+            <li key={c.id} className="cr-row-split">
+              <span>
+                <span className="body">{formatDate(c.occurred_on)}</span>
+                {c.note && <span className="caption cr-muted cr-block">{c.note}</span>}
+              </span>
+              <span className="cr-row">
+                <span className={amount < 0 ? 'amount-sm cr-neg' : 'amount-sm cr-pos'}>
+                  {formatMoney(amount, goal.currency, { signed: true })}
+                </span>
+                {pending === c.id ? (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    disabled={remove.isPending}
+                    onClick={() =>
+                      remove.mutate(
+                        { goalId: goal.id, id: c.id },
+                        { onSettled: () => setPending(null) },
+                      )
+                    }
+                  >
+                    Eliminar
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    icon="trash"
+                    aria-label={`Eliminar aporte del ${formatDate(c.occurred_on)}`}
+                    onClick={() => setPending(c.id)}
+                  />
+                )}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      <ErrorText error={remove.error} />
+      {close}
+    </div>
   )
 }
 
