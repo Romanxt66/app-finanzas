@@ -11,6 +11,7 @@ import {
   useSummary,
   useTransactions,
   type Transaction,
+  suggestCategory,
 } from '../api/hooks'
 import { downloadFile } from '../api/client'
 import {
@@ -74,7 +75,7 @@ function TransactionForm({
   const { data: accounts = [] } = useAccounts()
   const save = useSaveTransaction()
   const from = editing ?? template
-  const { register, handleSubmit, control, formState, setValue } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState, setValue, getValues } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: from
       ? {
@@ -98,6 +99,7 @@ function TransactionForm({
   }, [from])
   const type = useWatch({ control, name: 'type' })
   const mood = useWatch({ control, name: 'mood' }) ?? null
+  const [suggested, setSuggested] = useState(false)
 
   const submit = handleSubmit((d) =>
     save.mutate(
@@ -157,7 +159,17 @@ function TransactionForm({
                 ))}
               </Select>
             ) : (
-              <CategorySelect kind={type} {...register('category_id')} />
+              <div className="cr-stack" style={{ gap: 4 }}>
+                <CategorySelect
+                  kind={type}
+                  {...register('category_id', { onChange: () => setSuggested(false) })}
+                />
+                {suggested && (
+                  <span className="caption cr-muted" role="status">
+                    Sugerida según la descripción
+                  </span>
+                )}
+              </div>
             )}
             <Input
               label="Monto"
@@ -174,7 +186,24 @@ function TransactionForm({
             <Input
               label="Descripción"
               error={formState.errors.description?.message}
-              {...register('description')}
+              {...register('description', {
+                // Al salir del campo, si aún no hay categoría, se propone una (como al importar)
+                onBlur: async (e) => {
+                  const text = e.target.value.trim()
+                  const { type: t, category_id, amount } = getValues()
+                  if (!text || t === 'transfer' || category_id) return
+                  try {
+                    const sign = t === 'expense' ? -1 : 1
+                    const id = await suggestCategory(text, sign * Number(amount || 1))
+                    if (id && !getValues('category_id')) {
+                      setValue('category_id', id, { shouldDirty: true })
+                      setSuggested(true)
+                    }
+                  } catch {
+                    // Sugerencia opcional: si falla, el formulario sigue igual
+                  }
+                },
+              })}
             />
           </div>
           {type === 'expense' && (
