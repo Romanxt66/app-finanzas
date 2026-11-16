@@ -314,43 +314,47 @@ class CategoryStrip extends StatelessWidget {
     ];
     return Semantics(
       label: 'Gasto del mes: ${segments.map((s) => '${s.name} ${(s.total / total * 100).round()} %').join(', ')}',
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < segments.length; i++) ...[
-            if (i > 0) const SizedBox(width: 6),
-            Expanded(
-              flex: math.max(1, (segments[i].total / total * 1000).round()),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GrowBar(ratio: 1, color: colors[i % colors.length], height: 6, glow: true),
-                  const SizedBox(height: space2),
-                  if (segments[i].total / total >= 0.08)
-                    Row(
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(color: colors[i % colors.length], borderRadius: BorderRadius.circular(2)),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            segments[i].name,
-                            style: CrText.mono(c.inkMuted, size: 11),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text('${(segments[i].total / total * 100).round()} %', style: CrText.mono(c.ink, size: 11)),
-                      ],
-                    ),
+      child: ExcludeSemantics(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Barras proporcionales al gasto de cada categoría
+            Row(
+              children: [
+                for (var i = 0; i < segments.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
+                  Expanded(
+                    flex: math.max(1, (segments[i].total / total * 1000).round()),
+                    child: GrowBar(ratio: 1, color: colors[i % colors.length], height: 6, glow: true),
+                  ),
                 ],
-              ),
+              ],
+            ),
+            const SizedBox(height: space3),
+            // Leyenda aparte: bajo una barra estrecha el nombre se cortaba («Superme…»)
+            Wrap(
+              spacing: space4,
+              runSpacing: space2,
+              children: [
+                for (var i = 0; i < segments.length; i++)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(color: colors[i % colors.length], borderRadius: BorderRadius.circular(2)),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(segments[i].name, style: CrText.mono(c.inkMuted, size: 11)),
+                      const SizedBox(width: 6),
+                      Text('${(segments[i].total / total * 100).round()} %', style: CrText.mono(c.ink, size: 11)),
+                    ],
+                  ),
+              ],
             ),
           ],
-        ],
+        ),
       ),
     );
   }
