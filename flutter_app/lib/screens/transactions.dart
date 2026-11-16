@@ -9,6 +9,7 @@ import '../core/models.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
+import '../ui/category_icon.dart';
 import '../ui/deal_card.dart';
 import '../ui/download.dart';
 import '../ui/glass.dart';
@@ -536,6 +537,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     return DealCard(
       // Tocar la tarjeta la abre para editar (arriba de la lista)
       onTap: () => _edit(context, t),
+      // Con categoría, su icono (como en la web); si no, las iniciales del título
+      leading: category != null && t.type != 'transfer' ? CategoryGlyph(category, kind: t.type) : null,
       avatar: initials(category ?? title),
       accent: color,
       title: title,
