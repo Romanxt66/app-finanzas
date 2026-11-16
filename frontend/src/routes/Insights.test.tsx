@@ -188,6 +188,11 @@ describe('SubscriptionsPage', () => {
       /subió de .* a .*18,2 %/,
     )
     expect(screen.getByRole('link', { name: 'Recurrentes' })).toHaveAttribute('href', '/recurring')
+    // Si el equivalente mensual coincide con el cobro no se repite la cifra; si difiere, sí
+    expect(screen.getByRole('list', { name: 'Cobros ya registrados' })).not.toHaveTextContent(
+      '/mes',
+    )
+    expect(screen.getByRole('list', { name: 'Cobros sin registrar' })).toHaveTextContent('/mes')
   })
 
   it('registra un cobro detectado como recurrente con un toque', async () => {
