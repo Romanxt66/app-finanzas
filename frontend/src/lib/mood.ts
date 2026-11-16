@@ -89,10 +89,11 @@ export function financeMood({
     score += 15
   }
   const active = budgets.filter((b) => b.amount > 0)
+  let over = 0
   if (!active.length) {
     score += 12
   } else {
-    const over = active.filter((b) => b.spent > b.amount).length
+    over = active.filter((b) => b.spent > b.amount).length
     score += Math.round(20 * (1 - over / active.length))
     reasons.push(
       over === 0
@@ -102,6 +103,8 @@ export function financeMood({
   }
   if (balance > 0) score += 15
   else if (balance < 0) reasons.push('saldo en negativo')
-  const level = score >= 80 ? 4 : score >= 60 ? 3 : score >= 40 ? 2 : score >= 20 ? 1 : 0
+  let level = score >= 80 ? 4 : score >= 60 ? 3 : score >= 40 ? 2 : score >= 20 ? 1 : 0
+  // «Radiante» dice «vas por debajo de tus límites»: con un presupuesto pasado sería falso
+  if (over > 0 && level === 4) level = 3
   return { level, score, reasons }
 }

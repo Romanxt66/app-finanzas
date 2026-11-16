@@ -40,7 +40,10 @@ test('desactivar pide contraseña y código', async () => {
   renderApp(<TwoFactorCard />)
   await userEvent.click(await screen.findByRole('button', { name: 'Desactivar' }))
   await userEvent.type(screen.getByLabelText('Contraseña'), 'password-123')
-  await userEvent.type(screen.getByLabelText('Código de 6 dígitos'), '654321')
+  const field = screen.getByLabelText('Código de la app o de recuperación')
+  // Si perdió el móvil escribirá un código de recuperación: el teclado no puede ser numérico
+  expect(field).toHaveAttribute('inputmode', 'text')
+  await userEvent.type(field, '654321')
   await userEvent.click(screen.getByRole('button', { name: 'Desactivar' }))
   await vi.waitFor(() =>
     expect(calls.find((c) => c.path === '/auth/2fa/disable')?.body).toEqual({
