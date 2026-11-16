@@ -576,3 +576,11 @@ export function useDeleteWaiting() {
     },
   })
 }
+
+export type PersonalInflation = Schemas['PersonalInflation']
+
+export const usePersonalInflation = () =>
+  useQuery({
+    queryKey: ['personal-inflation', todayISO()],
+    queryFn: () => api<PersonalInflation>('/personal-inflation', { query: { today: todayISO() } }),
+  })

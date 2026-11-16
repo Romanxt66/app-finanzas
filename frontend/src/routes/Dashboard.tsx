@@ -17,6 +17,7 @@ import {
 import { BudgetHomeCard } from '../features/BudgetHomeCard'
 import { DailyAllowanceCard } from '../features/DailyAllowanceCard'
 import { GhostTeaser } from '../features/GhostTeaser'
+import { PersonalInflationCard } from '../features/PersonalInflationCard'
 import { WaitingTeaser } from '../features/WaitingTeaser'
 import { LifeHoursCard } from '../features/LifeHoursCard'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
@@ -295,6 +296,7 @@ export function DashboardPage() {
         <LifeHoursCard month={month} />
         <GhostTeaser />
         <WaitingTeaser />
+        <PersonalInflationCard />
       </div>
 
       {upcoming.length > 0 && (
