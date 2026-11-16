@@ -13,6 +13,8 @@ const PATHS = {
   down: 'M12 5v14M6 13l6 6 6-6',
   salary: 'M3 7h18v10H3zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 10v.01M18 14v.01',
   target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 12h.01',
+  // Bandera de meta (Metas); el gráfico de barras queda para Análisis
+  flag: 'M5 21V4M5 4h12l-2.5 4L17 12H5',
   eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   // Ampliación del sistema para las pantallas de la app (mismo trazo y caja)
   tag: 'M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9zM8 8h.01',
