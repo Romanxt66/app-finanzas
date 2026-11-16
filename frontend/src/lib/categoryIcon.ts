@@ -9,7 +9,9 @@ const RULES: [string[], IconName][] = [
     'home',
   ],
   [['restaurante', 'domicilio', 'rappi', 'cafe', 'comida rapida', 'almuerzo'], 'restaurant'],
-  [['comida', 'mercado', 'supermercado', 'alimenta', 'viveres', 'fruta'], 'food'],
+  // El mercado con carrito, para no repetir el icono de «Comida» cuando el usuario tiene ambas
+  [['supermercado', 'mercado', 'viveres'], 'cart'],
+  [['comida', 'alimenta', 'fruta'], 'food'],
   [['salud', 'medic', 'farmacia', 'eps', 'doctor', 'odontolog', 'seguro medico'], 'health'],
   [
     [
@@ -30,18 +32,10 @@ const RULES: [string[], IconName][] = [
   [['regalo', 'cumpleanos', 'donacion', 'navidad'], 'gift'],
   [['educacion', 'colegio', 'universidad', 'curso', 'libro', 'estudio', 'matricula'], 'school'],
   [['viaje', 'vacacion', 'vuelo', 'hotel', 'turismo'], 'travel'],
+  // Una categoría de suscripciones es un cobro que se repite: no el mismo icono que «Ocio»
+  [['suscripcion'], 'restore'],
   [
-    [
-      'ocio',
-      'entretenimiento',
-      'cine',
-      'netflix',
-      'spotify',
-      'streaming',
-      'suscripcion',
-      'juego',
-      'concierto',
-    ],
+    ['ocio', 'entretenimiento', 'cine', 'netflix', 'spotify', 'streaming', 'juego', 'concierto'],
     'film',
   ],
   [['ropa', 'compras', 'shopping', 'tienda', 'calzado'], 'bag'],
