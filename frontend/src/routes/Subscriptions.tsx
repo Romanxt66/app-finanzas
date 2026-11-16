@@ -151,7 +151,12 @@ function SubscriptionList({ items, label }: { items: Sub[]; label: string }) {
           </div>
           <div className="cr-sub-amt">
             <div className="amount-sm">{formatMoney(s.last_amount, s.currency)}</div>
-            <div className="caption cr-muted">≈ {formatMoney(s.monthly_cost, s.currency)}/mes</div>
+            {/* En las mensuales el equivalente al mes repetiría la misma cifra */}
+            {Number(s.monthly_cost) !== Number(s.last_amount) && (
+              <div className="caption cr-muted">
+                ≈ {formatMoney(s.monthly_cost, s.currency)}/mes
+              </div>
+            )}
           </div>
           {s.tracked || !s.account_id ? (
             <Badge tone={s.tracked ? 'positive' : 'warning'}>
