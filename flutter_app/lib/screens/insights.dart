@@ -379,10 +379,11 @@ FinanceMood financeMood({
   }
 
   final active = budgets.where((b) => b.amount > 0).toList();
+  var over = 0;
   if (active.isEmpty) {
     score += 12;
   } else {
-    final over = active.where((b) => b.spent > b.amount).length;
+    over = active.where((b) => b.spent > b.amount).length;
     score += (20 * (1 - over / active.length)).round();
     reasons.add(over == 0 ? 'ningún presupuesto excedido' : '$over presupuesto${over == 1 ? '' : 's'} excedido${over == 1 ? '' : 's'}');
   }
@@ -393,7 +394,7 @@ FinanceMood financeMood({
     reasons.add('saldo en negativo');
   }
 
-  final level = score >= 80
+  var level = score >= 80
       ? 4
       : score >= 60
       ? 3
@@ -402,6 +403,8 @@ FinanceMood financeMood({
       : score >= 20
       ? 1
       : 0;
+  // «Radiante» dice «vas por debajo de tus límites»: con un presupuesto pasado sería falso.
+  if (over > 0 && level == 4) level = 3;
   return FinanceMood(level, score, reasons);
 }
 
