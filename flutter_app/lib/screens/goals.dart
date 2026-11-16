@@ -18,7 +18,11 @@ import 'features.dart';
 String? goalNote(Goal g) {
   if (g.achieved) return '¡Meta cumplida!';
   final parts = <String>['Faltan ${formatMoney(g.remaining, g.currency)}'];
-  if (g.deadline != null) parts.add('para el ${formatDate(g.deadline!)}');
+  if (g.deadline != null) {
+    // Con la fecha ya pasada, «para el …» sonaría a que aún hay tiempo
+    final due = g.deadline!.substring(0, 10);
+    parts.add(due.compareTo(todayISO()) < 0 ? '· el plazo venció el ${formatDate(due)}' : 'para el ${formatDate(due)}');
+  }
   final perMonth = monthlyNeeded(deadline: g.deadline == null ? null : parseIso(g.deadline!), remaining: g.remaining, achieved: g.achieved);
   if (perMonth != null) {
     parts.add('· ${formatMoney(perMonth, g.currency)} al mes');
