@@ -24,6 +24,8 @@ export interface TransactionFilters {
   date_from?: string
   date_to?: string
   search?: string
+  /** «amount»: los de mayor importe primero (por defecto, los más recientes) */
+  order?: 'recent' | 'amount'
   limit: number
   offset: number
 }

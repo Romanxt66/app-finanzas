@@ -9,11 +9,21 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { useAccounts, useCategories, type Summary } from '../api/hooks'
+import { useAccounts, useCategories, useTransactions, type Summary } from '../api/hooks'
 import { api } from '../api/client'
-import { Card, ErrorText, Icon, Segmented, Skeleton, StatTile, PageTitle } from '../design'
+import {
+  Card,
+  ErrorText,
+  Icon,
+  Segmented,
+  Skeleton,
+  StatTile,
+  PageTitle,
+  TransactionList,
+  TransactionRow,
+} from '../design'
 import { categoryIcon } from '../lib/categoryIcon'
-import { formatMoney, monthLabel } from '../lib/format'
+import { formatDate, formatMoney, monthLabel, todayISO } from '../lib/format'
 import { combinePeriod, lastMonths } from '../lib/period'
 
 type Period = '1' | '3' | '6'
@@ -179,8 +189,49 @@ export function AnalyticsPage() {
               </ul>
             )}
           </Card>
+          <BiggestExpenses from={months[months.length - 1]} names={names} />
         </>
       )}
     </>
+  )
+}
+
+/** Los cinco gastos más grandes del periodo: dónde se fue lo grueso del dinero. */
+function BiggestExpenses({ from, names }: { from: string; names: Map<string, string> }) {
+  const { data: accounts = [] } = useAccounts(true)
+  const { data, isLoading } = useTransactions({
+    type: 'expense',
+    date_from: from,
+    date_to: todayISO(),
+    order: 'amount',
+    limit: 5,
+    offset: 0,
+  })
+  const currencyOf = new Map(accounts.map((a) => [a.id, a.currency]))
+  const items = data?.items ?? []
+  return (
+    <Card title="Mayores gastos">
+      {isLoading ? (
+        <Skeleton lines={3} height={44} />
+      ) : items.length === 0 ? (
+        <p className="cr-muted">Sin gastos en este periodo.</p>
+      ) : (
+        <TransactionList label="Mayores gastos del periodo">
+          {items.map((t) => (
+            <TransactionRow
+              key={t.id}
+              kind="expense"
+              title={t.description || (t.category_id ? names.get(t.category_id) : null) || 'Gasto'}
+              detail={[
+                formatDate(t.occurred_on),
+                t.category_id ? (names.get(t.category_id) ?? 'Sin categoría') : 'Sin categoría',
+              ].join(' · ')}
+              amount={Number(t.amount)}
+              currency={currencyOf.get(t.account_id)}
+            />
+          ))}
+        </TransactionList>
+      )}
+    </Card>
   )
 }

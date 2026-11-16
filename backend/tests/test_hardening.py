@@ -301,3 +301,35 @@ def test_eliminar_la_cuenta_cubre_todas_las_tablas_del_usuario() -> None:
     with_user = {t.name for t in Base.metadata.tables.values() if "user_id" in t.columns}
     covered = {m.__table__.name for m in _OWNED}  # type: ignore[attr-defined]
     assert with_user - covered == set()
+
+
+async def test_listar_movimientos_por_importe(client: AsyncClient, auth: H) -> None:
+    acc = await _mk(
+        client,
+        auth,
+        "accounts",
+        {"name": "A", "type": "bank", "currency": "COP", "initial_balance": "0"},
+    )
+    for amount, day in (("50", "2026-11-03"), ("900", "2026-11-01"), ("120", "2026-11-05")):
+        await _mk(
+            client,
+            auth,
+            "transactions",
+            {
+                "type": "expense",
+                "account_id": acc["id"],
+                "amount": amount,
+                "occurred_on": day,
+                "description": amount,
+            },
+        )
+
+    async def order(**params: str) -> list[str]:
+        r = await client.get("/api/v1/transactions", headers=auth, params=params)
+        assert r.status_code == 200, r.text
+        return [t["description"] for t in r.json()["items"]]
+
+    assert await order() == ["120", "50", "900"]  # por fecha, lo más reciente primero
+    assert await order(order="amount", limit="2") == ["900", "120"]
+    bad = await client.get("/api/v1/transactions", headers=auth, params={"order": "otro"})
+    assert bad.status_code == 422

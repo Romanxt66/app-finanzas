@@ -894,6 +894,7 @@
       "get": {
         "tags": ["transactions"],
         "summary": "List Transactions",
+        "description": "Por defecto los más recientes primero; con `order=amount`, los de mayor importe.",
         "operationId": "list_transactions_api_v1_transactions_get",
         "security": [
           {
@@ -1023,6 +1024,17 @@
               "minimum": 0,
               "default": 0,
               "title": "Offset"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": ["recent", "amount"],
+              "type": "string",
+              "default": "recent",
+              "title": "Order"
             }
           }
         ],

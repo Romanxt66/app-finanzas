@@ -75,6 +75,7 @@ async def list_transactions(
     search: str | None,
     limit: int,
     offset: int,
+    order: str = "recent",
 ) -> tuple[list[Transaction], int]:
     conditions = build_conditions(
         user_id,
@@ -86,10 +87,12 @@ async def list_transactions(
         search=search,
     )
     total = await session.scalar(select(func.count()).select_from(Transaction).where(*conditions))
+    # «amount»: los más grandes primero (p. ej. «Mayores gastos» del periodo en Análisis)
+    by_amount = (Transaction.amount.desc(),) if order == "amount" else ()
     stmt = (
         select(Transaction)
         .where(*conditions)
-        .order_by(Transaction.occurred_on.desc(), Transaction.created_at.desc())
+        .order_by(*by_amount, Transaction.occurred_on.desc(), Transaction.created_at.desc())
         .limit(limit)
         .offset(offset)
     )
