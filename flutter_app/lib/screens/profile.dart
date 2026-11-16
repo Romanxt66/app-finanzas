@@ -126,7 +126,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text('Correo: ${app.user?.email ?? ''}', style: CrText.label(c.inkMuted)),
               Align(
                 alignment: Alignment.centerLeft,
-                child: CrButton(variant: CrButtonVariant.primary, label: 'Guardar', onPressed: _nameBusy ? null : _saveName),
+                child: CrButton(
+                  variant: CrButtonVariant.primary,
+                  label: 'Guardar',
+                  // Solo cuando el nombre cambió: pulsarlo sin cambios no hacía nada visible
+                  onPressed: _nameBusy || _name.text.trim() == (context.app.user?.fullName ?? '').trim() ? null : _saveName,
+                ),
               ),
               ErrorText(_nameError),
             ],
