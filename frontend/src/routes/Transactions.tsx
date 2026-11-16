@@ -402,7 +402,16 @@ export function TransactionsPage() {
         <Skeleton lines={4} />
       ) : !data?.items.length ? (
         <Card>
-          <Empty>No hay transacciones.</Empty>
+          <Empty>
+            {/* Explica por qué no hay nada y cómo salir de ahí, no solo «no hay» */}
+            {filters.search.trim()
+              ? `Nada coincide con «${filters.search.trim()}». Prueba con otra palabra.`
+              : filters.date_from && filters.date_from === filters.date_to
+                ? 'No anotaste nada ese día.'
+                : activeFilters > 0
+                  ? 'Ningún movimiento cumple estos filtros.'
+                  : 'Aún no hay movimientos. Anota el primero con «Nueva» o el botón +.'}
+          </Empty>
         </Card>
       ) : (
         groupByDay(data.items).map(([day, items]) => {
