@@ -138,7 +138,7 @@ describe('GoalsPage', () => {
       'DELETE /goals/g1': { status: 204, body: null },
     })
     renderApp(<GoalsPage />)
-    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar' }))
+    await userEvent.click(await screen.findByRole('button', { name: /^Eliminar / }))
     expect(calls.some((c) => c.method === 'DELETE')).toBe(false)
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent('Viaje')

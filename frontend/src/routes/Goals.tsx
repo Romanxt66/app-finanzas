@@ -2,7 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { useContribute, useCreateGoal, useDeleteGoal, useGoals, type Goal } from '../api/hooks'
+import {
+  useContribute,
+  useCreateGoal,
+  useDeleteGoal,
+  useGoals,
+  useUpdateGoal,
+  type Goal,
+} from '../api/hooks'
 import {
   Button,
   Card,
@@ -101,12 +108,67 @@ function ContributionForm({
   )
 }
 
+const editSchema = goalSchema.omit({ currency: true })
+
+/** Editar una meta: nombre, objetivo y fecha límite (vacía = sin fecha). Solo envía lo que cambió. */
+function GoalEditForm({ goal, onClose }: { goal: Goal; onClose: () => void }) {
+  const update = useUpdateGoal()
+  const { register, handleSubmit, formState } = useForm({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      name: goal.name,
+      target_amount: String(Number(goal.target_amount)),
+      deadline: goal.deadline ?? '',
+    },
+  })
+  return (
+    <form
+      className="cr-stack"
+      onSubmit={handleSubmit((d) => {
+        const deadline = d.deadline || null
+        update.mutate(
+          {
+            id: goal.id,
+            ...(d.name.trim() !== goal.name && { name: d.name.trim() }),
+            ...(Number(d.target_amount) !== Number(goal.target_amount) && {
+              target_amount: d.target_amount,
+            }),
+            ...(deadline !== (goal.deadline ?? null) && { deadline }),
+          },
+          { onSuccess: onClose },
+        )
+      })}
+    >
+      <div className="cr-form-grid">
+        <Input label="Nombre" error={formState.errors.name?.message} {...register('name')} />
+        <Input
+          label={`Monto objetivo (${goal.currency})`}
+          inputMode="decimal"
+          error={formState.errors.target_amount?.message}
+          {...register('target_amount')}
+        />
+        <Input label="Fecha límite (vacía: sin fecha)" type="date" {...register('deadline')} />
+      </div>
+      <ErrorText error={update.error} />
+      <div className="cr-dialog-actions">
+        <Button variant="ghost" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button type="submit" variant="primary" disabled={update.isPending}>
+          Guardar
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 export function GoalsPage() {
   const { data: goals, isLoading } = useGoals()
   const create = useCreateGoal()
   const remove = useDeleteGoal()
   const [contribution, setContribution] = useState<{ goal: Goal; withdraw: boolean } | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Goal | null>(null)
+  const [editing, setEditing] = useState<Goal | null>(null)
   const [showAchieved, setShowAchieved] = useState(true)
   const { register, handleSubmit, reset, formState } = useForm({
     resolver: zodResolver(goalSchema),
@@ -185,9 +247,20 @@ export function GoalsPage() {
                         >
                           Retirar
                         </Button>
-                        <Button variant="danger" size="sm" onClick={() => setPendingDelete(g)}>
-                          Eliminar
-                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon="edit"
+                          aria-label={`Editar ${g.name}`}
+                          onClick={() => setEditing(g)}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon="trash"
+                          aria-label={`Eliminar ${g.name}`}
+                          onClick={() => setPendingDelete(g)}
+                        />
                       </>
                     }
                   />
@@ -213,6 +286,15 @@ export function GoalsPage() {
             withdraw={contribution.withdraw}
             onClose={() => setContribution(null)}
           />
+        )}
+      </FormDialog>
+      <FormDialog
+        open={!!editing}
+        title={editing ? `Editar «${editing.name}»` : ''}
+        onClose={() => setEditing(null)}
+      >
+        {editing && (
+          <GoalEditForm key={editing.id} goal={editing} onClose={() => setEditing(null)} />
         )}
       </FormDialog>
       <ConfirmDialog

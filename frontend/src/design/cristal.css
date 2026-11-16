@@ -2483,3 +2483,51 @@ a.cr-user:focus-visible {
   font-size: 14px;
   user-select: all;
 }
+
+/* Formularios que se llevan a la vista: que no queden bajo la barra superior fija */
+.cr-scroll-anchor {
+  scroll-margin-top: 96px;
+}
+
+/* Selector de archivo propio (Importar): el input nativo queda invisible encima del botón */
+.cr-field > .cr-field-label {
+  font: 500 13px/18px var(--font-sans);
+  color: var(--ink-muted);
+}
+.cr-field > label.cr-file {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--glass);
+  border: 1px dashed var(--glass-border);
+  color: var(--ink);
+  font: 500 14px/20px var(--font-sans);
+  cursor: pointer;
+}
+.cr-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.cr-file:focus-within {
+  outline: 2px solid var(--focus, var(--ink));
+  outline-offset: 2px;
+}
+.cr-file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-muted);
+}
+.cr-file > .cr-btn {
+  flex: none;
+  white-space: nowrap;
+}

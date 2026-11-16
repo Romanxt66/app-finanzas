@@ -26,9 +26,11 @@ import {
   TransactionRow,
   CreateSection,
   PageTitle,
+  StatTile,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
-import { formatDate, todayISO } from '../lib/format'
+import { formatDate, formatMoney, todayISO } from '../lib/format'
+import { recurringTotals } from '../lib/recurringTotals'
 
 const FREQUENCY_LABELS = {
   weekly: 'Cada semana',
@@ -79,6 +81,11 @@ export function RecurringPage() {
   const type = useWatch({ control, name: 'type' })
   const accountById = new Map(accounts.map((a) => [a.id, a]))
   const categoryName = new Map(categories.map((c) => [c.id, c.name]))
+  // Lo fijo del mes, en la moneda principal (la de la primera cuenta)
+  const currency = accounts.find((a) => !a.archived)?.currency ?? accounts[0]?.currency
+  const fixed = currency
+    ? recurringTotals(rules ?? [], (id) => accountById.get(id)?.currency, currency, todayISO())
+    : null
 
   return (
     <>
@@ -177,6 +184,34 @@ export function RecurringPage() {
           <ErrorText error={create.error} />
         </form>
       </CreateSection>
+
+      {fixed && fixed.count > 0 && (
+        <div className="cr-grid-kpi">
+          <StatTile
+            label="Gastos fijos al mes"
+            value={fixed.expense}
+            currency={currency}
+            icon="down"
+            tone="amber"
+            note={
+              fixed.income > 0
+                ? `${Math.round((fixed.expense / fixed.income) * 100)} % de tus ingresos fijos`
+                : undefined
+            }
+          />
+          <StatTile
+            label="Ingresos fijos al mes"
+            value={fixed.income}
+            currency={currency}
+            icon="up"
+            note={
+              fixed.income > 0
+                ? `Libre tras lo fijo: ${formatMoney(fixed.income - fixed.expense, currency)}`
+                : 'Añade tu sueldo como recurrente para verlo'
+            }
+          />
+        </div>
+      )}
 
       {isLoading ? (
         <Skeleton lines={3} />

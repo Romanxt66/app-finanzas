@@ -1,4 +1,5 @@
 import enum
+import uuid
 from datetime import date
 
 from pydantic import BaseModel
@@ -28,6 +29,9 @@ class Subscription(BaseModel):
     next_expected: date
     occurrences: int
     monthly_cost: Money
+    # Cuenta y categoría del último cobro (para registrarla como recurrente desde la app)
+    account_id: uuid.UUID | None = None
+    category_id: uuid.UUID | None = None
     # True si ya existe una regla recurrente activa para este cobro; si no, es un cobro «fantasma»
     tracked: bool
 

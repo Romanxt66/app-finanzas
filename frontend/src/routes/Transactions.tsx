@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
@@ -54,23 +54,43 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 
-function TransactionForm({ editing, onDone }: { editing: Transaction | null; onDone: () => void }) {
+/**
+ * Alta o edición de un movimiento. Con `template` es un alta rellenada con los datos de otro
+ * movimiento y la fecha de hoy («Repetir»).
+ */
+function TransactionForm({
+  editing,
+  template,
+  onDone,
+}: {
+  editing: Transaction | null
+  template?: Transaction
+  onDone: () => void
+}) {
   const { data: accounts = [] } = useAccounts()
   const save = useSaveTransaction()
+  const from = editing ?? template
   const { register, handleSubmit, control, formState } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: editing
+    defaultValues: from
       ? {
-          type: editing.type,
-          account_id: editing.account_id,
-          transfer_account_id: editing.transfer_account_id ?? '',
-          category_id: editing.category_id ?? '',
-          amount: String(editing.amount),
-          description: editing.description,
-          occurred_on: editing.occurred_on,
+          type: from.type,
+          account_id: from.account_id,
+          transfer_account_id: from.transfer_account_id ?? '',
+          category_id: from.category_id ?? '',
+          amount: String(Number(from.amount)),
+          description: from.description,
+          occurred_on: editing ? editing.occurred_on : todayISO(),
         }
       : { type: 'expense', description: '', occurred_on: todayISO(), amount: '' },
   })
+  // Se abre desde una fila de la lista, que puede estar muy abajo: se lleva el formulario a la vista
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!from) return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    box.current?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  }, [from])
   const type = useWatch({ control, name: 'type' })
 
   const submit = handleSubmit((d) =>
@@ -88,33 +108,25 @@ function TransactionForm({ editing, onDone }: { editing: Transaction | null; onD
   )
 
   return (
-    <Card title={editing ? 'Editar transacción' : 'Nueva transacción'}>
-      <form className="cr-stack" onSubmit={submit}>
-        <div className="cr-form-grid">
-          <Select label="Tipo" {...register('type')}>
-            {Object.entries(TYPE_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </Select>
-          <Select
-            label={type === 'transfer' ? 'Cuenta origen' : 'Cuenta'}
-            error={formState.errors.account_id?.message}
-            {...register('account_id')}
-          >
-            <option value="">Selecciona…</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name} ({a.currency})
-              </option>
-            ))}
-          </Select>
-          {type === 'transfer' ? (
+    <div ref={box} className="cr-scroll-anchor">
+      <Card
+        title={
+          editing ? 'Editar transacción' : template ? 'Repetir movimiento' : 'Nueva transacción'
+        }
+      >
+        <form className="cr-stack" onSubmit={submit}>
+          <div className="cr-form-grid">
+            <Select label="Tipo" {...register('type')}>
+              {Object.entries(TYPE_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>
+                  {l}
+                </option>
+              ))}
+            </Select>
             <Select
-              label="Cuenta destino"
-              error={formState.errors.transfer_account_id?.message}
-              {...register('transfer_account_id')}
+              label={type === 'transfer' ? 'Cuenta origen' : 'Cuenta'}
+              error={formState.errors.account_id?.message}
+              {...register('account_id')}
             >
               <option value="">Selecciona…</option>
               {accounts.map((a) => (
@@ -123,38 +135,52 @@ function TransactionForm({ editing, onDone }: { editing: Transaction | null; onD
                 </option>
               ))}
             </Select>
-          ) : (
-            <CategorySelect kind={type} {...register('category_id')} />
-          )}
-          <Input
-            label="Monto"
-            inputMode="decimal"
-            error={formState.errors.amount?.message}
-            {...register('amount')}
-          />
-          <Input
-            label="Fecha"
-            type="date"
-            error={formState.errors.occurred_on?.message}
-            {...register('occurred_on')}
-          />
-          <Input
-            label="Descripción"
-            error={formState.errors.description?.message}
-            {...register('description')}
-          />
-        </div>
-        <div className="cr-row">
-          <Button type="submit" variant="primary" disabled={save.isPending}>
-            Guardar
-          </Button>
-          <Button type="button" variant="ghost" onClick={onDone}>
-            Cancelar
-          </Button>
-        </div>
-      </form>
-      <ErrorText error={save.error} />
-    </Card>
+            {type === 'transfer' ? (
+              <Select
+                label="Cuenta destino"
+                error={formState.errors.transfer_account_id?.message}
+                {...register('transfer_account_id')}
+              >
+                <option value="">Selecciona…</option>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.currency})
+                  </option>
+                ))}
+              </Select>
+            ) : (
+              <CategorySelect kind={type} {...register('category_id')} />
+            )}
+            <Input
+              label="Monto"
+              inputMode="decimal"
+              error={formState.errors.amount?.message}
+              {...register('amount')}
+            />
+            <Input
+              label="Fecha"
+              type="date"
+              error={formState.errors.occurred_on?.message}
+              {...register('occurred_on')}
+            />
+            <Input
+              label="Descripción"
+              error={formState.errors.description?.message}
+              {...register('description')}
+            />
+          </div>
+          <div className="cr-row">
+            <Button type="submit" variant="primary" disabled={save.isPending}>
+              Guardar
+            </Button>
+            <Button type="button" variant="ghost" onClick={onDone}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+        <ErrorText error={save.error} />
+      </Card>
+    </div>
   )
 }
 
@@ -218,8 +244,8 @@ export function TransactionsPage() {
   // El «+» de la barra abre el alta (aunque ya estemos en esta pantalla: cada toque es una navegación nueva)
   const location = useLocation()
   const wantsNew = (location.state as { nuevo?: boolean } | null)?.nuevo === true
-  const [form, setForm] = useState<{ editing: Transaction | null } | null>(() =>
-    wantsNew ? { editing: null } : null,
+  const [form, setForm] = useState<{ editing: Transaction | null; template?: Transaction } | null>(
+    () => (wantsNew ? { editing: null } : null),
   )
   const [handledKey, setHandledKey] = useState(location.key)
   if (wantsNew && handledKey !== location.key) {
@@ -292,8 +318,9 @@ export function TransactionsPage() {
       <ErrorText error={exportError} />
       {form && (
         <TransactionForm
-          key={form.editing?.id ?? 'new'}
+          key={form.editing?.id ?? (form.template ? `copy-${form.template.id}` : 'new')}
           editing={form.editing}
+          template={form.template}
           onDone={() => setForm(null)}
         />
       )}
@@ -419,6 +446,14 @@ export function TransactionsPage() {
                             icon="edit"
                             aria-label="Editar"
                             onClick={() => setForm({ editing: t })}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            icon="restore"
+                            aria-label="Repetir hoy"
+                            title="Repetir hoy"
+                            onClick={() => setForm({ editing: null, template: t })}
                           />
                           <Button
                             variant="danger"

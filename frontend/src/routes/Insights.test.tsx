@@ -190,6 +190,29 @@ describe('SubscriptionsPage', () => {
     expect(screen.getByRole('link', { name: 'Recurrentes' })).toHaveAttribute('href', '/recurring')
   })
 
+  it('registra un cobro detectado como recurrente con un toque', async () => {
+    const withAccount = {
+      ...report,
+      subscriptions: [{ ...report.subscriptions[0], account_id: 'a1', category_id: 'c9' }],
+    }
+    const calls = mockApi({
+      'GET /ghost-subscriptions': withAccount,
+      'POST /recurring': { status: 201, body: {} },
+    })
+    renderApp(<SubscriptionsPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Registrar' }))
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
+    expect(calls.find((c) => c.method === 'POST')?.body).toEqual({
+      type: 'expense',
+      account_id: 'a1',
+      category_id: 'c9',
+      amount: '10.99',
+      description: 'Netflix',
+      frequency: 'monthly',
+      start_date: '2026-11-05',
+    })
+  })
+
   it('pide los datos con la fecha local del navegador', async () => {
     const calls = mockApi({ 'GET /ghost-subscriptions': report })
     renderApp(<SubscriptionsPage />)

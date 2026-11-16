@@ -271,6 +271,19 @@ export function useCreateGoal() {
   })
 }
 
+export function useUpdateGoal() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.goals)
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & Schemas['GoalUpdate']) =>
+      api<Goal>(`/goals/${id}`, { method: 'PATCH', body }),
+    onSuccess: () => {
+      toast.success('Meta actualizada')
+      return invalidate()
+    },
+  })
+}
+
 export function useDeleteGoal() {
   const toast = useToast()
   const invalidate = useInvalidate(keys.goals)

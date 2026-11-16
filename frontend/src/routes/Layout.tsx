@@ -28,7 +28,7 @@ const DESKTOP_NAV: NavItem[] = [
   { to: '/analytics', label: 'Análisis', icon: 'chart' },
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
   { to: '/budgets', label: 'Presupuestos', icon: 'target' },
-  { to: '/goals', label: 'Metas', icon: 'chart' },
+  { to: '/goals', label: 'Metas', icon: 'flag' },
   { to: '/recurring', label: 'Recurrentes', icon: 'swap' },
   { to: '/categories', label: 'Categorías', icon: 'tag' },
 ]
@@ -38,7 +38,7 @@ const MOBILE_NAV: NavItem[] = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/transactions', label: 'Movimientos', icon: 'list' },
   { to: '/accounts', label: 'Cuentas', icon: 'wallet' },
-  { to: '/goals', label: 'Metas', icon: 'chart' },
+  { to: '/goals', label: 'Metas', icon: 'flag' },
   { to: '/more', label: 'Más', icon: 'dots' },
 ]
 

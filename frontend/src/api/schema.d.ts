@@ -1716,6 +1716,10 @@ export interface components {
       occurrences: number
       /** Monthly Cost */
       monthly_cost: string
+      /** Account Id */
+      account_id?: string | null
+      /** Category Id */
+      category_id?: string | null
       /** Tracked */
       tracked: boolean
     }
