@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/data.dart';
 import '../core/format.dart';
 import '../core/models.dart';
+import '../core/recurring_totals.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
@@ -188,8 +189,10 @@ class _RecurringScreenState extends State<RecurringScreen> {
               const Skeleton(lines: 3)
             else if (rules == null || rules.isEmpty)
               const CrCard(child: CrEmpty('Aún no tienes movimientos recurrentes. Crea uno para tu sueldo, arriendo o suscripciones.'))
-            else
+            else ...[
+              _FixedSummary(rules: rules, accounts: ref.accounts),
               CardGrid(minWidth: 250, children: [for (final r in rules) _card(context, r, ref)]),
+            ],
             ErrorText(_actionError),
           ],
         );
@@ -357,6 +360,42 @@ class _RecurringEditFormState extends State<_RecurringEditForm> {
             const SizedBox(width: space2),
             CrButton(label: 'Guardar', variant: CrButtonVariant.primary, onPressed: _busy ? null : _save),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Lo fijo del mes en la moneda principal: gastos, ingresos, qué parte se lleva y cuánto queda libre.
+class _FixedSummary extends StatelessWidget {
+  const _FixedSummary({required this.rules, required this.accounts});
+  final List<Recurring> rules;
+  final List<Account> accounts;
+
+  @override
+  Widget build(BuildContext context) {
+    if (accounts.isEmpty) return const SizedBox.shrink();
+    final c = context.c;
+    final currency = accounts.first.currency;
+    final byId = {for (final a in accounts) a.id: a.currency};
+    final t = recurringTotals(rules, (id) => byId[id], currency, todayISO());
+    if (t.count == 0) return const SizedBox.shrink();
+    return CardGrid(
+      minWidth: 150,
+      children: [
+        SummaryTile(
+          label: 'gastos',
+          value: formatMoney(t.expense, currency),
+          icon: 'down',
+          color: c.neon,
+          note: t.income > 0 ? 'fijos/mes · ${(t.expense / t.income * 100).round()} %' : 'fijos al mes',
+        ),
+        SummaryTile(
+          label: 'ingresos',
+          value: formatMoney(t.income, currency),
+          icon: 'up',
+          color: c.positive,
+          note: t.income > 0 ? 'libre ${formatMoney(t.income - t.expense, currency)}' : 'fijos al mes',
         ),
       ],
     );
