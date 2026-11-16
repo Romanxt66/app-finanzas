@@ -118,12 +118,12 @@ export function CategoriesPage() {
                             onClick={() => setRenaming({ id: c.id, name: c.name })}
                           />
                           <Button
-                            variant="danger"
+                            variant="ghost"
                             size="sm"
+                            icon="trash"
+                            aria-label={`Eliminar ${c.name}`}
                             onClick={() => setPending({ id: c.id, name: c.name })}
-                          >
-                            Eliminar
-                          </Button>
+                          />
                         </span>
                       </li>
                     ))}

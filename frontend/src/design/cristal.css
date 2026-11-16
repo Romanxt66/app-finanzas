@@ -2531,3 +2531,13 @@ a.cr-user:focus-visible {
   flex: none;
   white-space: nowrap;
 }
+.cr-allow-pct-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.cr-allow-pct-inner small {
+  font: 500 10.5px/14px var(--font-sans);
+  color: var(--ink-muted);
+}

@@ -47,7 +47,13 @@ export function DailyAllowanceCard() {
       <div className="cr-allow-gaugebox">
         <Gauge ratio={ratio} danger={danger} />
         <span className="cr-allow-pct label" aria-hidden="true">
-          {ratio > 1 ? 'excedido' : `${Math.round(ratio * 100)} %`}
+          {ratio > 1 ? (
+            'excedido'
+          ) : (
+            <span className="cr-allow-pct-inner">
+              {Math.round(ratio * 100)} %<small>usado hoy</small>
+            </span>
+          )}
         </span>
       </div>
       <div className="cr-allow-body">
