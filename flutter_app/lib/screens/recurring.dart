@@ -7,6 +7,7 @@ import '../core/recurring_totals.dart';
 import '../core/reference.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
+import '../ui/category_icon.dart';
 import '../ui/deal_card.dart';
 import '../ui/dialogs.dart';
 import '../ui/inputs.dart';
@@ -207,6 +208,8 @@ class _RecurringScreenState extends State<RecurringScreen> {
     final title = r.description.isNotEmpty ? r.description : (category ?? _typeLabels[r.type]!);
     final color = txColor(c, r.type);
     return DealCard(
+      // Con categoría, su icono (como en la web); si no, las iniciales del título
+      leading: category != null && r.type != 'transfer' ? CategoryGlyph(category, kind: r.type) : null,
       avatar: initials(category ?? title),
       accent: color,
       title: title,
