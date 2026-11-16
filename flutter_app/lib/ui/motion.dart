@@ -273,13 +273,16 @@ class _FadeInState extends State<FadeIn> with SingleTickerProviderStateMixin {
 
 /// Barra de progreso que crece desde cero (`cr-fill`: 0,7 s, retardo 0,15 s).
 class GrowBar extends StatelessWidget {
-  const GrowBar({super.key, required this.ratio, required this.color, this.height = 8, this.glow = false});
+  const GrowBar({super.key, required this.ratio, required this.color, this.height = 8, this.glow = false, this.striped = false});
   final double ratio;
   final Color color;
   final double height;
 
   /// Halo de luz del mismo color alrededor de la barra.
   final bool glow;
+
+  /// Rayas diagonales (presupuesto excedido): en la paleta monocroma el color solo no basta.
+  final bool striped;
 
   @override
   Widget build(BuildContext context) {
@@ -293,15 +296,38 @@ class GrowBar extends StatelessWidget {
         widthFactor: v,
         child: Container(
           height: height,
+          clipBehavior: striped ? Clip.antiAlias : Clip.none,
           decoration: BoxDecoration(
-            color: color,
+            color: striped ? color.withValues(alpha: 0.55) : color,
             borderRadius: BorderRadius.circular(radiusPill),
             boxShadow: glow ? [BoxShadow(color: color.withValues(alpha: 0.55), blurRadius: 10)] : null,
           ),
+          child: striped ? CustomPaint(painter: StripesPainter(color)) : null,
         ),
       ),
     );
   }
+}
+
+/// Rayas a -45° de 6 px con huecos de 5 px, como `repeating-linear-gradient` de la web.
+class StripesPainter extends CustomPainter {
+  const StripesPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 6 / 1.4142
+      ..style = PaintingStyle.stroke;
+    // Líneas diagonales separadas 11 px en horizontal que cubren todo el alto
+    for (double x = -size.height; x < size.width + size.height; x += 11 * 1.4142) {
+      canvas.drawLine(Offset(x, size.height), Offset(x + size.height, 0), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(StripesPainter old) => old.color != color;
 }
 
 /// Cifra que cuenta hasta su valor (0,7 s, ease-out cúbico), como `useCountUp`.
