@@ -190,9 +190,13 @@ export function BudgetsPage() {
                       aria-label={`Editar ${nameOf(b)}`}
                       onClick={() => setEditing(b)}
                     />
-                    <Button variant="danger" size="sm" onClick={() => setPending(b)}>
-                      Eliminar
-                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon="trash"
+                      aria-label={`Eliminar ${nameOf(b)}`}
+                      onClick={() => setPending(b)}
+                    />
                   </span>
                 }
               />
