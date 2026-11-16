@@ -62,6 +62,10 @@ export function Layout() {
   useRunDueRecurring(!!user)
   const actions = useMemo<Command[]>(
     () => [
+      // En escritorio no hay pestaña «Más»: lo que no cabe en la barra se alcanza desde aquí
+      { id: 'waiting', label: 'Sala de espera', icon: 'calendar', group: 'Ir a', to: '/waiting' },
+      { id: 'subs', label: 'Suscripciones', icon: 'search', group: 'Ir a', to: '/subscriptions' },
+      { id: 'import', label: 'Importar CSV', icon: 'download', group: 'Ir a', to: '/import' },
       { id: 'profile', label: 'Perfil', icon: 'user', group: 'Cuenta', to: '/profile' },
       { id: 'theme', label: 'Cambiar tema', icon: 'sun', group: 'Cuenta', run: theme.cycle },
       { id: 'logout', label: 'Cerrar sesión', icon: 'logout', group: 'Cuenta', run: logout },
