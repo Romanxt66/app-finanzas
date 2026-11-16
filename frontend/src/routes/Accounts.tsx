@@ -216,8 +216,13 @@ function BalancesDonut({ accounts }: { accounts: Account[] }) {
                     </span>
                   </span>
                   <span className="cr-donut-amount">
-                    <span>{formatMoney(a.balance, a.currency)}</span>
-                    <span className="caption cr-muted">{Math.round(share * 100)} %</span>
+                    <span className={Number(a.balance) < 0 ? 'cr-neg' : undefined}>
+                      {formatMoney(a.balance, a.currency)}
+                    </span>
+                    {/* Una cuenta en negativo no tiene «parte» del dinero: resta del total */}
+                    <span className="caption cr-muted">
+                      {Number(a.balance) < 0 ? 'resta del total' : `${Math.round(share * 100)} %`}
+                    </span>
                   </span>
                 </div>
               )
