@@ -6,6 +6,10 @@ describe('categoryIcon', () => {
     expect(categoryIcon('Educación')).toBe('school')
     expect(categoryIcon('Arriendo apartamento')).toBe('home')
     expect(categoryIcon('Netflix')).toBe('film')
+    // Ni «Supermercado» repite el de «Comida» ni «Suscripciones» el de «Ocio»
+    expect(categoryIcon('Supermercado')).toBe('cart')
+    expect(categoryIcon('Suscripciones')).toBe('restore')
+    expect(categoryIcon('Ocio')).toBe('film')
     expect(categoryIcon('Gasolina')).toBe('car')
     expect(categoryIcon('Sueldo', 'income')).toBe('salary')
     expect(categoryIcon('Cosas raras')).toBe('tag')
