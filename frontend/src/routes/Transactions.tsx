@@ -28,6 +28,7 @@ import {
   PageTitle,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
+import { MoodPicker } from '../features/MoodPicker'
 import { WeekStrip } from '../features/WeekStrip'
 import { dayLabel } from '../lib/dates'
 import { categoryIcon } from '../lib/categoryIcon'
@@ -47,6 +48,7 @@ const schema = z
     amount: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Monto positivo con hasta 2 decimales'),
     description: z.string().max(255),
     occurred_on: z.string().min(1, 'Requerida'),
+    mood: z.enum(['happy', 'calm', 'stressed', 'sad', 'bored']).nullable().optional(),
   })
   .refine((d) => d.type !== 'transfer' || !!d.transfer_account_id, {
     path: ['transfer_account_id'],
@@ -71,7 +73,7 @@ function TransactionForm({
   const { data: accounts = [] } = useAccounts()
   const save = useSaveTransaction()
   const from = editing ?? template
-  const { register, handleSubmit, control, formState } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState, setValue } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: from
       ? {
@@ -82,8 +84,9 @@ function TransactionForm({
           amount: String(Number(from.amount)),
           description: from.description,
           occurred_on: editing ? editing.occurred_on : todayISO(),
+          mood: from.mood ?? null,
         }
-      : { type: 'expense', description: '', occurred_on: todayISO(), amount: '' },
+      : { type: 'expense', description: '', occurred_on: todayISO(), amount: '', mood: null },
   })
   // Se abre desde una fila de la lista, que puede estar muy abajo: se lleva el formulario a la vista
   const box = useRef<HTMLDivElement>(null)
@@ -93,6 +96,7 @@ function TransactionForm({
     box.current?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
   }, [from])
   const type = useWatch({ control, name: 'type' })
+  const mood = useWatch({ control, name: 'mood' }) ?? null
 
   const submit = handleSubmit((d) =>
     save.mutate(
@@ -102,6 +106,8 @@ function TransactionForm({
           ...d,
           transfer_account_id: d.type === 'transfer' ? d.transfer_account_id : null,
           category_id: d.type === 'transfer' || !d.category_id ? null : d.category_id,
+          // El ánimo solo tiene sentido en gastos
+          mood: d.type === 'expense' ? (d.mood ?? null) : null,
         },
       },
       { onSuccess: onDone },
@@ -170,6 +176,9 @@ function TransactionForm({
               {...register('description')}
             />
           </div>
+          {type === 'expense' && (
+            <MoodPicker value={mood} onChange={(v) => setValue('mood', v, { shouldDirty: true })} />
+          )}
           <div className="cr-row">
             <Button type="submit" variant="primary" disabled={save.isPending}>
               Guardar
