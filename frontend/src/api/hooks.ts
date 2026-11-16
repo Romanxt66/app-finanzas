@@ -598,3 +598,23 @@ export const useSpendingMood = () =>
     queryKey: [...keys.mood, todayISO()],
     queryFn: () => api<SpendingMoodReport>('/spending-mood', { query: { today: todayISO() } }),
   })
+
+export const useContributions = (goalId: string | null) =>
+  useQuery({
+    queryKey: [...keys.goals, goalId, 'contributions'],
+    queryFn: () => api<Contribution[]>(`/goals/${goalId}/contributions`),
+    enabled: !!goalId,
+  })
+
+export function useDeleteContribution() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.goals)
+  return useMutation({
+    mutationFn: ({ goalId, id }: { goalId: string; id: string }) =>
+      api<void>(`/goals/${goalId}/contributions/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Aporte eliminado')
+      return invalidate()
+    },
+  })
+}
