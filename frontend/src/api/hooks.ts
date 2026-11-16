@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../design/toastContext'
-import { todayISO } from '../lib/format'
+import { formatMoney, todayISO } from '../lib/format'
 import { api, ApiError, tokens, type Schemas } from './client'
 
 export type Account = Schemas['AccountOut']
@@ -41,6 +41,7 @@ export const keys = {
   lifeHours: ['life-hours'] as const,
   ghost: ['ghost-subscriptions'] as const,
   allowance: ['daily-allowance'] as const,
+  waiting: ['waiting-room'] as const,
 }
 
 /** Una transacción cambia saldos, presupuestos y reportes: se invalida todo lo derivado. */
@@ -525,5 +526,53 @@ export function useNewRecoveryCodes() {
   return useMutation({
     mutationFn: (code: string) =>
       api<Schemas['RecoveryCodes']>('/auth/2fa/recovery-codes', { method: 'POST', body: { code } }),
+  })
+}
+
+export type WaitingRoom = Schemas['WaitingRoom']
+export type WaitingItem = Schemas['WaitingOut']
+
+export const useWaitingRoom = () =>
+  useQuery({ queryKey: keys.waiting, queryFn: () => api<WaitingRoom>('/waiting-room') })
+
+export function useAddWaiting() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.waiting)
+  return useMutation({
+    mutationFn: (body: Schemas['WaitingCreate']) =>
+      api<WaitingItem>('/waiting-room', { method: 'POST', body }),
+    onSuccess: () => {
+      toast.success('En espera: vuelve cuando pase el plazo para decidir')
+      return invalidate()
+    },
+  })
+}
+
+export function useDecideWaiting() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.waiting)
+  return useMutation({
+    mutationFn: ({ id, decision }: { id: string; decision: 'bought' | 'skipped' }) =>
+      api<WaitingItem>(`/waiting-room/${id}/decide`, { method: 'POST', body: { decision } }),
+    onSuccess: (item) => {
+      toast.success(
+        item.status === 'skipped'
+          ? `¡${formatMoney(item.amount, item.currency)} que no gastaste!`
+          : 'Marcada como comprada',
+      )
+      return invalidate()
+    },
+  })
+}
+
+export function useDeleteWaiting() {
+  const toast = useToast()
+  const invalidate = useInvalidate(keys.waiting)
+  return useMutation({
+    mutationFn: (id: string) => api<void>(`/waiting-room/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('Quitada de la lista')
+      return invalidate()
+    },
   })
 }

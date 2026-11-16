@@ -20,6 +20,7 @@ const CategoriesPage = lazyPage(() => import('./routes/Categories'), 'Categories
 const DashboardPage = lazyPage(() => import('./routes/Dashboard'), 'DashboardPage')
 const GoalsPage = lazyPage(() => import('./routes/Goals'), 'GoalsPage')
 const MorePage = lazyPage(() => import('./routes/More'), 'MorePage')
+const WaitingRoomPage = lazyPage(() => import('./routes/Waiting'), 'WaitingRoomPage')
 const NotFoundPage = lazyPage(() => import('./routes/NotFound'), 'NotFoundPage')
 const RecurringPage = lazyPage(() => import('./routes/Recurring'), 'RecurringPage')
 const ImportPage = lazyPage(() => import('./routes/Import'), 'ImportPage')
@@ -65,6 +66,7 @@ export default function App() {
                   <Route path="import" element={<ImportPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="more" element={<MorePage />} />
+                  <Route path="waiting" element={<WaitingRoomPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>

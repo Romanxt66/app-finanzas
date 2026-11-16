@@ -6,6 +6,7 @@ const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: '/analytics', label: 'Análisis', icon: 'chart' },
   { to: '/budgets', label: 'Presupuestos', icon: 'target' },
   { to: '/recurring', label: 'Recurrentes', icon: 'swap' },
+  { to: '/waiting', label: 'Sala de espera', icon: 'calendar' },
   { to: '/subscriptions', label: 'Suscripciones', icon: 'search' },
   { to: '/import', label: 'Importar CSV', icon: 'download' },
   { to: '/categories', label: 'Categorías', icon: 'tag' },

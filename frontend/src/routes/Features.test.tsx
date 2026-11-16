@@ -240,6 +240,7 @@ describe('MorePage', () => {
       '/analytics',
       '/budgets',
       '/recurring',
+      '/waiting',
       '/subscriptions',
       '/import',
       '/categories',
