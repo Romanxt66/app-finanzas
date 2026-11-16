@@ -26,6 +26,14 @@ import 'insights.dart';
 const pageSize = 20;
 const typeLabels = {'income': 'Ingreso', 'expense': 'Gasto', 'transfer': 'Transferencia'};
 
+/// Explica por qué no hay movimientos y cómo salir de ahí, no solo «no hay».
+String emptyTransactionsText({required String search, required String from, required String to, required int activeFilters}) {
+  if (search.isNotEmpty) return 'Nada coincide con «$search». Prueba con otra palabra.';
+  if (from.isNotEmpty && from == to) return 'No anotaste nada ese día.';
+  if (activeFilters > 0) return 'Ningún movimiento cumple estos filtros.';
+  return 'Aún no hay movimientos. Anota el primero con «Nueva» o el botón +.';
+}
+
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key, this.link});
 
@@ -276,7 +284,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             else if (q.error != null && data == null)
               CrCard(child: CrEmpty(q.error.toString()))
             else if (data == null || data.items.isEmpty)
-              const CrCard(child: CrEmpty('No hay transacciones.'))
+              CrCard(
+                child: CrEmpty(emptyTransactionsText(search: _searchText, from: _from, to: _to, activeFilters: _activeFilters)),
+              )
             else
               _board(context, data.items, ref),
             ErrorText(_removeError),
