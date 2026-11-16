@@ -24,6 +24,10 @@ void main() {
     expect(categoryIcon('Educación'), 'school');
     expect(categoryIcon('Arriendo apartamento'), 'home');
     expect(categoryIcon('Netflix'), 'film');
+    // Ni «Supermercado» repite el de «Comida» ni «Suscripciones» el de «Ocio»
+    expect(categoryIcon('Supermercado'), 'cart');
+    expect(categoryIcon('Suscripciones'), 'restore');
+    expect(categoryIcon('Ocio'), 'film');
     expect(categoryIcon('Gasolina'), 'car');
     expect(categoryIcon('Sueldo', kind: 'income'), 'salary');
     expect(categoryIcon('Cosas raras'), 'tag');

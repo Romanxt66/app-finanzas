@@ -9,14 +9,18 @@ import 'theme.dart';
 const _rules = <(List<String>, String)>[
   (['arriendo', 'alquiler', 'renta', 'hogar', 'casa', 'vivienda', 'hipoteca', 'administracion'], 'home'),
   (['restaurante', 'domicilio', 'rappi', 'cafe', 'comida rapida', 'almuerzo'], 'restaurant'),
-  (['comida', 'mercado', 'supermercado', 'alimenta', 'viveres', 'fruta'], 'food'),
+  // El mercado con carrito, para no repetir el icono de «Comida» cuando el usuario tiene ambas
+  (['supermercado', 'mercado', 'viveres'], 'cart'),
+  (['comida', 'alimenta', 'fruta'], 'food'),
   (['salud', 'medic', 'farmacia', 'eps', 'doctor', 'odontolog', 'seguro medico'], 'health'),
   (['transporte', 'carro', 'auto', 'moto', 'gasolina', 'combustible', 'taxi', 'uber', 'parqueadero', 'peaje'], 'car'),
   (['gimnasio', 'deporte', 'gym', 'futbol', 'tenis', 'yoga'], 'sport'),
   (['regalo', 'cumpleanos', 'donacion', 'navidad'], 'gift'),
   (['educacion', 'colegio', 'universidad', 'curso', 'libro', 'estudio', 'matricula'], 'school'),
   (['viaje', 'vacacion', 'vuelo', 'hotel', 'turismo'], 'travel'),
-  (['ocio', 'entretenimiento', 'cine', 'netflix', 'spotify', 'streaming', 'suscripcion', 'juego', 'concierto'], 'film'),
+  // Una categoría de suscripciones es un cobro que se repite: no el mismo icono que «Ocio»
+  (['suscripcion'], 'restore'),
+  (['ocio', 'entretenimiento', 'cine', 'netflix', 'spotify', 'streaming', 'juego', 'concierto'], 'film'),
   (['ropa', 'compras', 'shopping', 'tienda', 'calzado'], 'bag'),
   (['servicio', 'luz', 'agua', 'gas', 'energia', 'factura', 'internet'], 'bolt'),
   (['celular', 'telefono', 'plan movil', 'datos'], 'phone'),
