@@ -42,6 +42,8 @@ export const keys = {
   ghost: ['ghost-subscriptions'] as const,
   allowance: ['daily-allowance'] as const,
   waiting: ['waiting-room'] as const,
+  inflation: ['personal-inflation'] as const,
+  mood: ['spending-mood'] as const,
 }
 
 /** Una transacción cambia saldos, presupuestos y reportes: se invalida todo lo derivado. */
@@ -143,6 +145,8 @@ export function useSaveTransaction() {
     keys.lifeHours,
     keys.ghost,
     keys.allowance,
+    keys.inflation,
+    keys.mood,
   )
   return useMutation({
     mutationFn: ({ id, body }: { id?: string; body: TransactionInput }) =>
@@ -166,6 +170,8 @@ export function useDeleteTransaction() {
     keys.lifeHours,
     keys.ghost,
     keys.allowance,
+    keys.inflation,
+    keys.mood,
   )
   return useMutation({
     mutationFn: (id: string) => api<void>(`/transactions/${id}`, { method: 'DELETE' }),
@@ -581,6 +587,14 @@ export type PersonalInflation = Schemas['PersonalInflation']
 
 export const usePersonalInflation = () =>
   useQuery({
-    queryKey: ['personal-inflation', todayISO()],
+    queryKey: [...keys.inflation, todayISO()],
     queryFn: () => api<PersonalInflation>('/personal-inflation', { query: { today: todayISO() } }),
+  })
+
+export type SpendingMoodReport = Schemas['SpendingMoodReport']
+
+export const useSpendingMood = () =>
+  useQuery({
+    queryKey: [...keys.mood, todayISO()],
+    queryFn: () => api<SpendingMoodReport>('/spending-mood', { query: { today: todayISO() } }),
   })

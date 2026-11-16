@@ -220,6 +220,13 @@ describe('TransactionsPage', () => {
     renderApp(<TransactionsPage />)
     await userEvent.click(await screen.findByRole('button', { name: 'Repetir hoy' }))
     expect(await screen.findByRole('heading', { name: 'Repetir movimiento' })).toBeInTheDocument()
+    // En un gasto se puede marcar cómo te sentías (y se envía con el movimiento)
+    const moods = screen.getByRole('group', { name: 'Cómo te sientes' })
+    await userEvent.click(within(moods).getByRole('button', { name: /Estresado/ }))
+    expect(within(moods).getByRole('button', { name: /Estresado/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     await vi.waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
     const body = calls.find((c) => c.method === 'POST')?.body as Record<string, unknown>
@@ -230,6 +237,7 @@ describe('TransactionsPage', () => {
       amount: '12.5',
       description: 'Almuerzo',
       occurred_on: todayISO(),
+      mood: 'stressed',
     })
   })
 

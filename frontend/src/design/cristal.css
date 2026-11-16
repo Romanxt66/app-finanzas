@@ -2555,3 +2555,49 @@ a.cr-user:focus-visible {
 .cr-block {
   display: block;
 }
+
+/* Selector de ánimo del gasto: caritas en fila; la elegida resalta */
+.cr-mood-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.cr-mood-picker button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 64px;
+  padding: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  opacity: 0.7;
+  transition:
+    opacity 0.2s,
+    border-color 0.2s;
+}
+.cr-mood-picker button:hover {
+  opacity: 1;
+}
+.cr-mood-picker button[aria-pressed='true'] {
+  opacity: 1;
+  color: var(--ink);
+  border-color: var(--glass-border);
+  background: var(--hairline);
+}
+
+/* Fila de «Ánimo del gasto»: nombre, barra con su parte y total */
+.cr-mood-row {
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+.cr-mood-row .cr-track {
+  display: block;
+}
+.cr-mood-row .cr-fill {
+  display: block;
+}
