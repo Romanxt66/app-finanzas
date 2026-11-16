@@ -51,6 +51,9 @@ class Charge:
     amount: Decimal
     day: date
     currency: str
+    # De dónde salió el cobro: sirve para registrarlo como recurrente con un toque
+    account_id: uuid.UUID | None = None
+    category_id: uuid.UUID | None = None
 
 
 def merchant_key(description: str) -> str:
@@ -136,6 +139,8 @@ def _series(name: str, charges: list[Charge], today: date, tracked: bool) -> Sub
         occurrences=len(unique),
         monthly_cost=_monthly_cost(typical, cadence),
         tracked=tracked,
+        account_id=last.account_id,
+        category_id=last.category_id,
     )
 
 
@@ -236,7 +241,12 @@ async def report(session: AsyncSession, user_id: uuid.UUID, today: date) -> Ghos
     since = today - timedelta(days=LOOKBACK_DAYS)
     rows = await session.execute(
         select(
-            Transaction.description, Transaction.amount, Transaction.occurred_on, Account.currency
+            Transaction.description,
+            Transaction.amount,
+            Transaction.occurred_on,
+            Account.currency,
+            Transaction.account_id,
+            Transaction.category_id,
         )
         .join(Account, Account.id == Transaction.account_id)
         .where(
@@ -246,7 +256,7 @@ async def report(session: AsyncSession, user_id: uuid.UUID, today: date) -> Ghos
             Transaction.occurred_on <= today,
         )
     )
-    charges = [Charge(d, a, o, c) for d, a, o, c in rows if d.strip()]
+    charges = [Charge(d, a, o, c, acc, cat) for d, a, o, c, acc, cat in rows if d.strip()]
     rules = await session.scalars(
         select(RecurringRule.description).where(
             RecurringRule.user_id == user_id,

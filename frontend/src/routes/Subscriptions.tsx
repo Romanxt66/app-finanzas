@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { useGhostSubscriptions } from '../api/hooks'
+import { useCreateRecurring, useGhostSubscriptions } from '../api/hooks'
 import {
   Badge,
+  Button,
   Card,
   Empty,
   ErrorText,
@@ -82,8 +83,8 @@ export function SubscriptionsPage() {
             )}
             {ghosts.length > 0 && (
               <p className="caption cr-muted cr-hint">
-                Regístralos en <Link to="/recurring">Recurrentes</Link> para que cuenten en tu
-                «Disponible hoy» y te avisemos de sus cambios.
+                Regístralos (o ajústalos luego en <Link to="/recurring">Recurrentes</Link>) para que
+                cuenten en tu «Disponible hoy» y te avisemos de sus cambios.
               </p>
             )}
           </section>
@@ -104,13 +105,37 @@ export function SubscriptionsPage() {
   )
 }
 
-function SubscriptionList({
-  items,
-  label,
-}: {
-  items: NonNullable<ReturnType<typeof useGhostSubscriptions>['data']>['subscriptions']
-  label: string
-}) {
+type Sub = NonNullable<ReturnType<typeof useGhostSubscriptions>['data']>['subscriptions'][number]
+
+/** Registra un cobro detectado como recurrente: misma cuenta, categoría e importe habitual, a partir
+ *  del próximo cobro previsto (así no se duplica el último, que ya está anotado). */
+function RegisterButton({ sub }: { sub: Sub }) {
+  const create = useCreateRecurring()
+  if (!sub.account_id) return null
+  return (
+    <Button
+      variant="primary"
+      size="sm"
+      icon="plus"
+      disabled={create.isPending}
+      onClick={() =>
+        create.mutate({
+          type: 'expense',
+          account_id: sub.account_id!,
+          category_id: sub.category_id ?? null,
+          amount: sub.typical_amount,
+          description: sub.name,
+          frequency: sub.cadence,
+          start_date: sub.next_expected,
+        })
+      }
+    >
+      Registrar
+    </Button>
+  )
+}
+
+function SubscriptionList({ items, label }: { items: Sub[]; label: string }) {
   return (
     <TransactionList label={label}>
       {items.map((s) => (
@@ -128,9 +153,13 @@ function SubscriptionList({
             <div className="amount-sm">{formatMoney(s.last_amount, s.currency)}</div>
             <div className="caption cr-muted">≈ {formatMoney(s.monthly_cost, s.currency)}/mes</div>
           </div>
-          <Badge tone={s.tracked ? 'positive' : 'warning'}>
-            {s.tracked ? 'Registrada' : 'Sin registrar'}
-          </Badge>
+          {s.tracked || !s.account_id ? (
+            <Badge tone={s.tracked ? 'positive' : 'warning'}>
+              {s.tracked ? 'Registrada' : 'Sin registrar'}
+            </Badge>
+          ) : (
+            <RegisterButton sub={s} />
+          )}
         </div>
       ))}
     </TransactionList>

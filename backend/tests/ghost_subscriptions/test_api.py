@@ -53,6 +53,8 @@ async def test_detects_ghost_then_tracked_by_recurring_rule(client: AsyncClient,
     assert sub["name"] == "Netflix"
     assert sub["tracked"] is False
     assert sub["monthly_cost"] == "10.99"
+    assert sub["account_id"] == account  # para registrarla como recurrente desde la app
+    assert sub["category_id"] is None
     assert body["untracked_monthly"] == [{"currency": "EUR", "total": "10.99"}]
 
     rule = await client.post(
