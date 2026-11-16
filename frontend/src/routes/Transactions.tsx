@@ -30,6 +30,7 @@ import {
 import { CategorySelect } from '../features/CategorySelect'
 import { WeekStrip } from '../features/WeekStrip'
 import { dayLabel } from '../lib/dates'
+import { categoryIcon } from '../lib/categoryIcon'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { formatDate, formatMoney, monthStart, todayISO } from '../lib/format'
 import { useDebounced } from '../lib/useDebounced'
@@ -434,6 +435,11 @@ export function TransactionsPage() {
                     <TransactionRow
                       key={t.id}
                       kind={t.type}
+                      icon={
+                        category && t.type !== 'transfer'
+                          ? categoryIcon(category, t.type)
+                          : undefined
+                      }
                       title={t.description || category || TYPE_LABELS[t.type]}
                       detail={[
                         formatDate(t.occurred_on),

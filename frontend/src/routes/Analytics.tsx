@@ -225,6 +225,7 @@ function BiggestExpenses({ from, names }: { from: string; names: Map<string, str
             <TransactionRow
               key={t.id}
               kind="expense"
+              icon={t.category_id ? categoryIcon(names.get(t.category_id), 'expense') : undefined}
               title={t.description || (t.category_id ? names.get(t.category_id) : null) || 'Gasto'}
               detail={[
                 formatDate(t.occurred_on),

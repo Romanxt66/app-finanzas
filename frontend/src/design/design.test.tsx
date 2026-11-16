@@ -46,6 +46,16 @@ describe('componentes Cristal', () => {
     expect(screen.getByText('Igual')).not.toHaveClass('cr-badge-positive')
   })
 
+  it('TransactionRow usa el icono de la categoría si se le da, y si no el del tipo', () => {
+    const { container, rerender } = render(
+      <TransactionRow kind="expense" title="Éxito" amount={10} icon="cart" />,
+    )
+    const path = () => container.querySelector('.cr-chip path')?.getAttribute('d')
+    const cart = path()
+    rerender(<TransactionRow kind="expense" title="Éxito" amount={10} />)
+    expect(path()).not.toBe(cart)
+  })
+
   it('TransactionRow: ingreso con +, gasto con −, transferencia sin signo', () => {
     render(
       <div>
