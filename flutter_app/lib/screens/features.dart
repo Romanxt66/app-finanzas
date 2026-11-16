@@ -257,7 +257,14 @@ class DailyAllowanceCard extends StatelessWidget {
                   ),
                 )
               else
-                Text('${(ratio * 100).round()}%', style: CrText.display(c.ink, size: wide ? 24 : 20)),
+                // Con la etiqueta se entiende qué mide el anillo (antes era solo «0%»)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${(ratio * 100).round()}%', style: CrText.display(c.ink, size: wide ? 24 : 20)),
+                    Text('usado hoy', style: CrText.mono(c.inkMuted, size: 10)),
+                  ],
+                ),
             ],
           ),
         );
