@@ -122,11 +122,15 @@ export function AnalyticsPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke="var(--hairline)" vertical={false} />
+                    {/* Margen a los lados e intervalo 0: si no, el primer mes se ocultaba por no caber
+                        en el borde y el último quedaba cortado */}
                     <XAxis
                       dataKey="label"
                       tick={{ fill: 'var(--ink-faint)', fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
+                      interval={0}
+                      padding={{ left: 20, right: 20 }}
                     />
                     <YAxis hide />
                     <Tooltip
