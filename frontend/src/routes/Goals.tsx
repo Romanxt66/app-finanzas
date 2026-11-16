@@ -47,7 +47,14 @@ const contributionSchema = z.object({
 function goalNote(goal: Goal): string | undefined {
   if (goal.achieved) return '¡Meta cumplida!'
   const parts: string[] = [`Faltan ${formatMoney(goal.remaining, goal.currency)}`]
-  if (goal.deadline) parts.push(`para el ${formatDate(goal.deadline)}`)
+  if (goal.deadline) {
+    // Con la fecha ya pasada, «para el …» sonaría a que aún hay tiempo
+    parts.push(
+      goal.deadline < todayISO()
+        ? `· el plazo venció el ${formatDate(goal.deadline)}`
+        : `para el ${formatDate(goal.deadline)}`,
+    )
+  }
   const perMonth = monthlyNeeded(goal)
   if (perMonth) parts.push(`· ${formatMoney(perMonth, goal.currency)} al mes`)
   return parts.join(' ')

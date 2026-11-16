@@ -39,3 +39,10 @@ test('editar una meta envía solo lo que cambió y vaciar la fecha la quita', as
     }),
   )
 })
+
+test('con el plazo vencido no dice «para el …» como si aún hubiera tiempo', async () => {
+  mockApi({ 'GET /auth/me': user, 'GET /goals': [{ ...goal, deadline: '2020-03-01' }] })
+  renderApp(<GoalsPage />)
+  expect(await screen.findByText(/el plazo venció el/)).toBeInTheDocument()
+  expect(screen.queryByText(/para el/)).not.toBeInTheDocument()
+})
