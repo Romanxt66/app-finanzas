@@ -831,7 +831,7 @@ class BudgetBar extends StatelessWidget {
             child: Container(
               height: 6,
               decoration: BoxDecoration(color: track, borderRadius: BorderRadius.circular(radiusPill)),
-              child: GrowBar(ratio: ratio, color: fill, height: 6, glow: true),
+              child: GrowBar(ratio: ratio, color: fill, height: 6, glow: true, striped: over),
             ),
           ),
           const SizedBox(height: space2),
