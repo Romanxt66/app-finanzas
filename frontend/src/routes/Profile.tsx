@@ -47,6 +47,9 @@ export function ProfilePage() {
   })
   const pwForm = useForm({ resolver: zodResolver(passwordSchema) })
   const newPassword = useWatch({ control: pwForm.control, name: 'new_password', defaultValue: '' })
+  // «Guardar» solo cuando el nombre cambió: pulsarlo sin cambios no hacía nada visible
+  const typedName = useWatch({ control: nameForm.control, name: 'full_name' })
+  const nameChanged = (typedName ?? '').trim() !== (user?.full_name ?? '').trim()
 
   return (
     <>
@@ -63,7 +66,7 @@ export function ProfilePage() {
           />
           <p className="label cr-muted">Correo: {user?.email}</p>
           <div>
-            <Button type="submit" variant="primary" disabled={update.isPending}>
+            <Button type="submit" variant="primary" disabled={update.isPending || !nameChanged}>
               Guardar
             </Button>
           </div>
