@@ -27,6 +27,22 @@ describe('ánimo de Alvi', () => {
     )
   })
 
+  it('con un presupuesto pasado no llega a radiante (su mensaje sería falso)', () => {
+    const m = financeMood({
+      income: 4200000,
+      expense: 450000,
+      balance: 17000000,
+      allowanceStatus: 'ok',
+      budgets: [
+        { amount: 2500000, spent: 450000 },
+        { amount: 900000, spent: 150000 },
+        { amount: 150000, spent: 210000 },
+      ],
+    })
+    expect(m.score).toBeGreaterThanOrEqual(80)
+    expect(m.level).toBe(3)
+  })
+
   it('sin datos queda tranquila', () => {
     expect(financeMood({ income: 0, expense: 0, balance: 0 }).level).toBe(2)
   })
