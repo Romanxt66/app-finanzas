@@ -136,11 +136,91 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 if (r.trend.length >= 2) const SizedBox(height: space3),
                 _CategoryBreakdown(report: r, ref: ref, currency: cur),
+                const SizedBox(height: space3),
+                _BiggestExpenses(months: _months, ref: ref),
               ],
             );
           },
         ),
       ],
+    );
+  }
+}
+
+/// Los [n] gastos de mayor importe (de mayor a menor).
+List<Transaction> topExpenses(List<Transaction> items, [int n = 5]) => ([
+  for (final t in items)
+    if (t.type == 'expense') t,
+]..sort((a, b) => b.amount.compareTo(a.amount))).take(n).toList();
+
+/// Los cinco gastos más grandes del periodo: dónde se fue lo grueso del dinero. Se piden ordenados por
+/// importe y además se ordenan aquí, por si el servidor aún no admite `order=amount`.
+class _BiggestExpenses extends StatelessWidget {
+  const _BiggestExpenses({required this.months, required this.ref});
+  final int months;
+  final RefData ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    final now = DateTime.now();
+    final from = monthStart(DateTime(now.year, now.month - (months - 1)));
+    return Query<TransactionPage>(
+      deps: months,
+      load: () =>
+          context.app.data.transactions({'type': 'expense', 'date_from': from, 'date_to': todayISO(), 'order': 'amount', 'limit': 100}),
+      builder: (context, q) {
+        final items = topExpenses(q.data?.items ?? const []);
+        return Glass(
+          padding: const EdgeInsets.all(space5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SectionTitle('Mayores gastos'),
+              const SizedBox(height: space2),
+              if (q.data == null && q.error == null)
+                const Skeleton(lines: 3, height: 44)
+              else if (items.isEmpty)
+                const CrEmpty('Sin gastos en este periodo.')
+              else
+                for (final (i, t) in items.indexed)
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: space3),
+                    decoration: BoxDecoration(
+                      border: i == 0 ? null : Border(top: BorderSide(color: c.hairline)),
+                    ),
+                    child: Row(
+                      children: [
+                        CategoryGlyph(ref.categoryName(t.categoryId), size: 34),
+                        const SizedBox(width: space3),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                t.description.isEmpty ? ref.categoryName(t.categoryId) : t.description,
+                                style: CrText.body(c.ink).copyWith(fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                '${formatDate(t.occurredOn)} · ${ref.categoryName(t.categoryId)}',
+                                style: CrText.caption(c.inkMuted),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: space2),
+                        Text(formatMoney(-t.amount, ref.currencyOf(t.accountId)), style: CrText.amountSm(c.ink)),
+                      ],
+                    ),
+                  ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
