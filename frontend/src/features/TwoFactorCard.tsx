@@ -92,13 +92,16 @@ export function TwoFactorCard() {
     for (const m of [setup, enable, disable, regen]) m.reset()
   }
 
+  // Al activar solo vale la app; después también un código de recuperación (letras y guion)
+  const settingUp = step === 'setup'
   const codeInput = (
     <Input
-      label="Código de 6 dígitos"
+      label={settingUp ? 'Código de 6 dígitos' : 'Código de la app o de recuperación'}
       icon="lock"
-      inputMode="numeric"
+      inputMode={settingUp ? 'numeric' : 'text'}
+      autoCapitalize="none"
       autoComplete="one-time-code"
-      maxLength={step === 'setup' ? 7 : 32}
+      maxLength={settingUp ? 7 : 32}
       value={code}
       onChange={(e) => setCode(e.target.value)}
     />
