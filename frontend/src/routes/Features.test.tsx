@@ -156,6 +156,8 @@ describe('ProfilePage', () => {
     renderApp(<ProfilePage />)
     const input = await screen.findByLabelText('Nombre')
     await waitFor(() => expect(input).toHaveValue('Ana Test'))
+    // Sin cambios no hay nada que guardar
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeDisabled()
     await userEvent.clear(input)
     await userEvent.type(input, 'Nuevo')
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
