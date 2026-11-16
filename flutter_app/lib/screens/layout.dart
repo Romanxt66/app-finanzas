@@ -33,7 +33,7 @@ const desktopNav = [
   NavItem('/analytics', 'Análisis', 'chart'),
   NavItem('/accounts', 'Cuentas', 'wallet'),
   NavItem('/budgets', 'Presupuestos', 'target'),
-  NavItem('/goals', 'Metas', 'chart'),
+  NavItem('/goals', 'Metas', 'flag'),
   NavItem('/recurring', 'Recurrentes', 'swap'),
   NavItem('/categories', 'Categorías', 'tag'),
 ];
@@ -43,7 +43,7 @@ const mobileNav = [
   NavItem('/', 'Inicio', 'home', end: true),
   NavItem('/transactions', 'Historial', 'list'),
   NavItem('/accounts', 'Cuentas', 'wallet'),
-  NavItem('/goals', 'Metas', 'chart'),
+  NavItem('/goals', 'Metas', 'flag'),
   NavItem('/more', 'Más', 'dots'),
 ];
 
