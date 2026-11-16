@@ -2483,3 +2483,8 @@ a.cr-user:focus-visible {
   font-size: 14px;
   user-select: all;
 }
+
+/* Formularios que se llevan a la vista: que no queden bajo la barra superior fija */
+.cr-scroll-anchor {
+  scroll-margin-top: 96px;
+}

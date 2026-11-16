@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
 import { vi } from 'vitest'
 import { account, category, mockApi, page, renderApp, transaction, user } from '../test-utils'
+import { todayISO } from '../lib/format'
 import { AccountsPage } from './Accounts'
 import { BudgetsPage } from './Budgets'
 import { CategoriesPage } from './Categories'
@@ -210,6 +211,28 @@ describe('TransactionsPage', () => {
     expect(screen.getByText('2 resultados')).toBeInTheDocument()
   })
 
+  it('«Repetir hoy» abre un alta con los mismos datos y la fecha de hoy', async () => {
+    const calls = mockApi({
+      ...base,
+      'GET /transactions': page([transaction()]),
+      'POST /transactions': { status: 201, body: transaction({ id: 't9' }) },
+    })
+    renderApp(<TransactionsPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Repetir hoy' }))
+    expect(await screen.findByRole('heading', { name: 'Repetir movimiento' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await vi.waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
+    const body = calls.find((c) => c.method === 'POST')?.body as Record<string, unknown>
+    expect(body).toMatchObject({
+      type: 'expense',
+      account_id: 'a1',
+      category_id: 'c1',
+      amount: '12.5',
+      description: 'Almuerzo',
+      occurred_on: todayISO(),
+    })
+  })
+
   it('envía filtros a la API y reinicia la página', async () => {
     const calls = mockApi({ ...base, 'GET /transactions': page([]) })
     renderApp(<TransactionsPage />)
@@ -307,7 +330,7 @@ describe('TransactionsPage', () => {
     })
     renderApp(<TransactionsPage />)
     await userEvent.click(await screen.findByRole('button', { name: 'Editar' }))
-    expect(screen.getByLabelText('Monto')).toHaveValue('12.50')
+    expect(screen.getByLabelText('Monto')).toHaveValue('12.5')
     await userEvent.clear(screen.getByLabelText('Monto'))
     await userEvent.type(screen.getByLabelText('Monto'), '20')
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
