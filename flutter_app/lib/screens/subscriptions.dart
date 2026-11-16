@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/api.dart';
 import '../core/data.dart';
 import '../core/format.dart';
 import '../core/models.dart';
 import '../core/state.dart';
+import '../ui/buttons.dart';
 import '../ui/page.dart';
 import '../ui/query.dart';
 import '../ui/theme.dart';
@@ -173,7 +175,10 @@ class _SubscriptionList extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(width: space3),
-                  CrBadge(items[i].tracked ? 'Registrada' : 'Sin registrar', tone: items[i].tracked ? Tone.positive : Tone.warning),
+                  if (!items[i].tracked && items[i].accountId != null)
+                    _RegisterButton(sub: items[i])
+                  else
+                    CrBadge(items[i].tracked ? 'Registrada' : 'Sin registrar', tone: items[i].tracked ? Tone.positive : Tone.warning),
                 ],
               ),
             ],
@@ -181,4 +186,42 @@ class _SubscriptionList extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Registra un cobro detectado como recurrente: misma cuenta, categoría e importe habitual, desde el
+/// próximo cobro previsto (así no se duplica el último, que ya está anotado).
+class _RegisterButton extends StatefulWidget {
+  const _RegisterButton({required this.sub});
+  final Subscription sub;
+
+  @override
+  State<_RegisterButton> createState() => _RegisterButtonState();
+}
+
+class _RegisterButtonState extends State<_RegisterButton> {
+  bool _busy = false;
+
+  Future<void> _register() async {
+    final s = widget.sub;
+    setState(() => _busy = true);
+    try {
+      await context.app.data.post('/recurring', {
+        'type': 'expense',
+        'account_id': s.accountId,
+        'category_id': s.categoryId,
+        'amount': s.typicalAmount,
+        'description': s.name,
+        'frequency': s.cadence,
+        'start_date': s.nextExpected,
+      }, 'Registrada como recurrente');
+    } on ApiError catch (e) {
+      if (mounted) context.app.onToast?.call(e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      CrButton(label: 'Registrar', icon: 'plus', small: true, variant: CrButtonVariant.primary, onPressed: _busy ? null : _register);
 }

@@ -159,9 +159,19 @@ class Subscription {
       lastAmount = money(j['last_amount']),
       nextExpected = j['next_expected'],
       monthlyCost = money(j['monthly_cost']),
+      typicalAmount = j['typical_amount']?.toString() ?? '${j['last_amount']}',
+      accountId = j['account_id'],
+      categoryId = j['category_id'],
       tracked = j['tracked'];
   final String name, currency, cadence, nextExpected;
   final double lastAmount, monthlyCost;
+
+  /// Importe habitual tal cual llega (texto decimal), para crear la regla sin redondeos.
+  final String typicalAmount;
+
+  /// Cuenta y categoría del último cobro: permiten registrarla como recurrente con un toque
+  /// (null con servidores anteriores, que no las enviaban).
+  final String? accountId, categoryId;
   final bool tracked;
 }
 
