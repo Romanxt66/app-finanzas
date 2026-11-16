@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAccounts, useBulkImport } from '../api/hooks'
-import { Badge, Button, Card, Empty, ErrorText, Glass, Select, PageTitle } from '../design'
+import { Badge, Button, Card, Empty, ErrorText, Glass, Icon, Select, PageTitle } from '../design'
 import {
   detectDelimiter,
   guessDateFormat,
@@ -138,14 +138,28 @@ export function ImportPage() {
             ))}
           </Select>
           <div className="cr-field">
-            <label htmlFor="csv-file">Archivo CSV del banco</label>
-            <input
-              id="csv-file"
-              className="cr-input"
-              type="file"
-              accept=".csv,text/csv,text/plain"
-              onChange={(e) => void onFile(e.target.files?.[0])}
-            />
+            <span className="cr-field-label" id="csv-file-label">
+              Archivo CSV del banco
+            </span>
+            {/* El selector nativo sale sin estilo y en el idioma del navegador: se oculta (sigue
+                siendo enfocable y accesible) y se muestra un botón propio con el nombre elegido */}
+            <label className="cr-file">
+              <input
+                id="csv-file"
+                className="cr-file-input"
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                aria-labelledby="csv-file-label"
+                onChange={(e) => void onFile(e.target.files?.[0])}
+              />
+              <span className="cr-btn cr-btn-glass cr-btn-sm" aria-hidden="true">
+                <Icon name="download" />
+                {fileName ? 'Cambiar archivo' : 'Elegir archivo'}
+              </span>
+              <span className="cr-file-name" aria-live="polite">
+                {fileName || 'Ningún archivo'}
+              </span>
+            </label>
           </div>
           {fileError && (
             <p role="alert" className="cr-error">
