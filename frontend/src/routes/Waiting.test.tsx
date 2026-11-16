@@ -41,6 +41,20 @@ test('muestra la cuenta atrás y deja descartar la compra', async () => {
     'GET /auth/me': user,
     'GET /waiting-room': room([item()]),
     'POST /waiting-room/w1/decide': { ...item(), status: 'skipped' },
+    'GET /goals': [
+      {
+        id: 'g1',
+        created_at: '2026-01-01T00:00:00Z',
+        name: 'Viaje',
+        target_amount: '3000000.00',
+        currency: 'COP',
+        deadline: null,
+        saved: '0.00',
+        remaining: '3000000.00',
+        achieved: false,
+      },
+    ],
+    'POST /goals/g1/contributions': { status: 201, body: {} },
   })
   renderApp(<WaitingRoomPage />)
   const list = await screen.findByRole('list', { name: 'En espera' })
@@ -52,6 +66,14 @@ test('muestra la cuenta atrás y deja descartar la compra', async () => {
   await vi.waitFor(() =>
     expect(calls.find((c) => c.path === '/waiting-room/w1/decide')?.body).toEqual({
       decision: 'skipped',
+    }),
+  )
+  // Ofrece apartar lo que no gastó en una meta de la misma moneda
+  const dialog = await screen.findByRole('dialog', { name: '¿Lo mandas a una meta?' })
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Viaje' }))
+  await vi.waitFor(() =>
+    expect(calls.find((c) => c.path === '/goals/g1/contributions')?.body).toMatchObject({
+      amount: '300000',
     }),
   )
 })
