@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Logotipo de Alvea: la «A» plateada con la línea de tendencia sobre el mapa y las barras
-/// (`assets/brand/logo.png`). [AlveaLogoPainter] queda como versión vectorial para dibujar sin assets.
+/// (`assets/brand/logo.webp`). [AlveaLogoPainter] queda como versión vectorial para dibujar sin assets.
 class AlveaLogo extends StatelessWidget {
   const AlveaLogo({super.key, this.size = 32, this.background = true});
   final double size;
@@ -19,7 +19,7 @@ class AlveaLogo extends StatelessWidget {
         // Sin fondo (p. ej. dentro de la intro, que ya pone su propio cuadrado) apenas se redondea
         borderRadius: BorderRadius.circular(size * (background ? 0.24 : 0.16)),
         child: Image.asset(
-          'assets/brand/logo.png',
+          'assets/brand/logo.webp',
           width: size,
           height: size,
           fit: BoxFit.cover,
