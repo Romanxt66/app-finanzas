@@ -171,7 +171,9 @@ class _SubscriptionList extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(formatMoney(items[i].lastAmount, items[i].currency), style: CrText.amountSm(c.ink)),
-                      Text('≈ ${formatMoney(items[i].monthlyCost, items[i].currency)}/mes', style: CrText.caption(c.inkMuted)),
+                      // En las mensuales el equivalente al mes repetiría la misma cifra
+                      if (items[i].monthlyCost != items[i].lastAmount)
+                        Text('≈ ${formatMoney(items[i].monthlyCost, items[i].currency)}/mes', style: CrText.caption(c.inkMuted)),
                     ],
                   ),
                   const SizedBox(width: space3),
