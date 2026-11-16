@@ -405,7 +405,9 @@ class Delta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final up = value >= 0;
+    // Sin cambio (redondeado), una flecha de subida y el tono «bueno» darían una señal falsa
+    if ((value * 10).round() == 0) return const CrBadge('Igual');
+    final up = value > 0;
     final good = invert ? !up : up;
     return CrBadge(
       '${up ? '+' : '−'}${formatPercent(value.abs())} %',
