@@ -380,6 +380,22 @@ describe('BudgetsPage', () => {
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100')
   })
 
+  it('pone el general primero y luego los más gastados (lo excedido no queda al final)', async () => {
+    mockApi({
+      'GET /accounts': [account()],
+      'GET /categories': [category(), category({ id: 'c2', name: 'Ocio' })],
+      'GET /budgets': [
+        budget({ id: 'b1', spent: '20.00' }),
+        budget({ id: 'b2', category_id: 'c2', spent: '300.00' }),
+        budget({ id: 'b3', category_id: null, amount: '1000.00', spent: '10.00' }),
+      ],
+    })
+    renderApp(<BudgetsPage />)
+    await screen.findAllByRole('progressbar')
+    const labels = screen.getAllByRole('progressbar').map((p) => p.getAttribute('aria-label'))
+    expect(labels).toEqual(['Todos los gastos', 'Ocio', 'Comida'])
+  })
+
   it('solo ofrece categorías de gasto y crea con el mes seleccionado', async () => {
     const calls = mockApi({
       'GET /accounts': [],

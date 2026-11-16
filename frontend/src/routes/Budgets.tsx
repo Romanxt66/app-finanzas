@@ -112,9 +112,12 @@ export function BudgetsPage() {
   const names = new Map(categories.map((c) => [c.id, c.name]))
   const nameOf = (b: Budget) =>
     b.category_id ? (names.get(b.category_id) ?? 'Categoría') : GENERAL
-  // El general primero: es el límite de todo lo demás
+  // El general primero (es el límite de todo lo demás); luego los más gastados, así lo excedido
+  // queda a la vista en vez de al final de la lista
+  const used = (b: { spent: string; amount: string }) =>
+    Number(b.amount) > 0 ? Number(b.spent) / Number(b.amount) : 0
   const sorted = [...(budgets ?? [])].sort(
-    (a, b) => Number(a.category_id !== null) - Number(b.category_id !== null),
+    (a, b) => Number(a.category_id !== null) - Number(b.category_id !== null) || used(b) - used(a),
   )
 
   return (
