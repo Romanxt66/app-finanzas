@@ -97,7 +97,9 @@ export function Badge({
 
 /** Variación porcentual con flecha y signo (no solo color). */
 export function Delta({ value, invert }: { value: number; invert?: boolean }) {
-  const up = value >= 0
+  // Sin cambio (redondeado), una flecha de subida y el tono «bueno» darían una señal falsa
+  if (Math.round(value * 10) === 0) return <Badge>Igual</Badge>
+  const up = value > 0
   const good = invert ? !up : up
   return (
     <Badge tone={good ? 'positive' : 'negative'} icon={up ? 'up' : 'down'}>

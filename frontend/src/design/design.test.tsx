@@ -41,6 +41,9 @@ describe('componentes Cristal', () => {
     expect(screen.getByText(/^−3/)).toHaveClass('cr-badge-negative', { exact: false })
     rerender(<Delta value={3} invert />)
     expect(screen.getByText(/^\+3/)).toHaveClass('cr-badge-negative', { exact: false })
+    // Sin cambio no muestra «↑ +0 %» en verde, que parecería una mejora
+    rerender(<Delta value={0.01} />)
+    expect(screen.getByText('Igual')).not.toHaveClass('cr-badge-positive')
   })
 
   it('TransactionRow: ingreso con +, gasto con −, transferencia sin signo', () => {
