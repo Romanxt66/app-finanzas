@@ -21,6 +21,7 @@ import { WaitingTeaser } from '../features/WaitingTeaser'
 import { LifeHoursCard } from '../features/LifeHoursCard'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
 import { MoodCard } from '../features/MoodCard'
+import { categoryIcon } from '../lib/categoryIcon'
 import { formatDate, formatMoney, monthLabel, monthStart } from '../lib/format'
 import { Link } from 'react-router-dom'
 
@@ -308,6 +309,11 @@ export function DashboardPage() {
               <TransactionRow
                 key={r.id}
                 kind={r.type}
+                icon={
+                  r.category_id && r.type !== 'transfer'
+                    ? categoryIcon(names.get(r.category_id), r.type)
+                    : undefined
+                }
                 title={r.description || (r.category_id && names.get(r.category_id)) || 'Recurrente'}
                 detail={`${formatDate(r.next_date)} · ${{ weekly: 'cada semana', monthly: 'cada mes', yearly: 'cada año' }[r.frequency]}`}
                 amount={Number(r.amount)}
@@ -334,6 +340,11 @@ export function DashboardPage() {
               <TransactionRow
                 key={t.id}
                 kind={t.type}
+                icon={
+                  t.category_id && t.type !== 'transfer'
+                    ? categoryIcon(names.get(t.category_id), t.type)
+                    : undefined
+                }
                 title={
                   t.description ||
                   (t.category_id && names.get(t.category_id)) ||

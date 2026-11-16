@@ -242,13 +242,15 @@ export function TransactionRow(props: {
   amount: number
   currency?: string
   actions?: ReactNode
+  /** Icono de la categoría; si falta, el del tipo (enviar/recibir/transferir). */
+  icon?: IconName
 }) {
   const signed =
     props.kind === 'income' ? props.amount : props.kind === 'expense' ? -props.amount : props.amount
   return (
     <div className="cr-txn" role="listitem">
       <span className={cx('cr-chip', KIND_TONE[props.kind] && `cr-chip-${KIND_TONE[props.kind]}`)}>
-        <Icon name={KIND_ICON[props.kind]} />
+        <Icon name={props.icon ?? KIND_ICON[props.kind]} />
       </span>
       <div className="cr-txn-main">
         <div className="body cr-txn-title">{props.title}</div>

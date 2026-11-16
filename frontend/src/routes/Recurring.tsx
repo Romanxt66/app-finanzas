@@ -29,6 +29,7 @@ import {
   StatTile,
 } from '../design'
 import { CategorySelect } from '../features/CategorySelect'
+import { categoryIcon } from '../lib/categoryIcon'
 import { formatDate, formatMoney, todayISO } from '../lib/format'
 import { recurringTotals } from '../lib/recurringTotals'
 
@@ -231,6 +232,9 @@ export function RecurringPage() {
               <TransactionRow
                 key={r.id}
                 kind={r.type}
+                icon={
+                  category && r.type !== 'transfer' ? categoryIcon(category, r.type) : undefined
+                }
                 title={r.description || category || TYPE_LABELS[r.type]}
                 detail={[
                   FREQUENCY_LABELS[r.frequency],
