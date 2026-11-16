@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
   useAddWaiting,
+  useContribute,
   useDecideWaiting,
+  useGoals,
   useDeleteWaiting,
   useWaitingRoom,
   type WaitingItem,
@@ -14,6 +16,7 @@ import {
   Card,
   ConfirmDialog,
   ErrorText,
+  FormDialog,
   Glass,
   Input,
   PageTitle,
@@ -22,7 +25,7 @@ import {
 } from '../design'
 import { CurrencySelect } from '../features/CurrencySelect'
 import { useLifeHoursNote } from '../features/useLifeHoursNote'
-import { formatDate, formatMoney } from '../lib/format'
+import { formatDate, formatMoney, todayISO } from '../lib/format'
 import { useDisplayCurrency } from '../lib/useCurrency'
 
 const WAITS = [
@@ -52,6 +55,8 @@ export function WaitingRoomPage() {
     const t = setInterval(() => setNow(Date.now()), 30_000)
     return () => clearInterval(t)
   }, [])
+  // Tras descartar una compra se ofrece apartar ese dinero en una meta (como en la app)
+  const [saved, setSaved] = useState<WaitingItem | null>(null)
   const pending = room?.items.filter((i) => i.status === 'waiting') ?? []
   const decided = room?.items.filter((i) => i.status !== 'waiting') ?? []
 
@@ -71,7 +76,7 @@ export function WaitingRoomPage() {
           <ul className="cr-stack cr-plain-list" aria-label="En espera">
             {pending.map((item) => (
               <li key={item.id}>
-                <PendingCard item={item} now={now} />
+                <PendingCard item={item} now={now} onSkipped={setSaved} />
               </li>
             ))}
           </ul>
@@ -102,7 +107,57 @@ export function WaitingRoomPage() {
           </Glass>
         </>
       )}
+      <SendToGoal item={saved} onClose={() => setSaved(null)} />
     </>
+  )
+}
+
+/** «¿Lo mandas a una meta?»: aporta lo que no gastaste a una meta de la misma moneda. */
+function SendToGoal({ item, onClose }: { item: WaitingItem | null; onClose: () => void }) {
+  const { data: goals = [] } = useGoals()
+  const contribute = useContribute()
+  const options = item
+    ? goals.filter((g) => !g.achieved && g.currency === item.currency).slice(0, 4)
+    : []
+  return (
+    <FormDialog
+      open={!!item && options.length > 0}
+      title="¿Lo mandas a una meta?"
+      onClose={onClose}
+    >
+      {item && (
+        <div className="cr-stack">
+          <p className="body cr-muted">
+            Aparta los {formatMoney(item.amount, item.currency)} que no gastaste en una de tus
+            metas.
+          </p>
+          {options.map((g) => (
+            <Button
+              key={g.id}
+              icon="flag"
+              disabled={contribute.isPending}
+              onClick={() =>
+                contribute.mutate(
+                  {
+                    goalId: g.id,
+                    amount: String(Number(item.amount)),
+                    occurred_on: todayISO(),
+                    note: `No compraste «${item.name}»`,
+                  },
+                  { onSuccess: onClose },
+                )
+              }
+            >
+              {g.name}
+            </Button>
+          ))}
+          <ErrorText error={contribute.error} />
+          <Button variant="ghost" onClick={onClose}>
+            Ahora no
+          </Button>
+        </div>
+      )}
+    </FormDialog>
   )
 }
 
@@ -198,7 +253,15 @@ function AddForm() {
   )
 }
 
-function PendingCard({ item, now }: { item: WaitingItem; now: number }) {
+function PendingCard({
+  item,
+  now,
+  onSkipped,
+}: {
+  item: WaitingItem
+  now: number
+  onSkipped: (item: WaitingItem) => void
+}) {
   const decide = useDecideWaiting()
   const remove = useDeleteWaiting()
   const lifeNote = useLifeHoursNote()
@@ -240,7 +303,12 @@ function PendingCard({ item, now }: { item: WaitingItem; now: number }) {
           size="sm"
           variant={ready ? 'primary' : 'ghost'}
           disabled={decide.isPending}
-          onClick={() => decide.mutate({ id: item.id, decision: 'skipped' })}
+          onClick={() =>
+            decide.mutate(
+              { id: item.id, decision: 'skipped' },
+              { onSuccess: () => onSkipped(item) },
+            )
+          }
         >
           Ya no la quiero
         </Button>
