@@ -366,36 +366,52 @@ class SummaryTile extends StatelessWidget {
       onTap: onTap,
       borderColor: selected ? tint.withValues(alpha: 0.7) : null,
       padding: const EdgeInsets.all(space4),
-      child: Row(
-        children: [
-          if (icon != null) ...[
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: tint.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(10)),
-              child: Center(child: CrIcon(icon!, size: 18, color: const Color(0xFF0B0B0B))),
-            ),
-            const SizedBox(width: space3),
-          ],
-          Expanded(
-            child: Column(
+      // Estrecha (dos columnas en el móvil): el icono va arriba y el texto usa todo el ancho, con hasta
+      // dos líneas, para no cortar «ingresos del mes» en «ingresos del…»
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final narrow = box.maxWidth < 210;
+          final chip = icon == null
+              ? null
+              : Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(color: tint.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(10)),
+                  child: Center(child: CrIcon(icon!, size: 18, color: const Color(0xFF0B0B0B))),
+                );
+          final lines = narrow ? 2 : 1;
+          final texts = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label.toLowerCase(), style: CrText.mono(c.inkFaint, size: 11), maxLines: lines, overflow: TextOverflow.ellipsis),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(value, style: CrText.display(c.ink, size: 22)),
+              ),
+              if (note != null) Text(note!, style: CrText.mono(c.inkFaint, size: 10.5), maxLines: lines, overflow: TextOverflow.ellipsis),
+              if (progress != null) ...[
+                const SizedBox(height: space2),
+                GrowBar(ratio: progress!.clamp(0, 1), color: tint, height: 3, glow: true),
+              ],
+            ],
+          );
+          if (narrow) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label.toLowerCase(), style: CrText.mono(c.inkFaint, size: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(value, style: CrText.display(c.ink, size: 22)),
-                ),
-                if (note != null) Text(note!, style: CrText.mono(c.inkFaint, size: 10.5), maxLines: 1, overflow: TextOverflow.ellipsis),
-                if (progress != null) ...[
-                  const SizedBox(height: space2),
-                  GrowBar(ratio: progress!.clamp(0, 1), color: tint, height: 3, glow: true),
-                ],
+                if (chip != null) ...[chip, const SizedBox(height: space3)],
+                texts,
               ],
-            ),
-          ),
-        ],
+            );
+          }
+          return Row(
+            children: [
+              if (chip != null) ...[chip, const SizedBox(width: space3)],
+              Expanded(child: texts),
+            ],
+          );
+        },
       ),
     );
   }

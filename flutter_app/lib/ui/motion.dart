@@ -68,6 +68,12 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
   bool _started = false;
   bool _firstCheck = true;
 
+  /// Reintentos pendientes tras un cambio de diseño: el contenido de arriba puede estar encogiendo con
+  /// una animación (p. ej. un formulario que se pliega al llegar los datos) y traer este módulo a la
+  /// vista sin que la página se desplace, así que nada más avisaría.
+  int _retries = 0;
+  Timer? _retry;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -92,15 +98,26 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
   void didUpdateWidget(Rise oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Al recargar la página el diseño puede encoger y traer el módulo a la vista sin desplazar
-    if (!_started) WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+    if (!_started) {
+      _retries = 12; // ~1,2 s: más que cualquier plegado animado
+      WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+    }
   }
 
   void _check() {
     if (!mounted || _started) return;
     final first = _firstCheck;
     _firstCheck = false;
-    if (_watching != null && !_inView()) return;
+    if (_watching != null && !_inView()) {
+      if (_retries > 0) {
+        _retries--;
+        _retry?.cancel();
+        _retry = Timer(const Duration(milliseconds: 100), _check);
+      }
+      return;
+    }
     _started = true;
+    _retry?.cancel();
     _stopWatching();
     _start(first ? widget.delay : Duration.zero);
   }
@@ -134,6 +151,7 @@ class _RiseState extends State<Rise> with SingleTickerProviderStateMixin {
   void dispose() {
     _stopWatching();
     _timer?.cancel();
+    _retry?.cancel();
     _c.dispose();
     super.dispose();
   }

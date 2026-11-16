@@ -48,6 +48,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   bool _formOpen = false;
   Transaction? _editing;
 
+  /// Clave del formulario de un borrador «Repetir hoy» (cada repetición abre uno nuevo).
+  String? _repeatKey;
+
   /// Filtros avanzados (tipo, cuenta, fechas) desplegados.
   bool _filtersOpen = false;
 
@@ -248,12 +251,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ErrorText(_exportError),
             if (_formOpen)
               TransactionForm(
-                key: ValueKey(_editing?.id ?? _handledLink ?? 'new'),
+                key: ValueKey(_editing?.id ?? _repeatKey ?? _handledLink ?? 'new'),
                 editing: _editing,
                 draft: _editing == null ? _draft : null,
                 onDone: () => setState(() {
                   _formOpen = false;
                   _draft = null;
+                  _repeatKey = null;
                 }),
               ),
             const _MonthTotals(),
@@ -451,6 +455,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     setState(() {
       _formOpen = true;
       _editing = t;
+      _repeatKey = null;
+    });
+    Scrollable.maybeOf(context)?.position.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+  }
+
+  /// «Repetir hoy»: un alta con los datos del movimiento y la fecha de hoy (gastos habituales).
+  void _repeat(BuildContext context, Transaction t) {
+    setState(() {
+      _formOpen = true;
+      _editing = null;
+      _repeatKey = 'copy-${t.id}-${DateTime.now().microsecondsSinceEpoch}';
+      _draft = TransactionDraft(
+        type: t.type,
+        account: t.accountId,
+        transfer: t.transferAccountId ?? '',
+        amount: '${double.parse(t.amountRaw)}'.replaceAll(RegExp(r'\.0$'), ''),
+        description: t.description,
+        category: t.categoryId ?? '',
+      );
     });
     Scrollable.maybeOf(context)?.position.animateTo(0, duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
   }
@@ -519,6 +542,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       trailing: t.type == 'expense' ? lifeHoursNote(t.amount, ref.hourlyRate)?.replaceFirst(' de trabajo', '') : null,
       actions: [
         CardAction(icon: 'edit', tooltip: 'Editar', onPressed: () => _edit(context, t)),
+        CardAction(icon: 'restore', tooltip: 'Repetir hoy', onPressed: () => _repeat(context, t)),
         CardAction(icon: 'trash', tooltip: 'Eliminar', danger: true, onPressed: () => _remove(t)),
       ],
       semanticLabel: '$title, ${typeLabels[t.type]} de ${formatMoney(t.amount, account?.currency)}, ${formatDate(t.occurredOn)}',
@@ -528,8 +552,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
 /// Valores iniciales de una transacción nueva.
 class TransactionDraft {
-  const TransactionDraft({this.type = 'expense', this.account = '', this.transfer = '', this.amount = '', this.description = ''});
-  final String type, account, transfer, amount, description;
+  const TransactionDraft({
+    this.type = 'expense',
+    this.account = '',
+    this.transfer = '',
+    this.amount = '',
+    this.description = '',
+    this.category = '',
+  });
+  final String type, account, transfer, amount, description, category;
 }
 
 class TransactionForm extends StatefulWidget {
@@ -546,7 +577,7 @@ class _TransactionFormState extends State<TransactionForm> {
   late String _type = widget.editing?.type ?? widget.draft?.type ?? 'expense';
   late String _account = widget.editing?.accountId ?? widget.draft?.account ?? '';
   late String _transfer = widget.editing?.transferAccountId ?? widget.draft?.transfer ?? '';
-  late String _category = widget.editing?.categoryId ?? '';
+  late String _category = widget.editing?.categoryId ?? widget.draft?.category ?? '';
   late final _amount = TextEditingController(
     text: widget.editing == null
         ? widget.draft?.amount ?? ''

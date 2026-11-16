@@ -120,7 +120,11 @@ class DonutCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       if (s.trailing != null) Text(s.trailing!, style: CrText.amountSm(c.ink)),
-                      Text('${total > 0 ? (math.max(0, s.value) / total * 100).round() : 0} %', style: CrText.mono(c.inkFaint, size: 10.5)),
+                      // Un valor negativo (p. ej. una cuenta en rojo) no tiene «parte» del total: lo resta
+                      Text(
+                        s.value < 0 ? 'resta del total' : '${total > 0 ? (s.value / total * 100).round() : 0} %',
+                        style: CrText.mono(c.inkFaint, size: 10.5),
+                      ),
                     ],
                   ),
                 ],

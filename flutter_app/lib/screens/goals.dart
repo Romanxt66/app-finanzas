@@ -187,6 +187,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                   if (!g.achieved) DealChip('faltan ${formatMoney(g.remaining, g.currency)}', dot: true, color: c.amber),
                                 ],
                                 actions: [
+                                  CardAction(icon: 'edit', tooltip: 'Editar ${g.name}', onPressed: () => _edit(g)),
                                   CardAction(icon: 'trash', tooltip: 'Eliminar ${g.name}', danger: true, onPressed: () => _delete(g)),
                                 ],
                                 footer: Wrap(
@@ -239,10 +240,106 @@ class _GoalsScreenState extends State<GoalsScreen> {
     }
   }
 
+  Future<void> _edit(Goal g) => showCrDialog<void>(
+    context,
+    title: 'Editar «${g.name}»',
+    builder: (_) => _GoalEditForm(goal: g),
+  );
+
   Future<void> _contribution(Goal g, bool withdraw) => showCrDialog<void>(
     context,
     title: '${withdraw ? 'Retirar de' : 'Aportar a'} «${g.name}»',
     builder: (_) => _ContributionForm(goal: g, withdraw: withdraw),
+  );
+}
+
+/// Editar una meta: nombre, objetivo y fecha límite (vacía = sin fecha). Solo envía lo que cambió.
+class _GoalEditForm extends StatefulWidget {
+  const _GoalEditForm({required this.goal});
+  final Goal goal;
+
+  @override
+  State<_GoalEditForm> createState() => _GoalEditFormState();
+}
+
+class _GoalEditFormState extends State<_GoalEditForm> {
+  late final _name = TextEditingController(text: widget.goal.name);
+  late final _target = TextEditingController(text: _plain(widget.goal.target));
+  late String _deadline = widget.goal.deadline ?? '';
+  bool _submitted = false;
+  bool _busy = false;
+  Object? _error;
+
+  static String _plain(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
+
+  String? get _nameError => _submitted && _name.text.trim().isEmpty ? 'Requerido' : null;
+  String? get _targetError => _submitted && parseAmount(_target.text) == null ? amountError : null;
+
+  Future<void> _save() async {
+    setState(() {
+      _submitted = true;
+      _error = null;
+    });
+    if (_nameError != null || _targetError != null || _busy) return;
+    final g = widget.goal;
+    final name = _name.text.trim();
+    final target = parseAmount(_target.text)!;
+    final deadline = _deadline.isEmpty ? null : _deadline;
+    final body = <String, Object?>{
+      if (name != g.name) 'name': name,
+      if (double.parse(target) != g.target) 'target_amount': target,
+      if (deadline != g.deadline) 'deadline': deadline,
+    };
+    if (body.isEmpty) {
+      Navigator.pop(context);
+      return;
+    }
+    final data = context.app.data;
+    setState(() => _busy = true);
+    try {
+      await data.patch('/goals/${g.id}', body, 'Meta actualizada');
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _target.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Stack12(
+    children: [
+      CrTextField(label: 'Nombre', controller: _name, error: _nameError, onChanged: (_) => setState(() {})),
+      CrTextField(
+        label: 'Monto objetivo (${widget.goal.currency})',
+        controller: _target,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        error: _targetError,
+        onChanged: (_) => setState(() {}),
+      ),
+      CrDateField(
+        label: 'Fecha límite (opcional)',
+        value: _deadline,
+        optional: true,
+        onChanged: (v) => setState(() => _deadline = v ?? ''),
+      ),
+      ErrorText(_error),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          CrButton(variant: CrButtonVariant.ghost, label: 'Cancelar', onPressed: () => Navigator.pop(context)),
+          const SizedBox(width: space2),
+          CrButton(variant: CrButtonVariant.primary, label: 'Guardar', onPressed: _busy ? null : _save),
+        ],
+      ),
+    ],
   );
 }
 
