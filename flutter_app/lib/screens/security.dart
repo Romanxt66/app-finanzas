@@ -560,9 +560,9 @@ class _RegenerateCodesState extends State<_RegenerateCodes> {
       children: [
         Text('Los códigos anteriores dejarán de servir.', style: CrText.caption(context.c.inkMuted)),
         CrTextField(
-          label: 'Código de tu app de autenticación',
+          // Sin el móvil también vale un código de recuperación (letras y guion)
+          label: 'Código de la app o de recuperación',
           controller: _code,
-          keyboardType: TextInputType.number,
           autofillHints: const [AutofillHints.oneTimeCode],
           autofocus: true,
           onSubmitted: (_) => _submit(),
