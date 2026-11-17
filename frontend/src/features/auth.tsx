@@ -10,6 +10,8 @@ export interface AuthValue {
   loading: boolean
   login: (email: string, password: string, remember?: boolean, otp?: string) => Promise<void>
   register: (data: Schemas['RegisterIn']) => Promise<void>
+  /** Entra (o crea la cuenta) con el ID token de Google; `otp` si la cuenta tiene dos pasos. */
+  loginWithGoogle: (idToken: string, otp?: string) => Promise<void>
   logout: () => void
 }
 
@@ -48,6 +50,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const loginWithGoogle = useCallback(async (idToken: string, otp?: string) => {
+    const pair = await api<Schemas['TokenPair']>('/auth/google', {
+      method: 'POST',
+      body: { id_token: idToken, ...(otp && { otp }) },
+      auth: false,
+    })
+    tokens.set(pair, true)
+    setAuthed(true)
+  }, [])
+
   const register = useCallback(
     async (body: Schemas['RegisterIn']) => {
       await api('/auth/register', { method: 'POST', body, auth: false })
@@ -61,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading: authed && isLoading,
     login,
     register,
+    loginWithGoogle,
     logout,
   }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

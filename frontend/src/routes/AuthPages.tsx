@@ -15,6 +15,7 @@ import {
   BrandLogo,
 } from '../design'
 import { useAuth } from '../features/authContext'
+import { GoogleButton } from '../features/GoogleButton'
 import { PasswordRules } from '../features/PasswordRules'
 import { APP_NAME } from '../lib/brand'
 import { acceptLegal } from '../lib/legal'
@@ -99,6 +100,73 @@ function Shell({
   )
 }
 
+/**
+ * «Continuar con Google» bajo el formulario. Si la cuenta tiene verificación en dos pasos, pide el
+ * código y reenvía el mismo ID token (vale una hora).
+ */
+function GoogleSection({ signup = false }: { signup?: boolean }) {
+  const { loginWithGoogle } = useAuth()
+  const [token, setToken] = useState<string | null>(null)
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<unknown>(null)
+  const go = (idToken: string, otp?: string) => {
+    setError(null)
+    setBusy(true)
+    // Crear la cuenta con Google también es aceptar los términos (se avisa junto al botón)
+    if (signup) acceptLegal()
+    loginWithGoogle(idToken, otp)
+      .catch((e: unknown) => {
+        if (e instanceof ApiError && e.code === 'otp_required') setToken(idToken)
+        else setError(e)
+      })
+      .finally(() => setBusy(false))
+  }
+  return (
+    <div className="cr-stack">
+      <p className="cr-divider" aria-hidden="true">
+        <span>o</span>
+      </p>
+      {token ? (
+        <form
+          className="cr-stack"
+          onSubmit={(e) => {
+            e.preventDefault()
+            go(token, code.replace(/\s/g, ''))
+          }}
+        >
+          <p className="caption cr-muted" role="status">
+            Tu cuenta tiene verificación en dos pasos: escribe los 6 dígitos de tu app de
+            autenticación o un código de recuperación.
+          </p>
+          <Input
+            label="Código de verificación"
+            icon="lock"
+            placeholder="123 456"
+            autoComplete="one-time-code"
+            maxLength={32}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+          <Button type="submit" variant="primary" disabled={busy || !code.trim()}>
+            Entrar con Google
+          </Button>
+        </form>
+      ) : (
+        <GoogleButton onCredential={(t) => go(t)} text={signup ? 'signup_with' : 'continue_with'} />
+      )}
+      {signup && !token && (
+        <p className="caption cr-muted">
+          Al continuar con Google confirmas que eres mayor de edad y aceptas los{' '}
+          <Link to="/terminos">términos</Link> y la{' '}
+          <Link to="/privacidad">política de privacidad</Link>.
+        </p>
+      )}
+      <ErrorText error={error} />
+    </div>
+  )
+}
+
 export function LoginPage() {
   const { user, login } = useAuth()
   const [error, setError] = useState<unknown>(null)
@@ -174,6 +242,7 @@ export function LoginPage() {
           <Icon name="arrow" />
         </Button>
       </form>
+      <GoogleSection />
     </Shell>
   )
 }
@@ -249,6 +318,7 @@ export function RegisterPage() {
           <Icon name="arrow" />
         </Button>
       </form>
+      <GoogleSection signup />
     </Shell>
   )
 }
