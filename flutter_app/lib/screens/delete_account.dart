@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/api.dart';
+import '../core/google_auth.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
 import '../ui/dialogs.dart';
@@ -54,7 +55,10 @@ class _DeleteFormState extends State<_DeleteForm> {
   bool _busy = false;
   Object? _error;
 
-  bool get _ready => _password.text.isNotEmpty && _confirm.text.trim().toUpperCase() == 'ELIMINAR';
+  /// Cuenta creada con Google sin contraseña: se confirma volviendo a elegir la cuenta de Google.
+  bool get _withPassword => context.app.user?.emailLogin ?? true;
+
+  bool get _ready => (!_withPassword || _password.text.isNotEmpty) && _confirm.text.trim().toUpperCase() == 'ELIMINAR';
 
   Future<void> _submit() async {
     if (!_ready || _busy) return;
@@ -65,7 +69,13 @@ class _DeleteFormState extends State<_DeleteForm> {
     final app = context.app;
     final navigator = Navigator.of(context);
     try {
-      await app.deleteAccount(_password.text);
+      if (_withPassword) {
+        await app.deleteAccount(password: _password.text);
+      } else {
+        final token = await googleIdToken();
+        if (token == null) return; // canceló el selector de Google
+        await app.deleteAccount(googleIdToken: token);
+      }
       navigator.pop();
     } on ApiError catch (e) {
       // Servidor anterior a esta función: se explica cómo pedirlo mientras tanto
@@ -100,12 +110,18 @@ class _DeleteFormState extends State<_DeleteForm> {
       children: [
         Text('Esto no se puede deshacer. Se borrarán todos tus datos del servidor y se cerrará la sesión.', style: CrText.body(c.inkMuted)),
         const SizedBox(height: space3),
-        CrPasswordField(
-          label: 'Tu contraseña',
-          controller: _password,
-          autofillHints: const [AutofillHints.password],
-          onChanged: (_) => setState(() {}),
-        ),
+        if (_withPassword)
+          CrPasswordField(
+            label: 'Tu contraseña',
+            controller: _password,
+            autofillHints: const [AutofillHints.password],
+            onChanged: (_) => setState(() {}),
+          )
+        else
+          Text(
+            'Entraste con Google: al pulsar «Eliminar para siempre» elige otra vez tu cuenta de Google para confirmar.',
+            style: CrText.body(c.inkMuted),
+          ),
         const SizedBox(height: space3),
         CrTextField(
           label: 'Escribe ELIMINAR para confirmar',

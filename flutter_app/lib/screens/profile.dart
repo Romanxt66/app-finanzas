@@ -36,7 +36,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? get _nameProblem => _nameSubmitted && (_name.text.trim().isEmpty ? true : _name.text.trim().length > 120)
       ? (_name.text.trim().isEmpty ? 'Requerido' : 'Máximo 120 caracteres')
       : null;
-  String? get _currentProblem => _pwSubmitted && _current.text.isEmpty ? 'Requerida' : null;
+
+  /// Cuenta creada con Google sin contraseña: se crea la primera, sin pedir la actual.
+  bool get _hasPassword => context.app.user?.emailLogin ?? true;
+  String? get _currentProblem => _pwSubmitted && _hasPassword && _current.text.isEmpty ? 'Requerida' : null;
   String? get _newProblem => _pwSubmitted ? passwordProblem(_new.text) : null;
 
   Future<void> _saveName() async {
@@ -72,7 +75,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: {'current_password': _current.text, 'new_password': _new.text},
       ) as Map<String, dynamic>;
       await app.api.saveTokens(pair);
-      app.onToast?.call('Contraseña cambiada. Se cerraron las demás sesiones');
+      final created = !_hasPassword;
+      if (created) await app.reloadUser(); // ahora también puede entrar con correo y contraseña
+      app.onToast?.call(created ? 'Contraseña creada' : 'Contraseña cambiada. Se cerraron las demás sesiones');
       if (mounted) {
         setState(() {
           _current.clear();
@@ -138,16 +143,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         CrCard(
-          title: 'Cambiar contraseña',
+          title: _hasPassword ? 'Cambiar contraseña' : 'Crear contraseña',
           child: Stack12(
             children: [
-              CrPasswordField(
-                label: 'Contraseña actual',
-                controller: _current,
-                error: _currentProblem,
-                autofillHints: const [AutofillHints.password],
-                onChanged: (_) => setState(() {}),
-              ),
+              if (_hasPassword)
+                CrPasswordField(
+                  label: 'Contraseña actual',
+                  controller: _current,
+                  error: _currentProblem,
+                  autofillHints: const [AutofillHints.password],
+                  onChanged: (_) => setState(() {}),
+                )
+              else
+                Text(
+                  'Entraste con Google. Crea una contraseña si también quieres entrar con tu correo.',
+                  style: CrText.body(context.c.inkMuted),
+                ),
               CrPasswordField(
                 label: 'Contraseña nueva',
                 controller: _new,
@@ -158,7 +169,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               PasswordRules(_new.text),
               Align(
                 alignment: Alignment.centerLeft,
-                child: CrButton(variant: CrButtonVariant.primary, label: 'Cambiar contraseña', onPressed: _pwBusy ? null : _changePassword),
+                child: CrButton(
+                  variant: CrButtonVariant.primary,
+                  label: _hasPassword ? 'Cambiar contraseña' : 'Crear contraseña',
+                  onPressed: _pwBusy ? null : _changePassword,
+                ),
               ),
               ErrorText(_pwError),
             ],

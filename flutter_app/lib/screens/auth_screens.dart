@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/api.dart';
+import '../core/google_auth.dart';
 import '../core/password.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
@@ -553,6 +554,7 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 48,
           onPressed: _busy ? null : _submit,
         ),
+        if (googleSignInAvailable) const GoogleSignInSection(),
       ],
     );
   }
@@ -665,6 +667,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         height: 48,
         onPressed: _busy ? null : _submit,
       ),
+      if (googleSignInAvailable) const GoogleSignInSection(signup: true),
     ],
   );
 }
@@ -709,6 +712,142 @@ class _FootLink extends StatelessWidget {
         ),
         textAlign: TextAlign.center,
       ),
+    );
+  }
+}
+
+/// «Continuar con Google» bajo el formulario (solo Android). Si la cuenta tiene verificación en dos
+/// pasos, pide el código y reenvía el mismo ID token (vale una hora).
+class GoogleSignInSection extends StatefulWidget {
+  const GoogleSignInSection({super.key, this.signup = false, this.getToken});
+  final bool signup;
+
+  /// Para las pruebas: sustituye el selector de cuentas de Google.
+  final Future<String?> Function()? getToken;
+
+  @override
+  State<GoogleSignInSection> createState() => _GoogleSignInSectionState();
+}
+
+class _GoogleSignInSectionState extends State<GoogleSignInSection> {
+  final _otp = TextEditingController();
+  String? _token;
+  bool _busy = false;
+  Object? _error;
+
+  /// Segundo paso: reenvía el mismo ID token con el código.
+  Future<void> _go({required String otp}) async {
+    final app = context.app;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await app.loginWithGoogle(_token!, otp: otp);
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  String? _pendingToken;
+
+  Future<void> _start() async {
+    final app = context.app;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final token = await (widget.getToken ?? googleIdToken)();
+      if (token == null) return;
+      _pendingToken = token;
+      if (widget.signup) app.acceptLegal(legalVersion);
+      await app.loginWithGoogle(token);
+    } on ApiError catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (e.code == 'otp_required') {
+          _token = _pendingToken;
+        } else {
+          _error = e;
+        }
+      });
+    } catch (e) {
+      if (mounted) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _otp.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Divider(color: c.hairline)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: space3),
+              child: Text('o', style: CrText.label(c.inkMuted)),
+            ),
+            Expanded(child: Divider(color: c.hairline)),
+          ],
+        ),
+        const SizedBox(height: space3),
+        if (_token == null)
+          CrButton(
+            variant: CrButtonVariant.glass,
+            label: 'Continuar con Google',
+            expand: true,
+            height: 48,
+            onPressed: _busy ? null : _start,
+          )
+        else ...[
+          Text(
+            'Tu cuenta tiene verificación en dos pasos. Escribe el código de 6 dígitos de tu app de autenticación '
+            '(o uno de tus códigos de recuperación).',
+            style: CrText.caption(c.inkMuted),
+          ),
+          const SizedBox(height: space2),
+          CrTextField(
+            label: 'Código de verificación',
+            controller: _otp,
+            icon: 'shield',
+            hint: '123 456',
+            autofocus: true,
+            keyboardType: TextInputType.visiblePassword,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            onSubmitted: (_) => _go(otp: _otp.text.replaceAll(RegExp(r'\s'), '')),
+          ),
+          const SizedBox(height: space3),
+          CrButton(
+            variant: CrButtonVariant.primary,
+            label: 'Entrar con Google',
+            expand: true,
+            height: 48,
+            onPressed: _busy ? null : () => _go(otp: _otp.text.replaceAll(RegExp(r'\s'), '')),
+          ),
+        ],
+        if (widget.signup && _token == null) ...[
+          const SizedBox(height: space2),
+          Text(
+            'Al continuar con Google confirmas que eres mayor de edad y aceptas los términos y la política de privacidad.',
+            style: CrText.caption(c.inkMuted),
+          ),
+        ],
+        const SizedBox(height: space2),
+        ErrorText(_error),
+      ],
     );
   }
 }

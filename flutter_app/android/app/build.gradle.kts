@@ -29,8 +29,9 @@ android {
     }
 
     defaultConfig {
-        // Identificador en Google Play: no se puede cambiar después de publicar la app
-        applicationId = "click.softlane.alvea"
+        // Identificador en Google Play (el de la ficha «Alvea» y del cliente OAuth de Google): no se puede
+        // cambiar después de publicar. El código Kotlin sigue en el paquete click.softlane.alvea (namespace)
+        applicationId = "com.alvea.softlane"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         // versionCode/versionName salen de pubspec.yaml (la CI usa el número de ejecución como build)
