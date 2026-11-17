@@ -299,6 +299,28 @@ describe('TransactionsPage', () => {
     })
   })
 
+  it('sugiere la categoría al escribir la descripción si no hay una elegida', async () => {
+    const calls = mockApi({
+      ...base,
+      'GET /transactions': page([]),
+      'POST /transactions/categorize': {
+        suggestions: [{ category_id: 'c1', source: 'history' }],
+      },
+    })
+    renderApp(<TransactionsPage />)
+    await userEvent.click(await screen.findByRole('button', { name: 'Nueva' }))
+    const form = screen.getByText('Nueva transacción').closest('section')!
+    await userEvent.type(within(form).getByLabelText('Monto'), '30000')
+    await userEvent.type(within(form).getByLabelText('Descripción'), 'Rappi almuerzo')
+    await userEvent.tab()
+    await waitFor(() => expect(within(form).getByLabelText('Categoría')).toHaveValue('c1'))
+    expect(within(form).getByText('Sugerida según la descripción')).toBeInTheDocument()
+    // Los gastos se piden con signo negativo, como al importar
+    expect(calls.find((c) => c.path === '/transactions/categorize')?.body).toEqual({
+      items: [{ description: 'Rappi almuerzo', amount: '-30000' }],
+    })
+  })
+
   it('una transferencia pide cuenta destino y no envía categoría', async () => {
     const calls = mockApi({
       ...base,

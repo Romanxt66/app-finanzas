@@ -618,3 +618,12 @@ export function useDeleteContribution() {
     },
   })
 }
+
+/** Categoría sugerida para una descripción (por tu historial o el nombre del comercio). */
+export async function suggestCategory(description: string, signedAmount: number) {
+  const res = await api<Schemas['CategorizeOut']>('/transactions/categorize', {
+    method: 'POST',
+    body: { items: [{ description, amount: String(signedAmount || 0) }] },
+  })
+  return res.suggestions[0]?.category_id ?? null
+}
