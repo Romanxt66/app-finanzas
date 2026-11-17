@@ -3,7 +3,13 @@
 La app Android sale del mismo código que la web (`flutter_app/`). No hace falta Android Studio: GitHub Actions
 la compila en cada cambio (workflow `Android`, `.github/workflows/android.yml`).
 
-- Identificador: `click.softlane.alvea`. **No se puede cambiar después de publicar en Google Play.**
+- Identificador: `com.alvea.softlane` (el de la ficha de Google Play y del cliente OAuth «Alvea Android»). **No se puede
+  cambiar después de publicar en Google Play.** El código Kotlin sigue en el paquete `click.softlane.alvea`.
+- «Continuar con Google»: usa el cliente web `2627257012-06rocpn2pjiqqa6flkl0pri5gfcnqrps…` como `serverClientId`
+  (`lib/core/google_auth.dart`). Google solo lo permite en una app firmada con un certificado registrado en el cliente
+  «Alvea Android» de Google Cloud: hoy, el de firma de Google Play. El APK de prueba de «android-ultima» se firma con
+  otra clave y ahí el botón de Google falla; para probarlo fuera de Play, añade en Google Cloud otro cliente Android
+  (paquete `com.alvea.softlane`) con la SHA-1 de esa clave.
 - Servidor: `https://alvea.softlane.click` (la web React, que reenvía `/api` al backend). Para usar otro, crea la variable del repositorio
   `ALVEA_API_URL` (GitHub → Settings → Secrets and variables → Actions → Variables).
 - Android 7.0 o superior. Icono adaptativo con icono temático en Android 13 o superior.

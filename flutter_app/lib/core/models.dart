@@ -127,8 +127,15 @@ class Summary {
 }
 
 class User {
-  User.fromJson(Map<String, dynamic> j) : email = j['email'], fullName = j['full_name'], twoFactor = j['two_factor_enabled'] == true;
+  User.fromJson(Map<String, dynamic> j)
+    : email = j['email'],
+      fullName = j['full_name'],
+      twoFactor = j['two_factor_enabled'] == true,
+      emailLogin = j['email_login'] != false;
   final String email, fullName;
+
+  /// Tiene contraseña (false: la cuenta se creó con Google y aún no la tiene).
+  final bool emailLogin;
 
   /// Verificación en dos pasos activada.
   final bool twoFactor;

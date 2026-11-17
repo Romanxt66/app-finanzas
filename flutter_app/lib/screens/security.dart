@@ -498,8 +498,15 @@ class _TwoFactorDisableState extends State<_TwoFactorDisable> {
   @override
   Widget build(BuildContext context) => Stack12(
     children: [
-      Text('Tu cuenta quedará protegida solo con la contraseña.', style: CrText.caption(context.c.inkMuted)),
-      CrPasswordField(label: 'Contraseña', controller: _password, autofillHints: const [AutofillHints.password]),
+      Text(
+        (context.app.user?.emailLogin ?? true)
+            ? 'Tu cuenta quedará protegida solo con la contraseña.'
+            : 'Tu cuenta quedará protegida solo con tu cuenta de Google.',
+        style: CrText.caption(context.c.inkMuted),
+      ),
+      // Cuenta creada con Google sin contraseña: basta el código
+      if (context.app.user?.emailLogin ?? true)
+        CrPasswordField(label: 'Contraseña', controller: _password, autofillHints: const [AutofillHints.password]),
       CrTextField(
         label: 'Código de la app o de recuperación',
         controller: _code,

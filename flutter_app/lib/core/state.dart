@@ -258,6 +258,18 @@ class AppState extends ChangeNotifier {
     runDueRecurring();
   }
 
+  /// Entra (o crea la cuenta) con el ID token de Google; [otp] si la cuenta tiene dos pasos.
+  Future<void> loginWithGoogle(String idToken, {String? otp}) async {
+    await api.saveTokens(
+      await api.post('/auth/google', body: {'id_token': idToken, 'otp': ?otp}, auth: false) as Map<String, dynamic>,
+      remember: true,
+    );
+    lock.unlockAfterLogin();
+    await _loadUser();
+    notifyListeners();
+    runDueRecurring();
+  }
+
   Future<void> register(String name, String email, String password) async {
     await api.post('/auth/register', body: {'email': email, 'password': password, 'full_name': name}, auth: false);
     await login(email, password);
@@ -330,8 +342,9 @@ class AppState extends ChangeNotifier {
   }
 
   /// Borra la cuenta y todos sus datos en el servidor (pide la contraseña) y cierra la sesión aquí.
-  Future<void> deleteAccount(String password) async {
-    await api.call('DELETE', '/auth/me', body: {'password': password});
+  /// Las cuentas creadas con Google sin contraseña confirman con un ID token reciente ([googleIdToken]).
+  Future<void> deleteAccount({String? password, String? googleIdToken}) async {
+    await api.call('DELETE', '/auth/me', body: {'password': ?password, 'google_id_token': ?googleIdToken});
     await logout();
   }
 
