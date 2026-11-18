@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Logotipo de Alvea: la «A» plateada con la línea de tendencia sobre el mapa y las barras
-/// (`assets/brand/logo.webp`). [AlveaLogoPainter] queda como versión vectorial para dibujar sin assets.
+/// Logotipo de Alvea: la «A» de trazo redondeado con un punto, sobre el cuadrado oscuro
+/// (`brand/alvea-icon.svg`). Se dibuja en vectorial: nítido a cualquier tamaño y sin esperar a un asset.
 class AlveaLogo extends StatelessWidget {
-  const AlveaLogo({super.key, this.size = 32, this.background = true});
+  const AlveaLogo({super.key, this.size = 32, this.background = true, this.ink});
   final double size;
 
-  /// Con el cuadrado redondeado de fondo; sin él queda solo el símbolo.
+  /// Con el cuadrado redondeado de fondo; sin él queda solo el símbolo (para poner sobre algo oscuro).
   final bool background;
+
+  /// Color liso del símbolo; por defecto, blanco con un degradado plateado.
+  final Color? ink;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -15,33 +18,23 @@ class AlveaLogo extends StatelessWidget {
     image: true,
     child: SizedBox.square(
       dimension: size,
-      child: ClipRRect(
-        // Sin fondo (p. ej. dentro de la intro, que ya pone su propio cuadrado) apenas se redondea
-        borderRadius: BorderRadius.circular(size * (background ? 0.24 : 0.16)),
-        child: Image.asset(
-          'assets/brand/logo.webp',
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          filterQuality: FilterQuality.medium,
-          // Mientras carga (o si falla), el símbolo vectorial
-          errorBuilder: (_, _, _) => CustomPaint(painter: AlveaLogoPainter(background: background)),
-          frameBuilder: (context, child, frame, sync) =>
-              frame == null && !sync ? CustomPaint(painter: AlveaLogoPainter(background: background)) : child,
-        ),
+      child: CustomPaint(
+        painter: AlveaLogoPainter(background: background, ink: ink),
       ),
     ),
   );
 }
 
+/// Dibuja la marca en una caja de 108 × 108 (la del icono adaptativo de Android), escalada al tamaño.
 class AlveaLogoPainter extends CustomPainter {
-  const AlveaLogoPainter({this.background = true});
+  const AlveaLogoPainter({this.background = true, this.ink});
   final bool background;
+  final Color? ink;
 
-  static const violet = Color(0xFF5C5C5C);
-  static const glow = Color(0xFF707070);
-  static const line = Color(0xFF7D7D7D);
-  static const spark = Color(0xFFE4E4E4);
+  static const legs = [Offset(35, 77), Offset(54, 31), Offset(73, 77)];
+  static const dot = Offset(54, 63.2);
+  static const dotRadius = 5.7;
+  static const strokeWidth = 9.5;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -49,82 +42,63 @@ class AlveaLogoPainter extends CustomPainter {
     canvas.scale(size.width / 108, size.height / 108);
 
     if (background) {
-      final box = RRect.fromRectAndRadius(const Rect.fromLTWH(0, 0, 108, 108), const Radius.circular(24));
+      const box = Rect.fromLTWH(0, 0, 108, 108);
+      final rrect = RRect.fromRectAndRadius(box, const Radius.circular(24));
       canvas.drawRRect(
-        box,
+        rrect,
         Paint()
           ..shader = const RadialGradient(
-            center: Alignment(0, -0.4),
-            radius: 0.8,
-            colors: [Color(0xFF191919), Color(0xFF0D0D0D), Color(0xFF060606)],
-            stops: [0, 0.6, 1],
-          ).createShader(const Rect.fromLTWH(0, 0, 108, 108)),
+            center: Alignment(-0.44, -0.64),
+            radius: 1.0,
+            colors: [Color(0xFF2C2C31), Color(0xFF121214), Color(0xFF050506)],
+            stops: [0, 0.55, 1],
+          ).createShader(box),
       );
       canvas.drawRRect(
-        box.deflate(0.75),
+        rrect.deflate(0.6),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5
-          ..color = glow.withValues(alpha: 0.35),
+          ..strokeWidth = 1.2
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white.withValues(alpha: 0.24), Colors.white.withValues(alpha: 0.04), Colors.white.withValues(alpha: 0.10)],
+            stops: const [0, 0.5, 1],
+          ).createShader(box),
       );
+      // El símbolo un poco más grande dentro del cuadrado, como en el icono de la app
+      canvas.translate(54, 54);
+      canvas.scale(1.08);
+      canvas.translate(-54, -54);
     }
 
-    canvas.translate(-3, 1);
-    Paint stroke(double w) => Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = w
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    // «A»: borde violeta, relleno oscuro en degradado y sombra suave debajo
-    final a = Path()
-      ..moveTo(36, 78)
-      ..lineTo(54, 32)
-      ..lineTo(72, 78);
-    canvas.save();
-    canvas.translate(0, 3);
-    canvas.drawPath(
-      a,
-      stroke(11.5)
-        ..color = Colors.black.withValues(alpha: 0.55)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-    );
-    canvas.restore();
-    canvas.drawPath(a, stroke(11.5)..color = violet);
-    canvas.drawPath(
-      a,
-      stroke(8)
+    Paint base() {
+      final p = Paint()..isAntiAlias = true;
+      if (ink != null) return p..color = ink!;
+      return p
         ..shader = const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF1C1C1C), Color(0xFF090909)],
-        ).createShader(const Rect.fromLTRB(36, 32, 72, 78)),
-    );
-
-    // Tendencia que sube hasta el punto, con halo luminoso
-    final trend = Path()
-      ..moveTo(40, 64)
-      ..lineTo(51, 57)
-      ..lineTo(58, 61)
-      ..lineTo(74, 48);
-    final halo = Paint()
-      ..color = glow.withValues(alpha: 0.95)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3.2);
-    for (var i = 0; i < 2; i++) {
-      canvas.drawPath(
-        trend,
-        stroke(7)
-          ..color = halo.color
-          ..maskFilter = halo.maskFilter,
-      );
-      canvas.drawCircle(const Offset(78, 45), 5.5, halo);
+          colors: [Color(0xFFFFFFFF), Color(0xFFC8C8CE)],
+        ).createShader(const Rect.fromLTRB(0, 31, 108, 81));
     }
-    canvas.drawPath(trend, stroke(7)..color = line);
-    canvas.drawCircle(const Offset(78, 45), 5.5, Paint()..color = line);
-    canvas.drawCircle(const Offset(78, 45), 2.2, Paint()..color = spark);
+
+    final a = Path()
+      ..moveTo(legs[0].dx, legs[0].dy)
+      ..lineTo(legs[1].dx, legs[1].dy)
+      ..lineTo(legs[2].dx, legs[2].dy);
+    canvas.drawPath(
+      a,
+      base()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+    canvas.drawCircle(dot, dotRadius, base());
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(AlveaLogoPainter old) => old.background != background;
+  bool shouldRepaint(AlveaLogoPainter old) => old.background != background || old.ink != ink;
 }

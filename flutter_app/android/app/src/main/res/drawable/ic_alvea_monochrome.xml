@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Icono temático (Android 13+): el sistema lo tiñe con los colores del fondo de pantalla.
-     Al 80 % alrededor del centro, como el icono adaptativo: dentro de la zona segura de 66 dp. -->
+     Misma escala que el primer plano del icono adaptativo (dentro de la zona segura de 66 dp). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -9,24 +9,16 @@
     <group
         android:pivotX="54"
         android:pivotY="54"
-        android:scaleX="0.8"
-        android:scaleY="0.8">
-        <group android:translateX="-3" android:translateY="1">
-            <path
-                android:pathData="M36,78 L54,32 L72,78"
-                android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="9"
-                android:strokeLineCap="round"
-                android:strokeLineJoin="round" />
-            <path
-                android:pathData="M40,64 L51,57 L58,61 L74,48"
-                android:strokeColor="#FFFFFFFF"
-                android:strokeWidth="6"
-                android:strokeLineCap="round"
-                android:strokeLineJoin="round" />
-            <path
-                android:fillColor="#FFFFFFFF"
-                android:pathData="M72.5,45 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0" />
-        </group>
+        android:scaleX="0.9"
+        android:scaleY="0.9">
+        <path
+            android:pathData="M35,77 L54,31 L73,77"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="9.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M48.3,63.2 a5.7,5.7 0 1,0 11.4,0 a5.7,5.7 0 1,0 -11.4,0" />
     </group>
 </vector>

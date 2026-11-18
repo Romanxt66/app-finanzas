@@ -70,10 +70,10 @@ class _BrandIntroState extends State<BrandIntro> with SingleTickerProviderStateM
                         height: base,
                         decoration: BoxDecoration(
                           gradient: const RadialGradient(
-                            center: Alignment(0, -0.4),
-                            radius: 0.8,
-                            colors: [Color(0xFF191919), Color(0xFF0D0D0D), Color(0xFF060606)],
-                            stops: [0, 0.6, 1],
+                            center: Alignment(-0.44, -0.64),
+                            radius: 1.0,
+                            colors: [Color(0xFF2C2C31), Color(0xFF121214), Color(0xFF050506)],
+                            stops: [0, 0.55, 1],
                           ),
                           borderRadius: BorderRadius.circular(22 * (1 - grow) + 4),
                           boxShadow: [BoxShadow(color: c.neonGlow, blurRadius: 40)],

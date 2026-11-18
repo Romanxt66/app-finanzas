@@ -9,6 +9,7 @@ import '../core/password.dart';
 import '../core/state.dart';
 import '../ui/buttons.dart';
 import '../ui/glass.dart';
+import '../ui/google_mark.dart';
 import '../ui/inputs.dart';
 import '../ui/motion.dart';
 import '../ui/theme.dart';
@@ -808,6 +809,7 @@ class _GoogleSignInSectionState extends State<GoogleSignInSection> {
           CrButton(
             variant: CrButtonVariant.glass,
             label: 'Continuar con Google',
+            leading: const GoogleMark(),
             expand: true,
             height: 48,
             onPressed: _busy ? null : _start,
