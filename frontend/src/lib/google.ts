@@ -27,18 +27,35 @@ declare global {
 
 let loading: Promise<GoogleId> | null = null
 
-/** Carga el script de Google una sola vez; falla si no se puede (sin conexión, bloqueado…). */
+/** Olvida un intento fallido para que el siguiente vuelva a pedir el script. */
+export function resetGoogle() {
+  if (!window.google?.accounts?.id) loading = null
+}
+
+/**
+ * Carga el script de Google una sola vez. Falla si no se puede (sin conexión, bloqueado…) o si
+ * tarda más de 12 s, para no dejar el botón esperando para siempre.
+ */
 export function loadGoogle(): Promise<GoogleId> {
   if (window.google?.accounts?.id) return Promise.resolve(window.google.accounts.id)
   loading ??= new Promise<GoogleId>((resolve, reject) => {
+    const fail = () => {
+      loading = null
+      s.remove()
+      reject(new Error('gsi'))
+    }
+    const timer = setTimeout(fail, 12_000)
     const s = document.createElement('script')
     s.src = SCRIPT
     s.async = true
-    s.onload = () =>
-      window.google?.accounts?.id ? resolve(window.google.accounts.id) : reject(new Error('gsi'))
+    s.onload = () => {
+      clearTimeout(timer)
+      if (window.google?.accounts?.id) resolve(window.google.accounts.id)
+      else fail()
+    }
     s.onerror = () => {
-      loading = null
-      reject(new Error('gsi'))
+      clearTimeout(timer)
+      fail()
     }
     document.head.appendChild(s)
   })
