@@ -1,9 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="512" height="512"><defs>
-<radialGradient id="bg" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#191919"/><stop offset="0.6" stop-color="#0D0D0D"/><stop offset="1" stop-color="#060606"/></radialGradient>
-<linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C1C1C"/><stop offset="1" stop-color="#090909"/></linearGradient>
-<filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.55"/></filter>
-<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feFlood flood-color="#707070" flood-opacity="0.95"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs><rect width="108" height="108" rx="24" fill="url(#bg)"/><rect x="0.75" y="0.75" width="106.5" height="106.5" rx="23.5" fill="none" stroke="#707070" stroke-opacity="0.35" stroke-width="1.5"/><g transform="translate(-3,1)"><g filter="url(#sh)"><path d="M36 78 L54 32 L72 78" fill="none" stroke="#5C5C5C" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M36 78 L54 32 L72 78" fill="none" stroke="url(#a)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g>
-<g filter="url(#glow)"><path d="M40 64 L51 57 L58 61 L74 48" fill="none" stroke="#7D7D7D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="78" cy="45" r="5.5" fill="#7D7D7D"/><circle cx="78" cy="45" r="2.2" fill="#E4E4E4"/></g></g></svg>
+<radialGradient id="bg" cx="28%" cy="18%" r="100%"><stop offset="0" stop-color="#2C2C31"/><stop offset=".55" stop-color="#121214"/><stop offset="1" stop-color="#050506"/></radialGradient>
+<linearGradient id="ink" x1="0" y1="31" x2="0" y2="81" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C8C8CE"/></linearGradient>
+<linearGradient id="rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".24"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity=".04"/><stop offset="1" stop-color="#FFFFFF" stop-opacity=".10"/></linearGradient>
+</defs><rect width="108" height="108" rx="24" fill="url(#bg)"/><rect x=".6" y=".6" width="106.8" height="106.8" rx="23.4" fill="none" stroke="url(#rim)" stroke-width="1.2"/><g transform="translate(54 54) scale(1.08) translate(-54 -54)"><path d="M35 77 L54 31 L73 77" fill="none" stroke="url(#ink)" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="54" cy="63.2" r="5.7" fill="url(#ink)"/></g></svg>

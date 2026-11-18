@@ -13,6 +13,7 @@ class CrButton extends StatefulWidget {
     super.key,
     this.label,
     this.icon,
+    this.leading,
     this.trailingIcon,
     this.variant = CrButtonVariant.glass,
     this.small = false,
@@ -23,6 +24,9 @@ class CrButton extends StatefulWidget {
   });
   final String? label;
   final String? icon;
+
+  /// Marca propia antes del texto en lugar de [icon] (p. ej. la «G» de Google).
+  final Widget? leading;
   final String? trailingIcon;
   final CrButtonVariant variant;
   final bool small;
@@ -72,8 +76,9 @@ class _CrButtonState extends State<CrButton> {
       mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (widget.icon != null) CrIcon(widget.icon!, size: 18, color: fg),
-        if (widget.icon != null && widget.label != null) const SizedBox(width: space2),
+        if (widget.leading != null) ...[widget.leading!, const SizedBox(width: space3)],
+        if (widget.leading == null && widget.icon != null) CrIcon(widget.icon!, size: 18, color: fg),
+        if (widget.leading == null && widget.icon != null && widget.label != null) const SizedBox(width: space2),
         if (widget.label != null)
           Flexible(
             child: Text(
