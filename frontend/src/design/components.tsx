@@ -624,12 +624,12 @@ export function Donut({
   )
 }
 
-/** Logotipo de Alvea (la «A» plateada con la línea de tendencia). */
+/** Logotipo de Alvea: la «A» con el punto sobre el cuadrado oscuro (vectorial, nítido a cualquier tamaño). */
 export function BrandLogo({ size = 34 }: { size?: number }) {
   return (
     <img
       className="cr-brand-logo"
-      src={size > 64 ? '/brand/logo-256.webp' : '/brand/logo-128.webp'}
+      src="/brand/logo.svg"
       width={size}
       height={size}
       alt=""
