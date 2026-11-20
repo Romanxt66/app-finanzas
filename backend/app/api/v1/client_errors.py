@@ -6,12 +6,13 @@ import re
 from fastapi import APIRouter, Request, status
 from pydantic import BaseModel, Field
 
+from app.api.deps import SessionDep
 from app.core.ratelimit import FailureLimiter
 
 router = APIRouter(prefix="/client-errors", tags=["observability"])
 client_log = logging.getLogger("app.client")
 # Por IP: como mucho 30 reportes cada 10 min (los demás se descartan en silencio)
-report_limiter = FailureLimiter(max_failures=30, window_seconds=10 * 60)
+report_limiter = FailureLimiter("client-errors", max_failures=30, window_seconds=10 * 60)
 
 # Nada que parezca un token o un correo llega al registro
 _SECRETS = re.compile(r"(eyJ[\w-]+\.[\w-]+\.[\w-]+|Bearer\s+\S+|[\w.+-]+@[\w-]+\.[\w.-]+)")
@@ -36,11 +37,11 @@ def _one_line(text: str) -> str:
 
 
 @router.post("", status_code=status.HTTP_204_NO_CONTENT)
-async def report(data: ClientError, request: Request) -> None:
+async def report(data: ClientError, request: Request, session: SessionDep) -> None:
     key = request.client.host if request.client else "?"
-    if report_limiter.retry_after(key):
+    if await report_limiter.retry_after(session, key):
         return
-    report_limiter.record_failure(key)
+    await report_limiter.record_failure(session, key)
     message = _clean(data.message)
     route = _one_line(_clean(data.route.split("?", 1)[0]))
     release, platform = _one_line(data.release), _one_line(data.platform)

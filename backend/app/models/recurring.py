@@ -27,12 +27,12 @@ class RecurringRule(IdMixin, TimestampMixin, Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     type: Mapped[TransactionType] = mapped_column(String(10))
-    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("accounts.id"))
+    account_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("accounts.id"), index=True)
     transfer_account_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("accounts.id"), nullable=True
+        Uuid, ForeignKey("accounts.id"), nullable=True, index=True
     )
     category_id: Mapped[uuid.UUID | None] = mapped_column(
-        Uuid, ForeignKey("categories.id"), nullable=True
+        Uuid, ForeignKey("categories.id"), nullable=True, index=True
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
     description: Mapped[str] = mapped_column(String(255), default="")

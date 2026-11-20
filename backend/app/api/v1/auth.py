@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core import totp
@@ -31,32 +32,33 @@ from app.services import auth
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 # Por IP+correo (5/15 min); respaldo solo por correo si la IP se falsifica (X-Forwarded-For)
-login_limiter = FailureLimiter()
-email_limiter = FailureLimiter(max_failures=20)
+login_limiter = FailureLimiter("login")
+email_limiter = FailureLimiter("login-email", max_failures=20)
 # Acciones que piden la contraseña o un código con la sesión ya abierta (cambiar contraseña, borrar
 # la cuenta, verificación en dos pasos): 5 fallos por usuario cada 15 min. Así un token robado no
 # sirve para probar contraseñas o códigos sin límite.
-sensitive_limiter = FailureLimiter()
+sensitive_limiter = FailureLimiter("sensitive")
 # Altas por IP: 30 por hora (evita crear cuentas en masa con un script)
-register_limiter = FailureLimiter(max_failures=30, window_seconds=60 * 60)
+register_limiter = FailureLimiter("register", max_failures=30, window_seconds=60 * 60)
 
 
 class _Guarded:
     """Cuenta como fallo un error de credenciales dentro del bloque y bloquea tras demasiados."""
 
-    def __init__(self, user: User) -> None:
+    def __init__(self, user: User, session: AsyncSession) -> None:
         self.key = str(user.id)
+        self.session = session
 
-    def __enter__(self) -> None:
-        wait = sensitive_limiter.retry_after(self.key)
+    async def __aenter__(self) -> None:
+        wait = await sensitive_limiter.retry_after(self.session, self.key)
         if wait:
             raise TooManyRequestsError(
                 f"Demasiados intentos fallidos. Inténtalo de nuevo en {-(-wait // 60)} min"
             )
 
-    def __exit__(self, kind: type[BaseException] | None, *_: object) -> None:
+    async def __aexit__(self, kind: type[BaseException] | None, *_: object) -> None:
         if kind is not None and issubclass(kind, (AppError, UnauthorizedError)):
-            sensitive_limiter.record_failure(self.key)
+            await sensitive_limiter.record_failure(self.session, self.key)
 
 
 def _tokens(user: User) -> TokenPair:
@@ -69,11 +71,11 @@ def _tokens(user: User) -> TokenPair:
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def register(data: RegisterIn, request: Request, session: SessionDep) -> User:
     key = request.client.host if request.client else "?"
-    if register_limiter.retry_after(key):
+    if await register_limiter.retry_after(session, key):
         raise TooManyRequestsError(
             "Demasiadas cuentas creadas desde esta conexión. Prueba más tarde"
         )
-    register_limiter.record_failure(key)
+    await register_limiter.record_failure(session, key)
     return await auth.register(session, data)
 
 
@@ -81,7 +83,10 @@ async def register(data: RegisterIn, request: Request, session: SessionDep) -> U
 async def login(data: LoginIn, request: Request, session: SessionDep) -> TokenPair:
     email = data.email.lower()
     key = f"{request.client.host if request.client else '?'}|{email}"
-    wait = max(login_limiter.retry_after(key), email_limiter.retry_after(email))
+    wait = max(
+        await login_limiter.retry_after(session, key),
+        await email_limiter.retry_after(session, email),
+    )
     if wait:
         raise TooManyRequestsError(
             f"Demasiados intentos fallidos. Inténtalo de nuevo en {-(-wait // 60)} min"
@@ -98,12 +103,12 @@ async def login(data: LoginIn, request: Request, session: SessionDep) -> TokenPa
     except TwoFactorRequiredError:
         raise
     except UnauthorizedError:
-        login_limiter.record_failure(key)
-        email_limiter.record_failure(email)
+        await login_limiter.record_failure(session, key)
+        await email_limiter.record_failure(session, email)
         raise
     await session.commit()  # guarda el hash renovado, si lo hubo
-    login_limiter.reset(key)
-    email_limiter.reset(email)
+    await login_limiter.reset(session, key)
+    await email_limiter.reset(session, email)
     return _tokens(user)
 
 
@@ -112,7 +117,7 @@ async def google_login(data: GoogleLoginIn, request: Request, session: SessionDe
     """Entra (o crea la cuenta) con un ID token de Google. Respeta la verificación en dos pasos."""
     identity = await verify_google_token(data.id_token)
     key = f"{request.client.host if request.client else '?'}|google:{identity.sub}"
-    wait = login_limiter.retry_after(key)
+    wait = await login_limiter.retry_after(session, key)
     if wait:
         raise TooManyRequestsError(
             f"Demasiados intentos fallidos. Inténtalo de nuevo en {-(-wait // 60)} min"
@@ -123,10 +128,10 @@ async def google_login(data: GoogleLoginIn, request: Request, session: SessionDe
             await session.commit()  # la vinculación con Google se guarda aunque falte el código
             raise TwoFactorRequiredError("Escribe el código de tu app de autenticación")
         if not auth.check_second_factor(user, data.otp):
-            login_limiter.record_failure(key)
+            await login_limiter.record_failure(session, key)
             raise UnauthorizedError("El código de verificación no es correcto")
     await session.commit()
-    login_limiter.reset(key)
+    await login_limiter.reset(session, key)
     return _tokens(user)
 
 
@@ -155,7 +160,7 @@ async def update_profile(data: ProfileUpdate, user: CurrentUser, session: Sessio
 async def delete_me(data: DeleteAccountIn, user: CurrentUser, session: SessionDep) -> None:
     """Elimina la cuenta y todos sus datos. Pide la contraseña para confirmar."""
     google = await verify_google_token(data.google_id_token) if data.google_id_token else None
-    with _Guarded(user):
+    async with _Guarded(user, session):
         await auth.delete_account(session, user, data.password, google)
 
 
@@ -165,7 +170,7 @@ async def change_password(
 ) -> TokenPair:
     """Cambia la contraseña y cierra las demás sesiones; devuelve tokens nuevos para esta."""
     # Una cuenta creada con Google crea aquí su primera contraseña (no hay actual que comprobar)
-    with _Guarded(user):
+    async with _Guarded(user, session):
         if user.hashed_password is not None and not verify_password(
             data.current_password, user.hashed_password
         ):
@@ -198,7 +203,7 @@ async def two_factor_enable(
     data: TwoFactorCode, user: CurrentUser, session: SessionDep
 ) -> RecoveryCodes:
     """Confirma el primer código y devuelve los códigos de recuperación (solo esta vez)."""
-    with _Guarded(user):
+    async with _Guarded(user, session):
         codes = auth.confirm_two_factor(user, data.code)
     await session.commit()
     return RecoveryCodes(recovery_codes=codes)
@@ -208,7 +213,7 @@ async def two_factor_enable(
 async def two_factor_disable(
     data: TwoFactorDisable, user: CurrentUser, session: SessionDep
 ) -> None:
-    with _Guarded(user):
+    async with _Guarded(user, session):
         auth.disable_two_factor(user, data.password, data.code)
     await session.commit()
 
@@ -218,7 +223,7 @@ async def two_factor_recovery_codes(
     data: TwoFactorCode, user: CurrentUser, session: SessionDep
 ) -> RecoveryCodes:
     """Sustituye los códigos de recuperación por otros nuevos (los anteriores dejan de valer)."""
-    with _Guarded(user):
+    async with _Guarded(user, session):
         codes = auth.regenerate_recovery_codes(user, data.code)
     await session.commit()
     return RecoveryCodes(recovery_codes=codes)

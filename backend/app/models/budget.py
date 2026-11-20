@@ -40,7 +40,7 @@ class Budget(IdMixin, TimestampMixin, Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     category_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("categories.id"), nullable=True
+        ForeignKey("categories.id"), nullable=True, index=True
     )
     period: Mapped[BudgetPeriod] = mapped_column(
         String(10), default=BudgetPeriod.month, server_default="month"

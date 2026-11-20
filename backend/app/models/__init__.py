@@ -1,4 +1,5 @@
 from app.models.account import Account, AccountType
+from app.models.auth_failure import AuthFailure
 from app.models.budget import Budget, BudgetPeriod
 from app.models.category import Category, CategoryKind
 from app.models.goal import Goal, GoalContribution
@@ -12,6 +13,7 @@ from app.models.waiting_room import WaitingItem, WaitingStatus
 __all__ = [
     "Account",
     "AccountType",
+    "AuthFailure",
     "Budget",
     "BudgetPeriod",
     "Category",
