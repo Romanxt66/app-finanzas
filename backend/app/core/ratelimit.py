@@ -1,58 +1,68 @@
+import random
 import time
-from collections import defaultdict, deque
 from collections.abc import Callable
+
+from sqlalchemy import delete, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import AuthFailure
+
+# Los registros más viejos que esto no cuentan para ningún límite (la ventana más larga es 1 h)
+_KEEP_SECONDS = 24 * 60 * 60
+# De vez en cuando, al anotar, se borran los caducados (sin tarea programada aparte)
+_SWEEP_PROBABILITY = 0.02
 
 
 class FailureLimiter:
-    """Ventana deslizante de fallos por clave (p. ej. IP + correo), en memoria.
+    """Ventana deslizante de fallos por clave (p. ej. IP + correo), guardada en la base de datos.
 
-    Suficiente para una instancia; con varias réplicas habría que moverlo a Redis/BD.
+    Es compartida por todos los procesos de la API, así que el límite no cambia al poner varios
+    workers o réplicas. Cada límite tiene su `scope` para que las claves no se mezclen.
     """
 
     def __init__(
         self,
+        scope: str,
         max_failures: int = 5,
         window_seconds: int = 15 * 60,
-        clock: Callable[[], float] = time.monotonic,
+        clock: Callable[[], float] = time.time,
     ) -> None:
+        self.scope = scope
         self.max_failures = max_failures
         self.window = window_seconds
-        self._clock = clock
-        self._failures: dict[str, deque[float]] = defaultdict(deque)
-        self._writes = 0
+        self.clock = clock
 
-    # Cada tantas anotaciones se barren las claves caducadas: una clave solo se poda al volver a
-    # usarse, y sin barrido unas pruebas con correos o IPs al azar acumularían memoria sin fin.
-    _SWEEP_EVERY = 1000
-
-    def _sweep(self) -> None:
-        limit = self._clock() - self.window
-        for key in [k for k, ev in self._failures.items() if not ev or ev[-1] <= limit]:
-            del self._failures[key]
-
-    def _prune(self, key: str) -> deque[float]:
-        events = self._failures[key]
-        limit = self._clock() - self.window
-        while events and events[0] <= limit:
-            events.popleft()
-        if not events:
-            self._failures.pop(key, None)
-            return deque()
-        return events
-
-    def retry_after(self, key: str) -> int:
+    async def retry_after(self, session: AsyncSession, key: str) -> int:
         """Segundos hasta poder reintentar (0 si no está bloqueado)."""
-        events = self._prune(key)
-        if len(events) < self.max_failures:
+        since = self.clock() - self.window
+        count, oldest = (
+            await session.execute(
+                select(func.count(), func.min(AuthFailure.at)).where(
+                    AuthFailure.scope == self.scope, AuthFailure.key == key, AuthFailure.at > since
+                )
+            )
+        ).one()
+        if count < self.max_failures or oldest is None:
             return 0
-        return max(1, int(events[0] + self.window - self._clock()) + 1)
+        # Se desbloquea cuando el fallo más viejo de la ventana deja de contar
+        return max(1, int(oldest + self.window - self.clock()) + 1)
 
-    def record_failure(self, key: str) -> None:
-        self._writes += 1
-        if self._writes % self._SWEEP_EVERY == 0:
-            self._sweep()
-        self._prune(key)
-        self._failures[key].append(self._clock())
+    async def record_failure(self, session: AsyncSession, key: str) -> None:
+        """Anota un fallo y lo guarda ya.
 
-    def reset(self, key: str) -> None:
-        self._failures.pop(key, None)
+        Descarta antes lo que la petición tuviera a medio guardar: se llama justo cuando algo falló
+        (o antes de empezar), y el fallo debe quedar anotado aunque la petición termine en error.
+        """
+        await session.rollback()
+        now = self.clock()
+        session.add(AuthFailure(scope=self.scope, key=key, at=now))
+        if random.random() < _SWEEP_PROBABILITY:  # noqa: S311 - no es criptográfico
+            await session.execute(delete(AuthFailure).where(AuthFailure.at < now - _KEEP_SECONDS))
+        await session.commit()
+
+    async def reset(self, session: AsyncSession, key: str) -> None:
+        """Olvida los fallos de la clave (tras entrar bien)."""
+        await session.execute(
+            delete(AuthFailure).where(AuthFailure.scope == self.scope, AuthFailure.key == key)
+        )
+        await session.commit()

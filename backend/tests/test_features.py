@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from app.core.ratelimit import FailureLimiter
 from tests.conftest import register_and_login
@@ -278,26 +279,55 @@ class _Clock:
         return self.now
 
 
-def test_limiter_blocks_and_expires() -> None:
+async def test_limiter_blocks_and_expires(engine: AsyncEngine) -> None:
     clock = _Clock()
-    limiter = FailureLimiter(max_failures=3, window_seconds=60, clock=clock)
-    for _ in range(2):
-        limiter.record_failure("k")
-    assert limiter.retry_after("k") == 0
-    limiter.record_failure("k")
-    assert 0 < limiter.retry_after("k") <= 61
-    assert limiter.retry_after("otra-clave") == 0
-    clock.now += 61
-    assert limiter.retry_after("k") == 0  # la ventana expiró
+    limiter = FailureLimiter("t", max_failures=3, window_seconds=60, clock=clock)
+    async with async_sessionmaker(engine)() as s:
+        for _ in range(2):
+            await limiter.record_failure(s, "k")
+        assert await limiter.retry_after(s, "k") == 0
+        await limiter.record_failure(s, "k")
+        assert 0 < await limiter.retry_after(s, "k") <= 61
+        assert await limiter.retry_after(s, "otra-clave") == 0
+        clock.now += 61
+        assert await limiter.retry_after(s, "k") == 0  # la ventana expiró
 
 
-def test_limiter_reset_on_success() -> None:
-    limiter = FailureLimiter(max_failures=2, window_seconds=60, clock=_Clock())
-    limiter.record_failure("k")
-    limiter.record_failure("k")
-    assert limiter.retry_after("k") > 0
-    limiter.reset("k")
-    assert limiter.retry_after("k") == 0
+async def test_limiter_reset_on_success(engine: AsyncEngine) -> None:
+    limiter = FailureLimiter("t", max_failures=2, window_seconds=60, clock=_Clock())
+    async with async_sessionmaker(engine)() as s:
+        await limiter.record_failure(s, "k")
+        await limiter.record_failure(s, "k")
+        assert await limiter.retry_after(s, "k") > 0
+        await limiter.reset(s, "k")
+        assert await limiter.retry_after(s, "k") == 0
+
+
+async def test_limiter_is_shared_between_processes(engine: AsyncEngine) -> None:
+    """Dos limitadores iguales (como dos workers) ven los mismos fallos; otro scope no."""
+    clock = _Clock()
+    worker_a = FailureLimiter("login", max_failures=2, window_seconds=60, clock=clock)
+    worker_b = FailureLimiter("login", max_failures=2, window_seconds=60, clock=clock)
+    other = FailureLimiter("register", max_failures=2, window_seconds=60, clock=clock)
+    maker = async_sessionmaker(engine)
+    async with maker() as s1:
+        await worker_a.record_failure(s1, "k")
+    async with maker() as s2:
+        await worker_b.record_failure(s2, "k")
+        assert await worker_b.retry_after(s2, "k") > 0
+        assert await worker_a.retry_after(s2, "k") > 0
+        assert await other.retry_after(s2, "k") == 0
+
+
+async def test_limiter_failure_survives_request_rollback(engine: AsyncEngine) -> None:
+    """El fallo queda guardado aunque la petición no llegue a hacer commit de lo suyo."""
+    limiter = FailureLimiter("t", max_failures=1, window_seconds=60, clock=_Clock())
+    maker = async_sessionmaker(engine)
+    async with maker() as s:
+        await limiter.record_failure(s, "k")
+        await s.rollback()
+    async with maker() as s:
+        assert await limiter.retry_after(s, "k") > 0
 
 
 async def test_login_is_rate_limited(client: AsyncClient) -> None:

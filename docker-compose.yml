@@ -26,6 +26,12 @@ services:
       # «Continuar con Google»: IDs de cliente de OAuth en JSON, p. ej.
       # ["123-web.apps.googleusercontent.com","123-android.apps.googleusercontent.com"] (vacío = desactivado)
       GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-[]}
+      # Procesos de la API (uno por núcleo libre del servidor). Cada uno abre hasta
+      # DB_POOL_SIZE + DB_MAX_OVERFLOW conexiones: con 2 × (5 + 10) = 30 como máximo, de sobra dentro
+      # de las 100 de Postgres aunque ese servidor lo compartan otras apps.
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
+      DB_MAX_OVERFLOW: ${DB_MAX_OVERFLOW:-10}
     networks:
       - default
       - coolify # alcanzar el Postgres (master-db-central)

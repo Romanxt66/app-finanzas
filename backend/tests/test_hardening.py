@@ -5,6 +5,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from app.db.session import get_session
 from app.main import create_app
@@ -281,16 +282,29 @@ async def test_respuestas_de_la_api_no_se_guardan_en_cache(client: AsyncClient, 
     assert err.headers["cache-control"] == "no-store"
 
 
-def test_el_limitador_barre_claves_caducadas() -> None:
+async def test_el_limitador_barre_fallos_caducados(
+    engine: AsyncEngine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Los fallos de hace más de un día se borran al anotar otros: la tabla no crece sin fin."""
+    from sqlalchemy import func, select
+
+    from app.core import ratelimit
     from app.core.ratelimit import FailureLimiter
+    from app.models import AuthFailure
 
     now = [0.0]
-    lim = FailureLimiter(max_failures=5, window_seconds=60, clock=lambda: now[0])
-    for i in range(999):
-        lim.record_failure(f"correo-{i}@x.com")
-    now[0] = 120.0  # todas caducadas
-    lim.record_failure("otra")  # la anotación 1000 barre
-    assert set(lim._failures) == {"otra"}
+    lim = FailureLimiter("t", max_failures=5, window_seconds=60, clock=lambda: now[0])
+    maker = async_sessionmaker(engine)
+    monkeypatch.setattr(ratelimit, "_SWEEP_PROBABILITY", 0.0)
+    async with maker() as s:
+        for i in range(50):
+            await lim.record_failure(s, f"correo-{i}@x.com")
+        now[0] = 2 * 24 * 60 * 60.0  # dos días después: todos caducados
+        monkeypatch.setattr(ratelimit, "_SWEEP_PROBABILITY", 1.0)
+        await lim.record_failure(s, "otra")
+        keys = (await s.execute(select(AuthFailure.key))).scalars().all()
+        assert keys == ["otra"]
+        assert (await s.execute(select(func.count()).select_from(AuthFailure))).scalar() == 1
 
 
 def test_eliminar_la_cuenta_cubre_todas_las_tablas_del_usuario() -> None:

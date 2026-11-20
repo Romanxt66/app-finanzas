@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     # IDs de cliente de OAuth de Google (web y Android) que pueden iniciar sesión.
     # Vacío = desactivado.
     google_client_ids: list[str] = []
+    # Conexiones a la base de datos por proceso de la API (cada worker tiene su propio pool):
+    # workers × (pool + desborde) debe quedar por debajo de max_connections de Postgres (100).
+    db_pool_size: int = Field(default=5, ge=1)
+    db_max_overflow: int = Field(default=10, ge=0)
 
 
 @lru_cache

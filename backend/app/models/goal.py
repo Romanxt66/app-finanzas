@@ -26,7 +26,7 @@ class GoalContribution(IdMixin, TimestampMixin, Base):
     __table_args__ = (CheckConstraint("amount <> 0", name="ck_goal_contributions_nonzero"),)
 
     goal_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("goals.id"), index=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
     occurred_on: Mapped[date] = mapped_column(Date)
     note: Mapped[str] = mapped_column(String(255), default="")
